@@ -1,4 +1,5 @@
 """Wall masks shared by align.py (whole-floor fit) and game_views.py (per-label nudge)."""
+import json, os
 import cv2
 import numpy as np
 
@@ -13,10 +14,15 @@ IGNORE = {
 
 
 def blueprint_walls(path):
-    """Ubisoft's white wall lines, full resolution, 0/1 float."""
+    """White wall lines of an in-game image, full resolution, 0/1 float."""
     im = cv2.imread(path)
     m = (im.min(axis=2) > 205).astype(np.float32)
-    m[690:, 1270:] = 0  # legend box
+    if im.shape[:2] == (900, 1600):
+        m[690:, 1270:] = 0  # legend box on Ubisoft's blueprints
+    side = os.path.splitext(path)[0] + '.ignore.json'
+    if os.path.exists(side):  # legend and labels in screenshots (split_panels.py)
+        for x0, y0, x1, y1 in json.load(open(side)):
+            m[y0:y1, x0:x1] = 0
     return m
 
 

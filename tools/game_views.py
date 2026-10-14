@@ -49,10 +49,12 @@ def nudges(r, f, key, bp_path):
     wt = cv2.resize(W, (w, h), interpolation=cv2.INTER_AREA)
     wt = cv2.GaussianBlur((wt > 0.15).astype(np.float32), (0, 0), 2.5)
     ox, oy, P = int(round(r['x'])), int(round(r['y'])), 200
-    tw = np.zeros((900 + 2 * P, 1600 + 2 * P), np.float32)
-    tw[oy + P:oy + P + h, ox + P:ox + P + w] = wt
     U = cv2.GaussianBlur(blueprint_walls(bp_path), (0, 0), 2.5)
     U = cv2.copyMakeBorder(U, P, P, P, P, cv2.BORDER_CONSTANT, value=0)
+    tw = np.zeros_like(U)  # the placed plan, on the same padded canvas
+    y0, x0 = max(0, oy + P), max(0, ox + P)
+    y1, x1 = min(tw.shape[0], oy + P + h), min(tw.shape[1], ox + P + w)
+    tw[y0:y1, x0:x1] = wt[y0 - oy - P:y1 - oy - P, x0 - ox - P:x1 - ox - P]
     size = max(w, h)
     R, D = max(24, int(0.10 * size)), max(5, int(0.045 * size))
     raw, pts = [], []
@@ -96,15 +98,17 @@ for m in data['maps']:
     floors = [(f, r) for f, r in floors if r and not r.get('rejected')]
     if not floors:
         continue
+    paths = [glob.glob(f"{BP}/{BPDIR.get(m['id'], m['id'])}/**/{r['bp']}", recursive=True)[0] for f, r in floors]
+    sizes = [Image.open(p).size for p in paths]  # floors of a map share one frame
+    iw, ih = min(w for w, _ in sizes), min(h for _, h in sizes)
     boxes = [wall_box(r, os.path.join(SRC, f['image'])) for f, r in floors]
     x0 = min(b[0] for b in boxes); y0 = min(b[1] for b in boxes)
     x1 = max(b[2] for b in boxes); y1 = max(b[3] for b in boxes)
     pad = 0.06 * max(x1 - x0, y1 - y0)
-    crop = tuple(int(round(v)) for v in (max(0, x0 - pad), max(0, y0 - pad), min(1600, x1 + pad), min(900, y1 + pad)))
+    crop = tuple(int(round(v)) for v in (max(0, x0 - pad), max(0, y0 - pad), min(iw, x1 + pad), min(ih, y1 + pad)))
     cw, ch = crop[2] - crop[0], crop[3] - crop[1]
-    for f, r in floors:
+    for (f, r), path in zip(floors, paths):
         key = f"{m['id']}|{f['name']}"
-        path = glob.glob(f"{BP}/{BPDIR.get(m['id'], m['id'])}/**/{r['bp']}", recursive=True)[0]
         img = Image.open(path).convert('RGB').crop(crop)
         # Some maps are shot from far out; upscale small crops with Lanczos plus
         # a light sharpen, which holds up better than the browser's own scaling.

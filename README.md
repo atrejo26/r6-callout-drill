@@ -88,6 +88,9 @@ python3 tools/build.py                                     # expand abbreviation
   are numbered lowest floor first except Villa (#2 is an empty level) and Bank (1F, 2F,
   Basement, Roof); `ASSIGN` in the script records those. A floor marked
   `"rejected": true` in `alignment.json` keeps only the call-sheet view.
+- Screenshots can replace Ubisoft's blueprints: `tools/split_panels.py shot.png <dir>/bank
+  Basement 1F 2F -` splits a 2x2 picture of a map's floors into `floor-<name>.png` files,
+  which `align.py` and `game_views.py` use instead of the blueprints when present.
 - `game_views.py` crops the blueprints and places each callout with its floor's fit, then
   nudges it to line up with the walls right around it, for places where the call sheet is
   drawn a little differently from the game (the north end of Lair 1F). A nudge is kept

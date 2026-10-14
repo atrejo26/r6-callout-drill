@@ -3,7 +3,8 @@
 Usage: python3 -I tools/align.py <blueprints-dir> src/ [map ids or map|floor keys...]
 
 <blueprints-dir> holds one folder per map (border/, chalet/, ..., nighthavenlabs/)
-with Ubisoft's r6-maps-<map>-blueprint-N.jpg files. The fit is
+with Ubisoft's r6-maps-<map>-blueprint-N.jpg files, or floor-<floor>.png
+screenshots from tools/split_panels.py, which are used instead when present. The fit is
     blueprint_x = x + sx * plan_x,   blueprint_y = y + sy * plan_y
 with separate horizontal and vertical scales: the deck's plan images are not
 always stretched evenly (Border 1F is ~10% taller than the game). The score
@@ -28,6 +29,17 @@ ASSIGN = {'villa': {'Basement': 1, '1F': 3, '2F': 4},
           'bank': {'Basement': 3, '1F': 1, '2F': 2}}
 
 
+def floor_image(map_id, floor, index):
+    """The floor's in-game image: a screenshot from split_panels.py if there is
+    one, else Ubisoft's blueprint for that floor."""
+    d = f"{BP}/{BPDIR.get(map_id, map_id)}"
+    shots = glob.glob(f"{d}/**/floor-{floor.lower()}.png", recursive=True)
+    if shots:
+        return shots[0]
+    n = ASSIGN.get(map_id, {}).get(floor, index + 1)
+    return next(p for p in glob.glob(f"{d}/**/*-{n}.jpg", recursive=True) if 'MACOSX' not in p)
+
+
 def score_grid(W, F, um, H, pairs):
     """Best placement for each (sx, sy) pair; returns [(score, sx, sy, x, y)]."""
     out = []
@@ -50,8 +62,7 @@ for m in data['maps']:
         key = f"{m['id']}|{f['name']}"
         if only and m['id'] not in only and key not in only:
             continue
-        n = ASSIGN.get(m['id'], {}).get(f['name'], i + 1)
-        path = next(p for p in glob.glob(f"{BP}/{BPDIR.get(m['id'], m['id'])}/**/*-{n}.jpg", recursive=True) if 'MACOSX' not in p)
+        path = floor_image(m['id'], f['name'], i)
         if out.get(key, {}).get('rejected'):
             print(f"{key:20s} kept as rejected", flush=True)
             continue
@@ -84,5 +95,5 @@ for m in data['maps']:
                         x=float(x), y=float(y), dw=W.shape[1], dh=W.shape[0])
         if prev.get('rejected'):
             out[key]['rejected'] = True
-        print(f"{key:20s} img {n} score {v:6.2f} sx {sx:.3f} sy {sy:.3f} (sy/sx {sy / sx:.3f})", flush=True)
+        print(f"{key:20s} {os.path.basename(path):34s} score {v:6.2f} sx {sx:.3f} sy {sy:.3f} (sy/sx {sy / sx:.3f})", flush=True)
         json.dump(out, open(OUT, 'w'), indent=1)
