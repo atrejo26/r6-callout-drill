@@ -47,17 +47,28 @@ to a release.
 ## Rebuilding the data
 
 `index.html` is generated; edit `src/template.html` and run the tools with Python 3
-(`python-pptx`, `Pillow`, `numpy`, `opencv-python-headless`):
+(`python-pptx`, `pdfplumber`, `Pillow`, `numpy`, `opencv-python-headless`) and LibreOffice:
 
 ```sh
-python3 tools/extract.py "Paltrys_R6_Map_Call_Sheets.pptx" src   # callouts + call-sheet plans
-python3 tools/align.py   <ubisoft-blueprints-dir> src            # fit plans onto blueprints
-python3 tools/game_views.py <ubisoft-blueprints-dir> src         # in-game crops + positions
-python3 tools/build.py                                           # inline everything into index.html
+soffice --headless --convert-to pdf "Paltrys_R6_Map_Call_Sheets.pptx"
+python3 tools/extract.py "Paltrys_R6_Map_Call_Sheets.pptx" "Paltrys_R6_Map_Call_Sheets.pdf" src
+python3 tools/align.py      <ubisoft-blueprints-dir> src   # fit plans onto blueprints
+python3 tools/game_views.py <ubisoft-blueprints-dir> src   # in-game crops + positions
+python3 tools/build.py                                     # inline everything into index.html
 ```
 
-`tools/align.py` writes `src/alignment.json`. Bank 2F is marked `"rejected": true` there
-because Ubisoft's 2F blueprint does not match the call sheet's plan, so that floor uses
-the call-sheet view.
+- `extract.py` places each callout where its text is drawn on the slide (read from the
+  PDF), not at the centre of its text box: the deck's boxes are left-aligned,
+  top-anchored and often much bigger than the word.
+- `align.py` fits each call-sheet plan onto Ubisoft's blueprint for that floor, with
+  separate horizontal and vertical scales because some deck images are stretched (Border
+  1F is about 10% taller than the game). It writes `src/alignment.json`. Ubisoft's images
+  are numbered lowest floor first except Villa (#2 is an empty level) and Bank (1F, 2F,
+  Basement, Roof); `ASSIGN` in the script records those. A floor marked
+  `"rejected": true` in `alignment.json` keeps only the call-sheet view.
+- `game_views.py` crops the blueprints and places each callout with its floor's fit, then
+  nudges it to line up with the walls right around it, for places where the call sheet is
+  drawn a little differently from the game (the north end of Lair 1F). A nudge is kept
+  only when it clearly improves the local match and two or more nearby callouts agree.
 
 Floor plan imagery is Ubisoft's. This is an unofficial fan tool.

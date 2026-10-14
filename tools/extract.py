@@ -1,14 +1,23 @@
 """Pull floor plans and callout labels out of the call-sheet deck.
 
-Usage: python3 -I tools/extract.py <deck.pptx> src/
+Usage: python3 -I tools/extract.py <deck.pptx> <deck.pdf> src/
+
+<deck.pdf> is the deck rendered by LibreOffice
+(`soffice --headless --convert-to pdf deck.pptx`). Label positions come from
+where each label's text is actually drawn there: the deck's text boxes are
+left-aligned and top-anchored, and often much larger than their text, so the
+centre of the box can sit well away from the word itself.
 
 Writes src/maps/<map>_<floor>.webp and src/callouts.json. Each label is stored
 as a position normalized to its (cropped, trimmed) floor image, so the app can
 place markers at any display size.
 """
-import io, json, os, re, sys
+import io, json, math, os, re, sys
+import pdfplumber
 from pptx import Presentation
 from PIL import Image, ImageOps
+
+EMU_PER_PT = 12700
 
 A = '{http://schemas.openxmlformats.org/drawingml/2006/main}'
 
@@ -77,6 +86,39 @@ def label_info(sh):
     return ' '.join(paras), size, bold, color
 
 
+def rendered_center(chars, rect, rot, text):
+    """Centre of the drawn glyphs of one text box, in EMU; None if not found.
+
+    `chars` are the slide's non-blank pdfplumber chars in drawing order. The box's
+    text appears there as one consecutive run, so look for that exact run and,
+    if it occurs more than once ("Boost" on Border 1F), take the one inside the
+    (possibly rotated) box. A wrapped label can spill below its top-anchored box,
+    so the box is searched a line further down.
+    """
+    x, y, w, h = (v / EMU_PER_PT for v in rect)
+    cx, cy, a = x + w / 2, y + h / 2, math.radians(rot)
+
+    def local(ch):  # char centre in the box's own, unrotated frame
+        mx, my = (ch['x0'] + ch['x1']) / 2 - cx, (ch['top'] + ch['bottom']) / 2 - cy
+        return mx * math.cos(a) + my * math.sin(a), -mx * math.sin(a) + my * math.cos(a)
+
+    def inside(ch):
+        lx, ly = local(ch)
+        return abs(lx) <= w / 2 + 1 and -h / 2 - 1 <= ly <= h / 2 + 10
+
+    target = text.replace(' ', '')
+    n = len(target)
+    runs = [chars[i:i + n] for i in range(len(chars) - n + 1)
+            if ''.join(c['text'] for c in chars[i:i + n]) == target]
+    runs = [r for r in runs if sum(inside(c) for c in r) >= max(1, n // 2)]
+    if not runs:
+        return None
+    run = max(runs, key=lambda r: sum(inside(c) for c in r))
+    x0 = min(c['x0'] for c in run); x1 = max(c['x1'] for c in run)
+    y0 = min(c['top'] for c in run); y1 = max(c['bottom'] for c in run)
+    return (x0 + x1) / 2 * EMU_PER_PT, (y0 + y1) / 2 * EMU_PER_PT
+
+
 def trim_box(img):
     """Bounding box of non-white content, padded, so empty margins don't shrink the plan."""
     g = ImageOps.invert(img.convert('L')).point(lambda v: 255 if v > 20 else 0)
@@ -85,12 +127,14 @@ def trim_box(img):
     return (max(0, box[0] - pad), max(0, box[1] - pad), min(img.width, box[2] + pad), min(img.height, box[3] + pad))
 
 
-def main(deck, outdir):
+def main(deck, deck_pdf, outdir):
     os.makedirs(os.path.join(outdir, 'maps'), exist_ok=True)
     prs = Presentation(deck)
+    pdf = pdfplumber.open(deck_pdf)
     maps = []
     for num, (mid, name, floor_names) in MAPS.items():
         pics, texts = [], []
+        chars = [c for c in pdf.pages[num - 1].chars if c['text'].strip()]
         for z, (sh, rect) in enumerate(walk(prs.slides[num - 1].shapes, (1, 1, 0, 0))):
             if sh.shape_type == 13:
                 pics.append((z, sh, rect))
@@ -99,7 +143,11 @@ def main(deck, outdir):
                 # Skip slide titles and floor headings (black text, not red callouts).
                 if color != 'FF0000':
                     continue
-                texts.append((text, rect, sh.rotation, bold))
+                at = rendered_center(chars, rect, sh.rotation, re.sub(r'\s+', ' ', text).strip())
+                if at is None:
+                    print(f'  {mid}: no rendered text found for {text!r}; using its box centre')
+                    at = (rect[0] + rect[2] / 2, rect[1] + rect[3] / 2)
+                texts.append((text, at, sh.rotation, bold))
         assert len(pics) == len(floor_names), (mid, len(pics))
         floors = []
         for (z, sh, rect), fname in zip(pics, floor_names):
@@ -108,8 +156,7 @@ def main(deck, outdir):
             img = img.crop((round(sh.crop_left * W), round(sh.crop_top * H),
                             round(W - sh.crop_right * W), round(H - sh.crop_bottom * H)))
             floors.append(dict(name=fname, z=z, rect=rect, img=img, labels=[]))
-        for text, (x, y, w, h), rot, bold in texts:
-            cx, cy = x + w / 2, y + h / 2
+        for text, (cx, cy), rot, bold in texts:
             hits = [f for f in floors if f['rect'][0] <= cx <= f['rect'][0] + f['rect'][2]
                     and f['rect'][1] <= cy <= f['rect'][1] + f['rect'][3]]
             if not hits:
@@ -146,4 +193,4 @@ def main(deck, outdir):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:3])
+    main(*sys.argv[1:4])
