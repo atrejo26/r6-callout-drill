@@ -28,6 +28,10 @@ FLOOR_ORDER = ['Basement', '1F', '2F', '3F']
 
 # Display fixes for typos / formatting in the deck; aliases are extra accepted answers.
 FIXES = {
+    # Border 1F bathroom stalls: the sheet labels them 1/2/3 inside "Stalls".
+    '1': ('Stall 1', ['1']),
+    '2': ('Stall 2', ['2']),
+    '3': ('Stall 3', ['3']),
     'Dinning': ('Dining', []),
     'BottomSqr': ('Bottom Sqr', []),
     'DMZ(DeadManZone)': ('DMZ', ['Dead Man Zone']),
@@ -114,8 +118,12 @@ def main(deck, outdir):
             fx, fy, fw, fh = f['rect']
             text = re.sub(r'\s+', ' ', text).strip()
             disp, aliases = FIXES.get(text, (text, []))
+            # Less specific answers that still count, e.g. "Stalls" for "Stall 1".
+            broad = ['Stalls'] if mid == 'border' and text in ('1', '2', '3') else []
+            short = text if broad else None
             disp = disp[:1].upper() + disp[1:]
-            f['labels'].append(dict(name=disp, aliases=aliases, room=bold, rot=round(rot),
+            f['labels'].append(dict(name=disp, aliases=aliases, room=bold and not broad, rot=round(rot),
+                                    **({'broad': broad, 'short': short} if broad else {}),
                                     u=(cx - fx) / fw, v=(cy - fy) / fh))
         out_floors = []
         for f in sorted(floors, key=lambda f: FLOOR_ORDER.index(f['name'])):

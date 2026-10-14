@@ -374,30 +374,48 @@
        "gy": 0.392
       },
       {
-       "name": "1",
-       "aliases": [],
-       "room": true,
+       "name": "Stall 1",
+       "aliases": [
+        "1"
+       ],
+       "room": false,
        "rot": 0,
+       "broad": [
+        "Stalls"
+       ],
+       "short": "1",
        "x": 0.6361,
        "y": 0.0784,
        "gx": 0.6318,
        "gy": 0.1716
       },
       {
-       "name": "3",
-       "aliases": [],
-       "room": true,
+       "name": "Stall 3",
+       "aliases": [
+        "3"
+       ],
+       "room": false,
        "rot": 0,
+       "broad": [
+        "Stalls"
+       ],
+       "short": "3",
        "x": 0.7207,
        "y": 0.0727,
        "gx": 0.715,
        "gy": 0.1667
       },
       {
-       "name": "2",
-       "aliases": [],
-       "room": true,
+       "name": "Stall 2",
+       "aliases": [
+        "2"
+       ],
+       "room": false,
        "rot": 0,
+       "broad": [
+        "Stalls"
+       ],
+       "short": "2",
        "x": 0.6833,
        "y": 0.0743,
        "gx": 0.6782,

@@ -272,16 +272,25 @@ function lev(a, b) {
   }
   return prev[n];
 }
+const digits = s => s.replace(/\D/g, '');
+function close(g, t) {
+  const k = compact(t);
+  if (g === k) return true;
+  // Typos are forgiven in letters only: R1 is not R2, Stall 1 is not Stalls.
+  if (digits(g) !== digits(k)) return false;
+  const tol = k.length >= 8 ? 2 : k.length >= 4 ? 1 : 0;
+  return lev(g, k) <= tol;
+}
+// 'exact' for the callout or an alias, 'broad' for an accepted but less specific
+// answer ("Stalls" for "Stall 1"), false otherwise.
 function accepts(c, guess) {
   const g = compact(guess);
   if (!g) return false;
-  return [c.name, ...c.aliases].some(t => {
-    const k = compact(t);
-    if (g === k) return true;
-    const tol = k.length >= 8 ? 2 : k.length >= 4 ? 1 : 0;
-    return lev(g, k) <= tol;
-  });
+  if ([c.name, ...c.aliases].some(t => close(g, t))) return 'exact';
+  if ((c.broad || []).some(t => close(g, t))) return 'broad';
+  return false;
 }
+const covers = (o, c) => (o.broad || []).some(t => compact(t) === compact(c.name));
 
 // ---------- data ----------
 const ALL = [];
@@ -407,7 +416,7 @@ function focusOn(x, y) {
 }
 const pos = (node, c) => { node.style.left = (X(c) * 100) + '%'; node.style.top = (Y(c) * 100) + '%'; return node; };
 function tagFor(c, extra = '') {
-  const t = el('span', { className: `tag ${c.room ? 'room' : 'spot'} ${extra}`, textContent: c.name });
+  const t = el('span', { className: `tag ${c.room ? 'room' : 'spot'} ${extra}`, textContent: extra.includes('answer') ? c.name : (c.short || c.name) });
   if (c.rot) t.style.setProperty('--rot', c.rot + 'deg');
   return pos(t, c);
 }
@@ -489,8 +498,10 @@ function finishName(ok, guess) {
   const box = $('fb');
   box.className = 'feedback ' + (ok ? 'good' : 'bad');
   const same = compact(guess) === compact(c.name);
-  box.replaceChildren(ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` : `It's ${c.name}.`);
-  if (c.aliases.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + c.aliases.join(', ') }));
+  box.replaceChildren(ok === 'broad' ? `Accepted. More specific: ${c.name}.`
+    : ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` : `It's ${c.name}.`);
+  const alts = c.aliases.filter(a => !/^\d+$/.test(a));
+  if (alts.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + alts.join(', ') }));
   const input = $('guess'); input.readOnly = true;
   $('goBtn').textContent = 'Next';
   $('hintBtn').disabled = true;
@@ -507,7 +518,7 @@ function renderPick() {
   for (const o of [...shuffle(same.filter(o => o.room === c.room)), ...shuffle(same), ...shuffle(rest)]) {
     if (opts.length === 4) break;
     const k = compact(o.name);
-    if (!seen.has(k)) { seen.add(k); opts.push(o); }
+    if (!seen.has(k) && !covers(c, o) && !covers(o, c)) { seen.add(k); opts.push(o); }
   }
   q.opts = shuffle(opts);
   const box = el('div', { className: 'choices' }, ...q.opts.map((o, i) => {
@@ -557,7 +568,7 @@ function findAt(pt) {
   let ok = false, nearest = null;
   if (pt) {
     nearest = f.callouts.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
-    ok = compact(nearest.name) === compact(c.name) || targets.some(t => d(t, pt) <= 0.04);
+    ok = compact(nearest.name) === compact(c.name) || covers(nearest, c) || targets.some(t => d(t, pt) <= 0.04);
   }
   record(c, ok, false);
   const layer = $('layer');
