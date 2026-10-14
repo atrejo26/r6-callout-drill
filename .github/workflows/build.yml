@@ -19,6 +19,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx electron-builder --win portable --x64 --publish never
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build lite launcher
+        shell: bash
+        run: |
+          cp index.html launcher/index.html
+          cd launcher && go build -trimpath -ldflags "-s -w -H=windowsgui" -o ../dist/R6-Callout-Drill-Lite.exe .
       - uses: actions/upload-artifact@v4
         with:
           name: R6-Callout-Drill-windows

@@ -21,10 +21,15 @@ Progress is stored locally on your machine.
 
 ## Run it
 
-- **Windows**: download `R6-Callout-Drill-<version>.exe` from Releases (or the latest
-  *Build Windows app* workflow run) and double-click it. It is a portable app, so there is
-  nothing to install. The exe is unsigned, so Windows SmartScreen may ask you to confirm
-  (More info → Run anyway).
+- **Windows**, two builds, both portable (nothing to install):
+  - `R6-Callout-Drill-Lite.exe` (about 6 MB) opens the app in its own Microsoft Edge app
+    window (Chrome or your default browser if Edge is missing). Progress is kept in
+    `%LOCALAPPDATA%\R6CalloutDrill`.
+  - `R6-Callout-Drill-<version>.exe` (about 75 MB) is a full Electron app with its own
+    browser engine.
+
+  Get them from Releases or the latest *Build Windows app* workflow run. Both are
+  unsigned, so Windows SmartScreen may ask you to confirm (More info → Run anyway).
 - **Any browser**: open `index.html`. It is a single self-contained file that works offline.
 - **From source**: `npm install` then `npm start`.
 
@@ -33,6 +38,7 @@ Progress is stored locally on your machine.
 ```sh
 npm install
 npm run dist:win          # dist/R6-Callout-Drill-<version>.exe (works from Linux too)
+npm run dist:lite         # dist/R6-Callout-Drill-Lite.exe (needs Go)
 ```
 
 Pushing a tag like `v1.0.1` makes GitHub Actions build the exe on Windows and attach it
