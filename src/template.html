@@ -217,7 +217,7 @@ footer { color: var(--muted); font-size: 12px; }
         <div class="floor-tabs" id="floorTabs"></div>
         <button class="tool" id="zoomOut" aria-label="Zoom out">−</button>
         <button class="tool" id="zoomIn" aria-label="Zoom in">+</button>
-        <button class="tool" id="viewBtn" title="Switch between Ubisoft's in-game blueprint and the call-sheet plan">In-game</button>
+        <button class="tool" id="viewBtn" title="Switch between the in-game map and the call-sheet plan">In-game</button>
       </div>
       <div class="stage" id="stage">
         <figure class="plate" id="plate">
@@ -246,7 +246,7 @@ footer { color: var(--muted); font-size: 12px; }
     </aside>
   </div>
 
-  <footer>Callout names and positions come from Paltry's R6 Map Call Sheets for FireBirds. Mastery counts a callout once your latest answer for it was right. Progress is saved in this browser only.</footer>
+  <footer>Callout names and positions come from Paltry's R6 Map Call Sheets for FireBirds. In-game floor maps by R6Calls (r6calls.com), built on Ubisoft's maps. Mastery counts a callout once your latest answer for it was right. Progress is saved in this browser only.</footer>
 </div>
 
 <script>
@@ -387,7 +387,7 @@ function record(c, ok, hinted) {
 
 // ---------- drawing the plate ----------
 // Each floor has the call-sheet plan (image, w, h; callouts at x/y) and, for most
-// floors, Ubisoft's in-game blueprint (game; callouts at gx/gy).
+// floors, the in-game map (game; callouts at gx/gy).
 const inGame = f => S.view === 'game' && !!f.game;
 const img = f => inGame(f) ? f.game : f;
 const X = c => c.floor ? (inGame(c.floor) ? c.gx : c.x) : c.x;

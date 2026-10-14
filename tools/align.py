@@ -68,7 +68,7 @@ for m in data['maps']:
             continue
         W, F = plan_masks(os.path.join(SRC, f['image']), IGNORE.get(key, ()))
         # 1. even scale, coarse, half resolution
-        coarse = score_grid(W, F, blueprint_mask(path, 0.5), 0.5, [(s_, s_) for s_ in np.geomspace(0.08, 1.0, 60)])
+        coarse = score_grid(W, F, blueprint_mask(path, 0.5), 0.5, [(s_, s_) for s_ in np.geomspace(0.08, 3.0, 75)])
         coarse.sort(key=lambda c: -c[0])
         picks = []
         for c in coarse:  # a few distinct candidate scales

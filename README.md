@@ -4,7 +4,8 @@ A trainer for Rainbow Six Siege callouts on the Pro League map pool: Border, Cha
 Clubhouse, Villa, Nighthaven Labs, Fortress, Bank, Kafe Dostoyevsky and Lair.
 
 Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), 594 callouts
-across 25 floors. Each floor shows Ubisoft's in-game blueprint with the call sheet's callouts
+across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels and
+line-of-sight walls off) with the call sheet's callouts
 aligned onto it. Use the **In-game / Call sheet** button to switch to the call-sheet line plan.
 
 ## Modes
@@ -74,10 +75,14 @@ to a release.
 ```sh
 soffice --headless --convert-to pdf "Paltrys_R6_Map_Call_Sheets.pptx"
 python3 tools/extract.py "Paltrys_R6_Map_Call_Sheets.pptx" "Paltrys_R6_Map_Call_Sheets.pdf" src
-python3 tools/align.py      <ubisoft-blueprints-dir> src   # fit plans onto blueprints
-python3 tools/game_views.py <ubisoft-blueprints-dir> src   # in-game crops + positions
-python3 tools/build.py                                     # expand abbreviations, inline everything
+python3 tools/r6calls.py work                  # download + render R6Calls floors (Node + Playwright)
+python3 tools/align.py      work/floors src    # fit call-sheet plans onto the in-game floors
+python3 tools/game_views.py work/floors src    # in-game crops + callout positions
+python3 tools/build.py                         # expand abbreviations, inline everything
 ```
+
+`align.py` and `game_views.py` take any folder with one subfolder per map holding
+`floor-<floor>.png` images, or Ubisoft's `r6-maps-<map>-blueprint-N.jpg` files.
 
 - `extract.py` places each callout where its text is drawn on the slide (read from the
   PDF), not at the centre of its text box: the deck's boxes are left-aligned,
@@ -96,4 +101,5 @@ python3 tools/build.py                                     # expand abbreviation
   drawn a little differently from the game (the north end of Lair 1F). A nudge is kept
   only when it clearly improves the local match and two or more nearby callouts agree.
 
-Floor plan imagery is Ubisoft's. This is an unofficial fan tool.
+In-game floor maps are R6Calls' work (https://www.r6calls.com), built on Ubisoft's maps. This is an
+unofficial fan tool.
