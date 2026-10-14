@@ -253,12 +253,19 @@ footer { color: var(--muted); font-size: 12px; }
 const DATA = /*DATA*/null;
 
 // ---------- answer matching ----------
-const TOKEN = { h: 'hall', s: 'stairs', w: 'wall', sqr: 'square', kitch: 'kitchen', st: 'stairs', rm: 'room' };
+// Spellings that mean the same word. Abbreviations are not here: each callout
+// carries its own (built by tools/abbrev.py), since "S" is stairs in "Main S"
+// but short in "Fountain S H".
+const SAME = {
+  hallway: 'hall', hallways: 'hall', halls: 'hall', stair: 'stairs', staircase: 'stairs',
+  stairway: 'stairs', stairwell: 'stairs', showers: 'shower', rafter: 'rafters', lift: 'elevator',
+  one: '1', two: '2', three: '3', first: '1st', second: '2nd', third: '3rd',
+};
 function norm(s) {
-  return s.toLowerCase().replace(/½/g, ' half ').replace(/&/g, ' and ')
+  return s.toLowerCase().replace(/½|1\/2/g, ' half ').replace(/&/g, ' and ')
     .replace(/[^a-z0-9]+/g, ' ').trim().split(' ')
     .filter((t, i) => !(i === 0 && t === 'the'))
-    .map(t => TOKEN[t] || t).join(' ');
+    .map(t => SAME[t] || t).join(' ');
 }
 const compact = s => norm(s).replace(/ /g, '');
 function lev(a, b) {
@@ -273,21 +280,41 @@ function lev(a, b) {
   return prev[n];
 }
 const digits = s => s.replace(/\D/g, '');
-function close(g, t) {
-  const k = compact(t);
-  if (g === k) return true;
-  // Typos are forgiven in letters only: R1 is not R2, Stall 1 is not Stalls.
+// A small typo is forgiven in letters only (R1 is not R2, Stall 1 is not Stalls),
+// and only where it can't be another callout's abbreviation (Back S vs Back h).
+function near(g, k) {
   if (digits(g) !== digits(k)) return false;
   const tol = k.length >= 8 ? 2 : k.length >= 4 ? 1 : 0;
   return lev(g, k) <= tol;
+}
+// Every accepted way to say a callout, as [compact text, typos forgiven]: each
+// word as on the call sheet or written out, in any mix ("Kitch H", "Kitchen
+// Hallway", "kitchen h"), plus aliases. Typos count only when every abbreviated
+// word is written out.
+function forms(c) {
+  if (!c._forms) {
+    let out = [['', true]];
+    for (const [w, full = [], short = []] of c.slots || [[c.name]]) {
+      const opts = [[w, !full.length], ...full.map(f => [f, true]), ...short.map(t => [t, false])];
+      out = out.flatMap(([p, ok]) => opts.map(([t, k]) => [(p ? p + ' ' : '') + t, ok && k])).slice(0, 500);
+    }
+    c._forms = [...out, ...c.aliases.map(a => [a, true])].map(([t, k]) => [compact(t), k]);
+  }
+  return c._forms;
 }
 // 'exact' for the callout or an alias, 'broad' for an accepted but less specific
 // answer ("Stalls" for "Stall 1"), false otherwise.
 function accepts(c, guess) {
   const g = compact(guess);
   if (!g) return false;
-  if ([c.name, ...c.aliases].some(t => close(g, t))) return 'exact';
-  if ((c.broad || []).some(t => close(g, t))) return 'broad';
+  const broad = (c.broad || []).map(compact);
+  if (forms(c).some(([t]) => t === g)) return 'exact';
+  if (broad.includes(g)) return 'broad';
+  // an exact answer for another callout on this floor is that callout, not a typo
+  if (c.floor && c.floor.callouts.some(o => o !== c && compact(o.name) !== compact(c.name)
+      && forms(o).some(([t]) => t === g))) return false;
+  if (forms(c).some(([t, typos]) => typos && near(g, t))) return 'exact';
+  if (broad.some(t => near(g, t))) return 'broad';
   return false;
 }
 const covers = (o, c) => (o.broad || []).some(t => compact(t) === compact(c.name));
@@ -462,6 +489,7 @@ function header(text) {
           el('p', { className: 'prompt', innerHTML: text })];
 }
 const fb = () => el('div', { className: 'feedback', id: 'fb' });
+const fullLine = c => c.full ? el('span', { className: 'alt', textContent: `${c.name} is short for ${c.full}.` }) : '';
 const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 function renderName() {
@@ -482,7 +510,7 @@ function renderName() {
   };
   skip.onclick = () => q.done ? nextQuestion() : finishName(false, '');
   card(...header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, hint, skip), fb(),
-       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Small typos are accepted.' }));
+       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Short forms and full names both count (Kitch H or Kitchen Hallway), and small typos in full words are fine.' }));
   input.focus({ preventScroll: true });
 }
 function submitName(v) {
@@ -500,6 +528,7 @@ function finishName(ok, guess) {
   const same = compact(guess) === compact(c.name);
   box.replaceChildren(ok === 'broad' ? `Accepted. More specific: ${c.name}.`
     : ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` : `It's ${c.name}.`);
+  box.append(fullLine(c));
   const alts = c.aliases.filter(a => !/^\d+$/.test(a));
   if (alts.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + alts.join(', ') }));
   const input = $('guess'); input.readOnly = true;
@@ -545,7 +574,7 @@ function choose(i) {
   $('layer').append(tagFor(q.c, `answer ${ok ? 'good' : 'bad'}`));
   if (!ok) $('layer').append(pos(el('div', { className: 'marker small bad' }), picked.floor === q.c.floor ? picked : q.c));
   $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
-  $('fb').textContent = ok ? 'Correct.' : `That's ${q.c.name}.` + (picked.floor === q.c.floor ? ` ${picked.name} is the red dot.` : '');
+  $('fb').replaceChildren(ok ? 'Correct.' : `That's ${q.c.name}.` + (picked.floor === q.c.floor ? ` ${picked.name} is the red dot.` : ''), fullLine(q.c));
   if (!ok && picked.floor === q.c.floor) $('layer').append(tagFor(picked, 'answer other'));
   $('goBtn').hidden = false; $('goBtn').focus({ preventScroll: true });
 }
@@ -555,7 +584,8 @@ function renderFind() {
   next.onclick = nextQuestion;
   const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
   skip.onclick = () => findAt(null);
-  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `Tap its spot on ${q.c.floor.name}.` }),
+  const said = q.c.full ? `${q.c.name} is short for ${q.c.full}. ` : '';
+  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said}Tap its spot on ${q.c.floor.name}.` }),
        fb(), el('div', { className: 'actions' }, next, skip));
 }
 function findAt(pt) {
@@ -605,6 +635,7 @@ function renderStudy() {
   layer.replaceChildren(...f.callouts.filter(c => S.pool === 'rooms' ? c.room : S.pool === 'spots' ? !c.room : true).map(c => {
     const t = tagFor(c, studyHidden ? 'hidden' : '');
     t.tabIndex = 0; t.setAttribute('role', 'button');
+    if (c.full) t.title = c.full;
     const toggle = () => t.classList.toggle('hidden');
     t.onclick = toggle;
     t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };

@@ -9,11 +9,33 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 
 ## Modes
 
-- **Name it**: a spot is marked; type its callout. Small typos are accepted, and shorthand
-  like `H` = hall, `S` = stairs, `W` = wall works both ways (`Kitch H` = `kitchen hall`).
+- **Name it**: a spot is marked; type its callout. The call sheet's short form and the full
+  name both count, in any mix (`Kitch H`, `Kitchen Hallway`, `kitchen h`), and small typos
+  in full words are forgiven.
 - **Pick it**: a spot is marked; choose from four callouts on the same map (keys 1 to 4).
 - **Find it**: you get a callout; tap where it is on the floor.
 - **Study**: every callout on a floor. Hide the names and tap dots to test yourself.
+
+When an answer is revealed, an abbreviated callout also shows its full name.
+
+### Abbreviations
+
+| Short | Full | Where |
+|---|---|---|
+| H | Hallway | all maps (`Kitch H`, `Fountain L H`) |
+| L / S | Long / Short | `Fountain L H`, `Fountain S H`, `L desk` |
+| S | Stairs, after a word | `Main S`, `Red S1` (Red Stairs 1) |
+| HP | Harry Potter (under the stairs) | all maps |
+| S1, S2 | Shower 1, Shower 2 | Border 1F (`Showers` also counts) |
+| Sol | Solar | Chalet |
+| J Box | Juke Box | Clubhouse |
+| B2 | Bathroom 2nd floor | Clubhouse |
+| R | Rafters | Clubhouse (`R long`, `R90`) |
+| E1-E3 | Elevator 1-3 | Bank |
+| C, F, P, K | Cocktail, Freezer, Pillar, Kitchen | Kafe (`C1`, `F2`, `P1`, `K3`) |
+| Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
+
+The table lives in `tools/abbrev.py`; names it doesn't cover are only accepted as written.
 
 Pools: **Main rooms** (bold on the call sheet), **Rooms + spots**, **Spots only**, and
 **My misses** (callouts you last got wrong). Callouts you miss come up more often.
@@ -54,7 +76,7 @@ soffice --headless --convert-to pdf "Paltrys_R6_Map_Call_Sheets.pptx"
 python3 tools/extract.py "Paltrys_R6_Map_Call_Sheets.pptx" "Paltrys_R6_Map_Call_Sheets.pdf" src
 python3 tools/align.py      <ubisoft-blueprints-dir> src   # fit plans onto blueprints
 python3 tools/game_views.py <ubisoft-blueprints-dir> src   # in-game crops + positions
-python3 tools/build.py                                     # inline everything into index.html
+python3 tools/build.py                                     # expand abbreviations, inline everything
 ```
 
 - `extract.py` places each callout where its text is drawn on the slide (read from the

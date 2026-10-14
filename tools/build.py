@@ -1,5 +1,7 @@
 """Inline the callout data, every floor image and the fonts into one offline index.html.
 
+Abbreviations are expanded here (tools/abbrev.py), so changing them only needs this step.
+
 Usage: python3 -I tools/build.py [bare-page-output.html]
 
 index.html is what the desktop app loads; it has no network dependencies.
@@ -7,6 +9,8 @@ The optional second output is the same page without the <html>/<head> skeleton,
 for hosts that wrap pages themselves.
 """
 import base64, json, os, re, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import abbrev
 
 here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 src = os.path.join(here, 'src')
@@ -20,6 +24,8 @@ def data_uri(path, mime):
 data = json.load(open(os.path.join(src, 'callouts.json')))
 for m in data['maps']:
     for f in m['floors']:
+        for c in f['callouts']:
+            abbrev.annotate(m['id'], c)
         f['image'] = data_uri(os.path.join(src, f['image']), 'image/webp')
         if 'game' in f:
             f['game']['image'] = data_uri(os.path.join(src, f['game']['image']), 'image/webp')

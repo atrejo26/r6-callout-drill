@@ -1,0 +1,113 @@
+"""Full forms of the call sheets' abbreviations, so answers count either way.
+
+annotate() adds to each callout:
+  slots  one [word, full forms, short forms] per word of the name
+         ("Kitch H" -> [["Kitch", ["Kitchen"], []], ["H", ["Hallway"], []]]).
+         The app accepts any mix: "kitchen h", "kitch hallway", "kitchen hallway",
+         forgiving typos only where every abbreviation is written out.
+  full   the name with every abbreviation written out ("Kitchen Hallway"), shown
+         when an answer is revealed. Left out when nothing in the name is short.
+  broad  less specific answers that still count ("Showers" for "S1").
+
+The abbreviations come from the team. Names whose short forms we don't know yet
+(Nighthaven "R1", Kafe "B1", ...) stay exactly as written on the call sheet.
+"""
+import re
+
+# Abbreviations on every map: word -> full forms (the first one is shown).
+WORDS = {
+    'h': ['Hallway'],
+    'l': ['Long'],
+    'hp': ['Harry Potter'],
+    'kitch': ['Kitchen'],
+    'sqr': ['Square'],
+    'caf': ['Cafeteria'],
+    'mez': ['Mezzanine'],
+    'mezz': ['Mezzanine'],
+    'recep': ['Reception'],
+    'balc': ['Balcony'],
+    'logi': ['Logistics'],
+    'ops': ['Operations', 'Operation'],
+    'e-box': ['Electrical box', 'Electric box'],
+    'dmz': ['Dead Man Zone'],
+    '½': ['Half'],
+}
+
+# Full words that also appear shortened on the sheets: accepted, never shown.
+SHORT = {'hall': ['H'], 'stairs': ['S']}
+
+# Abbreviations used on one map only.
+MAP_WORDS = {
+    'chalet': {'sol': ['Solar']},
+    'clubhouse': {
+        'j': ['Juke'],
+        'r': ['Rafters'],
+        'b2': ['Bathroom 2nd floor', 'Bathroom 2', 'Bathroom 2F', '2nd floor bathroom',
+               '2F bathroom', 'Second floor bathroom', 'Bathroom second floor'],
+    },
+}
+
+# Letter + number on one map: "K2" -> "Kitchen 2".
+NUMBERED = {
+    'border': {'s': ['Shower', 'Showers']},  # S1, S2 in the showers
+    'clubhouse': {'r': ['Rafters']},         # R90
+    'bank': {'e': ['Elevator']},             # E1, E2 Hall, E3
+    'kafe': {'c': ['Cocktail'], 'f': ['Freezer'], 'p': ['Pillar'], 'k': ['Kitchen']},
+}
+
+# Less specific answers that still count: map -> callout -> answers.
+BROAD = {
+    'border': {'S1': ['Showers'], 'S2': ['Showers']},
+    'kafe': {'Red S1': ['Red Stairs'], 'Red S2': ['Red Stairs'], 'Red S3': ['Red Stairs']},
+}
+
+
+def word_forms(map_id, words, i):
+    """(full forms, short forms) for words[i] of a callout name."""
+    w, k = words[i], words[i].lower()
+    nxt = words[i + 1].lower() if i + 1 < len(words) else None
+    first, last = i == 0, i == len(words) - 1
+    full = list(MAP_WORDS.get(map_id, {}).get(k) or WORDS.get(k) or [])
+    short = list(SHORT.get(k, [])) if not (k == 'stairs' and first) else []
+    num = re.fullmatch(r'([a-z])(\d+)', k)
+    if k == 's':
+        # S is "short" before H ("Fountain S H"), "stairs" after a word ("Main S")
+        full = ['Short'] if nxt == 'h' else ['Stairs'] if last and not first else []
+    elif num and num[1] == 's' and not first:
+        full = [f'Stairs {num[2]}']  # "Red S1" on Kafe
+    elif num and not full:
+        full = [f'{f} {num[2]}' for f in NUMBERED.get(map_id, {}).get(num[1], [])]
+    elif k == 'e' and nxt == 'box':
+        full = ['Electrical', 'Electric']
+    elif k == 'w' and i > 0 and words[i - 1] == '½':
+        full = ['Wall']
+    return full, short
+
+
+def annotate(map_id, c):
+    words = c['name'].split()
+    slots, shown, changed = [], [], False
+    for i, w in enumerate(words):
+        full, short = word_forms(map_id, words, i)
+        slots.append([w, full, short])
+        shown.append(full[0] if full else w)
+        changed |= bool(full)
+    if any(full or short for _, full, short in slots):
+        c['slots'] = slots
+    if changed:
+        c['full'] = ' '.join(shown)
+    extra = BROAD.get(map_id, {}).get(c['name'], [])
+    if extra:
+        c['broad'] = c.get('broad', []) + [b for b in extra if b not in c.get('broad', [])]
+    return c
+
+
+if __name__ == '__main__':  # print every expansion for review
+    import json, sys
+    data = json.load(open(sys.argv[1] if len(sys.argv) > 1 else 'src/callouts.json'))
+    for m in data['maps']:
+        for f in m['floors']:
+            for c in f['callouts']:
+                annotate(m['id'], c)
+                if 'full' in c or c.get('broad'):
+                    print(f"{m['id']:10s} {f['name']:8s} {c['name']:16s} -> {c.get('full', '-'):26s} broad {c.get('broad', [])}")
