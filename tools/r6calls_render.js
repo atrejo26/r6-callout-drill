@@ -1,5 +1,6 @@
 // Render R6Calls map SVGs one floor at a time, the way the site shows them with
-// "Label" and "Line of sight wall" switched off (Secure and Hostage are off by default).
+// "Label", "Line of sight wall" and "Line of sight floor" switched off
+// (Secure and Hostage are off by default).
 // Usage: node tools/r6calls_render.js <render_plan.json> <svg-dir> <out-dir> [map ids...]
 // (run by tools/r6calls.py)
 const { chromium } = require('playwright');
@@ -24,7 +25,28 @@ const fs = require('fs'), path = require('path');
         const svg = document.documentElement;
         for (const g of svg.querySelectorAll('g[id^="Floor "]')) g.style.display = g.id === `Floor ${n}` ? 'inline' : 'none';
         const off = [];
-        for (const layer of ['txt', 'losw', 'sec', 'hst']) {
+        // Some maps file a stray icon in the line-of-sight-floor layer (a gas pipe on
+        // Nighthaven Labs 1F). Keep anything there that isn't a striped pattern fill:
+        // move it to a visible group at the same place before hiding the layer.
+        const floor = svg.querySelector(`g[id="Floor ${n}"]`);
+        for (const g of svg.querySelectorAll(`g[id="${n}-losf"]`)) {
+          const keep = [...g.querySelectorAll('path, rect, circle, ellipse, polygon, polyline, use, image, text')].filter(e => {
+            const cs = getComputedStyle(e);
+            return cs.display !== 'none' && cs.fill !== 'none' && !cs.fill.startsWith('url(') && parseFloat(cs.opacity) > 0;
+          });
+          for (const e of keep) {
+            const m = floor.getCTM().inverse().multiply(e.getCTM());
+            const wrap = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            wrap.setAttribute('transform', `matrix(${m.a} ${m.b} ${m.c} ${m.d} ${m.e} ${m.f})`);
+            const clone = e.cloneNode(true);
+            clone.removeAttribute('transform');  // already in the wrapper's matrix
+            const cs = getComputedStyle(e);
+            clone.style.fill = cs.fill; clone.style.stroke = cs.stroke; clone.style.opacity = cs.opacity;
+            wrap.appendChild(clone); floor.appendChild(wrap);
+            off.push(`kept ${e.id || e.tagName} from ${g.id}`);
+          }
+        }
+        for (const layer of ['txt', 'losw', 'losf', 'sec', 'hst']) {
           for (const g of svg.querySelectorAll(`g[id="${n}-${layer}"]`)) { g.style.display = 'none'; off.push(g.id); }
         }
         return off;

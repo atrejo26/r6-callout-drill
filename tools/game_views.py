@@ -25,6 +25,18 @@ data = json.load(open(os.path.join(SRC, 'callouts.json')))
 reg = json.load(open(os.path.join(SRC, 'alignment.json')))
 os.makedirs(os.path.join(SRC, 'game'), exist_ok=True)
 BPDIR = {'nighthaven': 'nighthavenlabs'}
+# Hand corrections, in floor-image pixels, for spots the wall matching can't
+# settle: the call sheet puts the label on a wall line or in a different place
+# from where the room is drawn in game.
+MANUAL = {
+    # top of the back stairs, inside the building (the fit lands on the cellar wall)
+    'villa|Basement|Back S': (-15, 28),
+    'villa|Basement|Tunnel': (7, -23),  # inside the lit tunnel, not the dark ground below it
+    # the north end of Lair 2F sits ~20 px low on the call sheet; the wall matching
+    # moves Desk, Tuck, Storage and others up by that much but can't place these two
+    'lair|2F|Sky Bridge': (0, -24),   # corridor above the Courtyard box
+    'lair|2F|Blue stairs': (-1, -20),  # stair treads above the wall with the door
+}
 
 
 def xform(r, x, y):
@@ -119,6 +131,8 @@ for m in data['maps']:
         img.save(os.path.join(SRC, fn), 'WEBP', quality=86, method=6)
         f['game'] = dict(image=fn, w=img.width, h=img.height, crop=list(crop))  # crop: blueprint pixels
         for c, (dx, dy) in zip(f['callouts'], nudges(r, f, key, path)):
+            if f"{key}|{c['name']}" in MANUAL:
+                dx, dy = MANUAL[f"{key}|{c['name']}"]
             gx, gy = xform(r, c['x'] * r['dw'], c['y'] * r['dh'])
             if dx or dy:
                 print(f"    nudged {key} {c['name']!r} by ({dx:+d}, {dy:+d}) px")

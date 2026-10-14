@@ -3,8 +3,9 @@
 Usage: python3 tools/r6calls.py <work-dir>
 
 Downloads each map's SVG from www.r6calls.com (once; delete <work-dir>/svg to
-refresh), renders every floor the way the site shows it with "Label" and
-"Line of sight wall" switched off (Secure and Hostage are off by default there),
+refresh), renders every floor the way the site shows it with "Label",
+"Line of sight wall" and "Line of sight floor" switched off (Secure and Hostage
+are off by default there),
 and writes <work-dir>/floors/<map>/floor-<floor>.png, cropped to the building
 with the same box for every floor of a map. Then:
 

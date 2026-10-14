@@ -4,8 +4,8 @@ A trainer for Rainbow Six Siege callouts on the Pro League map pool: Border, Cha
 Clubhouse, Villa, Nighthaven Labs, Fortress, Bank, Kafe Dostoyevsky and Lair.
 
 Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), 594 callouts
-across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels and
-line-of-sight walls off) with the call sheet's callouts
+across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels,
+line-of-sight walls and line-of-sight floors off) with the call sheet's callouts
 aligned onto it. Use the **In-game / Call sheet** button to switch to the call-sheet line plan.
 
 ## Modes
@@ -100,6 +100,7 @@ python3 tools/build.py                         # expand abbreviations, inline ev
   nudges it to line up with the walls right around it, for places where the call sheet is
   drawn a little differently from the game (the north end of Lair 1F). A nudge is kept
   only when it clearly improves the local match and two or more nearby callouts agree.
+  A few spots it can't settle are corrected by hand in `MANUAL` in the same script.
 
 In-game floor maps are R6Calls' work (https://www.r6calls.com), built on Ubisoft's maps. This is an
 unofficial fan tool.
