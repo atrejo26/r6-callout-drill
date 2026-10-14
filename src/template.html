@@ -1,0 +1,695 @@
+<title>R6 Callout Drill</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a briefing-room console. Map plate dominates; a narrow ops panel holds the question.
+   Single dark world by choice: in-game blueprints and lit call-sheet plans on a tactical screen. */
+:root {
+  color-scheme: dark;
+  --bg: #0c131b;
+  --panel: #131d28;
+  --raised: #1b2836;
+  --line: #2a3b4d;
+  --text: #e4ebf2;
+  --muted: #8ea0b2;
+  --amber: #f4a62a;
+  --amber-ink: #1d1404;
+  --plate: #0e2134;
+  --good: #46d68c;
+  --bad: #ff6464;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 24px;
+  box-sizing: border-box;
+}
+* { box-sizing: border-box; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.app { max-width: 1320px; margin: 0 auto; display: grid; gap: 14px; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+h1 {
+  font: 700 30px/1 var(--display);
+  letter-spacing: .02em; text-transform: uppercase; margin: 0;
+}
+h1 span { color: var(--amber); }
+.tagline { color: var(--muted); font-size: 14px; }
+
+.controls { display: grid; gap: 10px; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.row-label {
+  font: 600 12px/1 var(--display); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); width: 58px; flex: none;
+}
+.chip {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 999px;
+  padding: 5px 12px; font: 600 14px/1.2 var(--display); letter-spacing: .04em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+.chip .pct { font: 500 11px/1 var(--mono); opacity: .75; }
+.mode-tabs { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.mode-tabs button {
+  background: var(--panel); border: 0; border-right: 1px solid var(--line);
+  padding: 7px 14px; font: 600 15px/1.2 var(--display); letter-spacing: .05em; text-transform: uppercase;
+}
+.mode-tabs button:last-child { border-right: 0; }
+.mode-tabs button[aria-pressed="true"] { background: var(--raised); color: var(--amber); box-shadow: inset 0 -2px 0 var(--amber); }
+
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+
+/* Map plate */
+.board { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.board-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+}
+.where { font: 700 18px/1 var(--display); letter-spacing: .04em; text-transform: uppercase; margin-right: auto; }
+.where small { color: var(--muted); font-weight: 600; margin-left: 6px; }
+.where em { font-style: normal; font-weight: 500; font-size: 13px; color: var(--muted); margin-left: 8px; letter-spacing: .02em; text-transform: none; font-family: var(--body); }
+.floor-tabs { display: flex; gap: 4px; }
+.floor-tabs button, .tool {
+  background: var(--raised); border: 1px solid var(--line); border-radius: 4px;
+  padding: 3px 9px; font: 600 13px/1.3 var(--display); letter-spacing: .05em; text-transform: uppercase;
+}
+.floor-tabs button[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+.tool[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+.tool { min-width: 30px; }
+.stage { overflow: auto; max-height: min(74vh, 900px); background: var(--plate); display: grid; justify-items: center; overscroll-behavior: contain; }
+.plate { position: relative; flex: none; margin: 0; }
+.plate img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+.plan-view .plate img { filter: invert(1) sepia(.35) hue-rotate(165deg) saturate(1.8) brightness(.92) contrast(1.05); }
+.plate.clickable { cursor: crosshair; }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+.layer > * { pointer-events: auto; }
+
+.marker {
+  position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%;
+  border: 3px solid var(--amber); background: rgba(244,166,42,.25);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.55);
+}
+.marker::after {
+  content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--amber);
+  animation: ping 1.4s ease-out infinite;
+}
+.marker.good { border-color: var(--good); background: rgba(70,214,140,.3); }
+.marker.bad { border-color: var(--bad); background: rgba(255,100,100,.3); }
+.marker.good::after, .marker.bad::after { animation: none; display: none; }
+.marker.small { width: 14px; height: 14px; margin: -7px 0 0 -7px; border-width: 2px; }
+.marker.small::after { display: none; }
+@keyframes ping { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .marker::after { animation: none; opacity: .5; } }
+
+.tag {
+  position: absolute; transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  font: 700 var(--fs, 11px)/1.05 var(--display); letter-spacing: .02em; white-space: nowrap;
+  color: #ffd27a; text-shadow: 0 0 3px #000, 0 0 2px #000, 0 0 1px #000;
+  background: none; border: 0; padding: 1px 2px;
+}
+.tag.spot { font-weight: 500; color: #ffe7b8; }
+.tag.hidden { color: transparent !important; text-shadow: none; }
+.tag.hidden::before {
+  content: ""; position: absolute; inset: 50% auto auto 50%; width: 10px; height: 10px; margin: -5px;
+  border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 2px rgba(0,0,0,.6);
+}
+.tag.answer { --fs: 15px !important; color: #fff; background: rgba(12,19,27,.85); border-radius: 3px; padding: 2px 6px; text-shadow: none; transform: translate(-50%, calc(-100% - 14px)); }
+.tag.answer.good { box-shadow: inset 0 0 0 1px var(--good); }
+.tag.answer.bad { box-shadow: inset 0 0 0 1px var(--bad); }
+.tag.answer.other { transform: translate(-50%, 12px); font-size: 13px; color: var(--muted); }
+
+/* Ops panel */
+.panel { display: grid; gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 12px; }
+.eyebrow { font: 600 12px/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.prompt { font: 700 26px/1.1 var(--display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; margin: 0; }
+.prompt em { font-style: normal; color: var(--amber); }
+.answer-row { display: flex; gap: 8px; }
+.answer-row input {
+  flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 9px 11px; font-size: 16px;
+}
+.answer-row input:focus { border-color: var(--amber); outline: none; }
+.btn {
+  background: var(--amber); color: var(--amber-ink); border: 0; border-radius: var(--r);
+  padding: 9px 16px; font: 700 16px/1.2 var(--display); letter-spacing: .06em; text-transform: uppercase;
+}
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: default; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choices button {
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 11px 10px; text-align: left; font: 600 17px/1.15 var(--display); letter-spacing: .03em; text-transform: uppercase;
+  display: flex; gap: 8px; align-items: baseline;
+}
+.choices button kbd { font: 500 11px/1 var(--mono); color: var(--muted); }
+.choices button:hover:not(:disabled) { border-color: var(--muted); }
+.choices button.good { border-color: var(--good); color: var(--good); }
+.choices button.bad { border-color: var(--bad); color: var(--bad); }
+.feedback { min-height: 22px; font-weight: 600; }
+.feedback.good { color: var(--good); }
+.feedback.bad { color: var(--bad); }
+.feedback .alt { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.hint { color: var(--muted); font-size: 13px; }
+
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.stat { display: grid; gap: 3px; }
+.stat b { font: 500 22px/1 var(--mono); font-variant-numeric: tabular-nums; }
+.stat span { font: 600 11px/1 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.switch { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.switch input { accent-color: var(--amber); width: 16px; height: 16px; }
+.mastery { display: grid; gap: 6px; }
+.mbar { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 13px; }
+.mbar i { grid-column: 1 / -1; height: 4px; background: var(--raised); border-radius: 2px; overflow: hidden; display: block; }
+.mbar i::before { content: ""; display: block; height: 100%; width: var(--p); background: var(--amber); }
+.mbar span:last-of-type { font: 500 12px/1.4 var(--mono); color: var(--muted); }
+.linkish { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 0; font-size: 13px; justify-self: start; }
+footer { color: var(--muted); font-size: 12px; }
+.empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>R6 <span>Callout</span> Drill</h1>
+    <div class="tagline">Pro League map pool · 9 maps · callouts from Paltry's call sheets</div>
+  </header>
+
+  <section class="controls" aria-label="Drill settings">
+    <div class="row"><span class="row-label">Map</span><div class="row" id="mapChips"></div></div>
+    <div class="row"><span class="row-label">Mode</span>
+      <div class="mode-tabs" id="modeTabs">
+        <button data-mode="name" aria-pressed="true">Name it</button>
+        <button data-mode="pick">Pick it</button>
+        <button data-mode="find">Find it</button>
+        <button data-mode="study">Study</button>
+      </div>
+    </div>
+    <div class="row"><span class="row-label">Pool</span>
+      <div class="row" id="poolChips">
+        <button class="chip" data-pool="rooms" aria-pressed="true">Main rooms</button>
+        <button class="chip" data-pool="all">Rooms + spots</button>
+        <button class="chip" data-pool="spots">Spots only</button>
+        <button class="chip" data-pool="misses">My misses</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="main">
+    <section class="board game-view" id="board" aria-label="Floor plan">
+      <div class="board-bar">
+        <div class="where" id="where">Border<small>1F</small></div>
+        <div class="floor-tabs" id="floorTabs"></div>
+        <button class="tool" id="zoomOut" aria-label="Zoom out">−</button>
+        <button class="tool" id="zoomIn" aria-label="Zoom in">+</button>
+        <button class="tool" id="viewBtn" title="Switch between Ubisoft's in-game blueprint and the call-sheet plan">In-game</button>
+      </div>
+      <div class="stage" id="stage">
+        <figure class="plate" id="plate">
+          <img id="planImg" alt="">
+          <div class="layer" id="layer"></div>
+        </figure>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="card" id="qCard" aria-live="polite"></div>
+      <div class="card">
+        <div class="stats">
+          <div class="stat"><b id="sScore">0/0</b><span>Score</span></div>
+          <div class="stat"><b id="sAcc">–</b><span>Accuracy</span></div>
+          <div class="stat"><b id="sStreak">0</b><span>Streak</span></div>
+          <div class="stat"><b id="sBest">0</b><span>Best</span></div>
+        </div>
+        <label class="switch"><input type="checkbox" id="optOthers"> Show the other callouts as landmarks</label>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Map mastery</div>
+        <div class="mastery" id="mastery"></div>
+        <button class="linkish" id="resetBtn">Reset my progress</button>
+      </div>
+    </aside>
+  </div>
+
+  <footer>Callout names and positions come from Paltry's R6 Map Call Sheets for FireBirds. Mastery counts a callout once your latest answer for it was right. Progress is saved in this browser only.</footer>
+</div>
+
+<script>
+const DATA = /*DATA*/null;
+
+// ---------- answer matching ----------
+const TOKEN = { h: 'hall', s: 'stairs', w: 'wall', sqr: 'square', kitch: 'kitchen', st: 'stairs', rm: 'room' };
+function norm(s) {
+  return s.toLowerCase().replace(/½/g, ' half ').replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ').trim().split(' ')
+    .filter((t, i) => !(i === 0 && t === 'the'))
+    .map(t => TOKEN[t] || t).join(' ');
+}
+const compact = s => norm(s).replace(/ /g, '');
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++)
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+function accepts(c, guess) {
+  const g = compact(guess);
+  if (!g) return false;
+  return [c.name, ...c.aliases].some(t => {
+    const k = compact(t);
+    if (g === k) return true;
+    const tol = k.length >= 8 ? 2 : k.length >= 4 ? 1 : 0;
+    return lev(g, k) <= tol;
+  });
+}
+
+// ---------- data ----------
+const ALL = [];
+DATA.maps.forEach(m => m.floors.forEach((f, fi) => f.callouts.forEach((c, ci) => {
+  c.key = `${m.id}|${f.name}|${c.name}|${ci}`;
+  c.map = m; c.floor = f; c.fi = fi;
+  ALL.push(c);
+})));
+const mapById = Object.fromEntries(DATA.maps.map(m => [m.id, m]));
+
+// ---------- persistence (per-browser convenience only) ----------
+const STORE = 'r6-callout-drill-v1';
+function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch {} }
+const saved = load();
+saved.stats ||= {};
+saved.prefs ||= {};
+const stats = saved.stats;
+
+const S = Object.assign({ map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false }, saved.prefs);
+if (S.map !== 'all' && !mapById[S.map]) S.map = 'border';
+const session = { n: 0, c: 0, streak: 0, best: 0 };
+let zoom = 1;
+let q = null;              // current question
+let view = null;           // { map, fi } currently drawn
+let recent = [];
+
+const $ = id => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others }; save(); }
+
+// ---------- pool & picking ----------
+function inPool(c) {
+  if (S.map !== 'all' && c.map.id !== S.map) return false;
+  if (S.map !== 'all' && S.floor && c.floor.name !== S.floor) return false;
+  if (S.pool === 'rooms') return c.room;
+  if (S.pool === 'spots') return !c.room;
+  if (S.pool === 'misses') return stats[c.key] && stats[c.key].last === 0;
+  return true;
+}
+function pool() { return ALL.filter(inPool); }
+function pickNext() {
+  const p = pool();
+  if (!p.length) return null;
+  const avoid = p.length > 6 ? recent.slice(-5) : recent.slice(-1);
+  const cand = p.filter(c => !avoid.includes(c.key));
+  const list = cand.length ? cand : p;
+  const w = list.map(c => {
+    const s = stats[c.key];
+    if (!s) return 2;
+    return 1 + (s.n - s.c) * 1.5 + (s.last === 0 ? 4 : 0);
+  });
+  let r = Math.random() * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
+  return list[list.length - 1];
+}
+function record(c, ok, hinted) {
+  const s = stats[c.key] ||= { n: 0, c: 0, last: 0 };
+  s.n++; if (ok) s.c++; s.last = ok ? 1 : 0;
+  save();
+  session.n++; if (ok) session.c++;
+  session.streak = ok && !hinted ? session.streak + 1 : ok ? session.streak : 0;
+  session.best = Math.max(session.best, session.streak);
+  recent.push(c.key);
+  renderStats(); renderMastery(); renderMapChips();
+}
+
+// ---------- drawing the plate ----------
+// Each floor has the call-sheet plan (image, w, h; callouts at x/y) and, for most
+// floors, Ubisoft's in-game blueprint (game; callouts at gx/gy).
+const inGame = f => S.view === 'game' && !!f.game;
+const img = f => inGame(f) ? f.game : f;
+const X = c => c.floor ? (inGame(c.floor) ? c.gx : c.x) : c.x;
+const Y = c => c.floor ? (inGame(c.floor) ? c.gy : c.y) : c.y;
+function baseWidth(f) {
+  const stage = $('stage'), v = img(f);
+  const maxH = parseFloat(getComputedStyle(stage).maxHeight) || 700;
+  return Math.min(stage.clientWidth, maxH * v.w / v.h);
+}
+function drawPlate(map, fi) {
+  const f = map.floors[fi];
+  const src = img(f).image;
+  if ($('planImg').getAttribute('src') !== src) {
+    $('planImg').src = src;
+    $('planImg').alt = `${map.name} ${f.name} ${inGame(f) ? 'in-game blueprint' : 'call-sheet floor plan'}`;
+  }
+  view = { map, fi };
+  $('board').classList.toggle('game-view', inGame(f));
+  $('board').classList.toggle('plan-view', !inGame(f));
+  sizePlate();
+  const where = [map.name, el('small', { textContent: f.name })];
+  if (S.view === 'game' && !f.game) where.push(el('em', { textContent: 'call sheet only' }));
+  $('where').replaceChildren(...where);
+  renderFloorTabs();
+}
+function renderFloorTabs() {
+  const tabs = $('floorTabs');
+  if (S.map === 'all' && S.mode !== 'study') return tabs.replaceChildren();
+  const map = view.map, study = S.mode === 'study';
+  const opts = (study ? [] : [[null, 'All']]).concat(map.floors.map((f, i) => [i, f.name]));
+  tabs.replaceChildren(...opts.map(([i, name]) => {
+    const b = el('button', { textContent: name });
+    const on = study ? i === view.fi : (i === null ? !S.floor : map.floors[i].name === S.floor);
+    b.setAttribute('aria-pressed', String(on));
+    b.onclick = () => {
+      S.floor = i === null ? null : map.floors[i].name;
+      persistPrefs();
+      if (study) { drawPlate(map, i); renderStudy(); } else nextQuestion();
+    };
+    return b;
+  }));
+}
+function sizePlate() {
+  if (!view) return;
+  const w = Math.round(baseWidth(view.map.floors[view.fi]) * zoom);
+  $('plate').style.width = w + 'px';
+  document.documentElement.style.setProperty('--fs', Math.max(9, Math.min(18, w * 0.0125)).toFixed(1) + 'px');
+}
+function focusOn(x, y) {
+  const st = $('stage'), pl = $('plate');
+  st.scrollLeft = x * pl.offsetWidth - st.clientWidth / 2;
+  st.scrollTop = y * pl.offsetHeight - st.clientHeight / 2;
+}
+const pos = (node, c) => { node.style.left = (X(c) * 100) + '%'; node.style.top = (Y(c) * 100) + '%'; return node; };
+function tagFor(c, extra = '') {
+  const t = el('span', { className: `tag ${c.room ? 'room' : 'spot'} ${extra}`, textContent: c.name });
+  if (c.rot) t.style.setProperty('--rot', c.rot + 'deg');
+  return pos(t, c);
+}
+
+// ---------- question card ----------
+function card(...kids) { $('qCard').replaceChildren(...kids); }
+function emptyCard(msg) {
+  q = null;
+  $('layer').replaceChildren();
+  card(el('div', { className: 'eyebrow', textContent: 'Nothing to drill' }), el('p', { className: 'hint', textContent: msg }));
+}
+
+function nextQuestion() {
+  if (S.mode === 'study') return startStudy();
+  const c = pickNext();
+  if (!c) {
+    const m = S.pool === 'misses'
+      ? 'You have no misses in this selection. Drill a different pool to find some.'
+      : 'This selection has no callouts. Pick another map, floor or pool.';
+    if (S.map !== 'all') drawPlate(mapById[S.map], Math.max(0, mapById[S.map].floors.findIndex(f => f.name === S.floor)));
+    $('plate').classList.remove('clickable');
+    return emptyCard(m);
+  }
+  q = { c, done: false, hinted: false };
+  paintQuestion();
+  if (S.mode === 'find') return renderFind();
+  S.mode === 'pick' ? renderPick() : renderName();
+}
+function paintQuestion() {
+  const c = q.c;
+  drawPlate(c.map, c.fi);
+  const layer = $('layer');
+  layer.replaceChildren();
+  if (S.others) c.floor.callouts.forEach(o => { if (o !== c) layer.append(tagFor(o)); });
+  $('plate').classList.toggle('clickable', S.mode === 'find');
+  if (S.mode === 'find') return;
+  layer.append(pos(el('div', { className: 'marker', id: 'qMarker' }), c));
+  if (zoom > 1) focusOn(X(c), Y(c));
+}
+
+function header(text) {
+  return [el('div', { className: 'eyebrow', textContent: `${q.c.map.name} · ${q.c.floor.name} · ${q.c.room ? 'Main room' : 'Spot'}` }),
+          el('p', { className: 'prompt', innerHTML: text })];
+}
+const fb = () => el('div', { className: 'feedback', id: 'fb' });
+const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+function renderName() {
+  const input = el('input', { id: 'guess', placeholder: 'Type the callout', autocomplete: 'off', spellcheck: false });
+  input.setAttribute('autocapitalize', 'off');
+  input.setAttribute('aria-label', 'Your callout');
+  const go = el('button', { className: 'btn', textContent: 'Call it', id: 'goBtn' });
+  const hint = el('button', { className: 'btn ghost', textContent: 'Hint', id: 'hintBtn' });
+  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
+  const form = el('form', { className: 'answer-row' }, input, go);
+  form.onsubmit = e => { e.preventDefault(); q.done ? nextQuestion() : submitName(input.value); };
+  hint.onclick = () => {
+    q.hinted = true;
+    const n = q.c.name;
+    $('fb').className = 'feedback';
+    $('fb').textContent = `Starts with “${n[0]}”, ${n.replace(/[^A-Za-z0-9½]/g, '').length} characters`;
+    input.focus();
+  };
+  skip.onclick = () => q.done ? nextQuestion() : finishName(false, '');
+  card(...header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, hint, skip), fb(),
+       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Small typos are accepted.' }));
+  input.focus({ preventScroll: true });
+}
+function submitName(v) {
+  if (!v.trim()) return;
+  finishName(accepts(q.c, v), v);
+}
+function finishName(ok, guess) {
+  q.done = true;
+  record(q.c, ok, q.hinted);
+  const c = q.c;
+  $('qMarker').classList.add(ok ? 'good' : 'bad');
+  $('layer').append(tagFor(c, `answer ${ok ? 'good' : 'bad'}`));
+  const box = $('fb');
+  box.className = 'feedback ' + (ok ? 'good' : 'bad');
+  const same = compact(guess) === compact(c.name);
+  box.replaceChildren(ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` : `It's ${c.name}.`);
+  if (c.aliases.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + c.aliases.join(', ') }));
+  const input = $('guess'); input.readOnly = true;
+  $('goBtn').textContent = 'Next';
+  $('hintBtn').disabled = true;
+  $('skipBtn').hidden = true;
+  $('goBtn').focus({ preventScroll: true });
+}
+
+function renderPick() {
+  const c = q.c;
+  const seen = new Set([compact(c.name)]);
+  const same = c.floor.callouts, rest = c.map.floors.flatMap(f => f.callouts);
+  const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+  const opts = [c];
+  for (const o of [...shuffle(same.filter(o => o.room === c.room)), ...shuffle(same), ...shuffle(rest)]) {
+    if (opts.length === 4) break;
+    const k = compact(o.name);
+    if (!seen.has(k)) { seen.add(k); opts.push(o); }
+  }
+  q.opts = shuffle(opts);
+  const box = el('div', { className: 'choices' }, ...q.opts.map((o, i) => {
+    const b = el('button', {}, el('kbd', { textContent: i + 1 }), o.name);
+    b.onclick = () => choose(i);
+    return b;
+  }));
+  const next = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
+  next.onclick = nextQuestion;
+  card(...header('Which callout is <em>marked</em>?'), box, fb(), el('div', { className: 'actions' }, next),
+       el('div', { className: 'hint', textContent: 'Keys 1 to 4 answer, Enter goes to the next one.' }));
+}
+function choose(i) {
+  if (q.done) return;
+  q.done = true;
+  const picked = q.opts[i], ok = compact(picked.name) === compact(q.c.name);
+  record(q.c, ok, false);
+  [...document.querySelectorAll('.choices button')].forEach((b, j) => {
+    b.disabled = true;
+    if (q.opts[j] === q.c) b.classList.add('good');
+    else if (j === i) b.classList.add('bad');
+  });
+  $('qMarker').classList.add(ok ? 'good' : 'bad');
+  $('layer').append(tagFor(q.c, `answer ${ok ? 'good' : 'bad'}`));
+  if (!ok) $('layer').append(pos(el('div', { className: 'marker small bad' }), picked.floor === q.c.floor ? picked : q.c));
+  $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
+  $('fb').textContent = ok ? 'Correct.' : `That's ${q.c.name}.` + (picked.floor === q.c.floor ? ` ${picked.name} is the red dot.` : '');
+  if (!ok && picked.floor === q.c.floor) $('layer').append(tagFor(picked, 'answer other'));
+  $('goBtn').hidden = false; $('goBtn').focus({ preventScroll: true });
+}
+
+function renderFind() {
+  const next = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
+  next.onclick = nextQuestion;
+  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
+  skip.onclick = () => findAt(null);
+  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `Tap its spot on ${q.c.floor.name}.` }),
+       fb(), el('div', { className: 'actions' }, next, skip));
+}
+function findAt(pt) {
+  if (!q || q.done || S.mode !== 'find') return;
+  q.done = true;
+  const c = q.c, f = c.floor;
+  const v = img(f);
+  const d = (a, p) => Math.hypot((X(a) - X(p)) * v.w, (Y(a) - Y(p)) * v.h) / Math.max(v.w, v.h);
+  const targets = f.callouts.filter(o => compact(o.name) === compact(c.name));
+  let ok = false, nearest = null;
+  if (pt) {
+    nearest = f.callouts.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
+    ok = compact(nearest.name) === compact(c.name) || targets.some(t => d(t, pt) <= 0.04);
+  }
+  record(c, ok, false);
+  const layer = $('layer');
+  const shown = pt ? targets.reduce((a, t) => d(t, pt) < d(a, pt) ? t : a) : c;
+  layer.append(pos(el('div', { className: `marker ${ok ? 'good' : 'bad'}` }), shown), tagFor(shown, `answer ${ok ? 'good' : 'bad'}`));
+  if (pt && !ok) {
+    layer.append(pos(el('div', { className: 'marker small bad' }), pt));
+    layer.append(tagFor({ name: nearest.name, room: nearest.room, x: pt.x, y: pt.y }, 'answer other'));
+  }
+  $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
+  $('fb').textContent = ok ? 'Correct.' : pt ? `You tapped ${nearest.name}.` : `Here's ${c.name}.`;
+  $('goBtn').hidden = false; $('skipBtn').hidden = true; $('goBtn').focus({ preventScroll: true });
+  if (zoom > 1) focusOn(X(shown), Y(shown));
+}
+$('plate').addEventListener('click', e => {
+  if (S.mode !== 'find' || !q || q.done) return;
+  const r = $('planImg').getBoundingClientRect();
+  findAt({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+});
+
+// ---------- study ----------
+let studyHidden = false;
+function startStudy() {
+  q = null;
+  const map = mapById[S.map === 'all' ? 'border' : S.map];
+  const fi = Math.max(0, map.floors.findIndex(f => f.name === S.floor));
+  $('plate').classList.remove('clickable');
+  drawPlate(map, fi);
+  renderStudy();
+}
+function renderStudy() {
+  const f = view.map.floors[view.fi];
+  const layer = $('layer');
+  layer.replaceChildren(...f.callouts.filter(c => S.pool === 'rooms' ? c.room : S.pool === 'spots' ? !c.room : true).map(c => {
+    const t = tagFor(c, studyHidden ? 'hidden' : '');
+    t.tabIndex = 0; t.setAttribute('role', 'button');
+    const toggle = () => t.classList.toggle('hidden');
+    t.onclick = toggle;
+    t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
+    return t;
+  }));
+  const hideAll = el('button', { className: 'btn', textContent: studyHidden ? 'Show all names' : 'Hide all names' });
+  hideAll.onclick = () => { studyHidden = !studyHidden; renderStudy(); };
+  const n = layer.children.length;
+  card(el('div', { className: 'eyebrow', textContent: `${view.map.name} · ${f.name} · ${n} callouts` }),
+       el('p', { className: 'prompt', textContent: 'Study the floor' }),
+       el('p', { className: 'hint', textContent: 'Hide the names, then tap a dot to check yourself. Tap a name to hide it again. Use the floor tabs to switch floors.' }),
+       el('div', { className: 'actions' }, hideAll));
+}
+
+// ---------- sidebar ----------
+function renderStats() {
+  $('sScore').textContent = `${session.c}/${session.n}`;
+  $('sAcc').textContent = session.n ? Math.round(100 * session.c / session.n) + '%' : '–';
+  $('sStreak').textContent = session.streak;
+  $('sBest').textContent = session.best;
+}
+function mastery(m) {
+  const cs = m.floors.flatMap(f => f.callouts);
+  return cs.filter(c => stats[c.key] && stats[c.key].last === 1).length / cs.length;
+}
+function renderMastery() {
+  $('mastery').replaceChildren(...DATA.maps.map(m => {
+    const p = mastery(m), cs = m.floors.reduce((a, f) => a + f.callouts.length, 0);
+    const row = el('div', { className: 'mbar' }, el('span', { textContent: m.name }), el('span', { textContent: `${Math.round(p * cs)}/${cs}` }), el('i'));
+    row.style.setProperty('--p', (p * 100).toFixed(1) + '%');
+    return row;
+  }));
+}
+function renderMapChips() {
+  const chips = [['all', 'All maps'], ...DATA.maps.map(m => [m.id, m.name])].map(([id, name]) => {
+    const b = el('button', { className: 'chip', textContent: name });
+    if (id !== 'all') b.append(el('span', { className: 'pct', textContent: Math.round(mastery(mapById[id]) * 100) + '%' }));
+    b.setAttribute('aria-pressed', String(S.map === id));
+    b.onclick = () => { S.map = id; S.floor = null; persistPrefs(); renderMapChips(); nextQuestion(); };
+    return b;
+  });
+  $('mapChips').replaceChildren(...chips);
+}
+function pressed(container, attr, val) {
+  container.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === val)));
+}
+
+// ---------- wiring ----------
+$('modeTabs').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.mode = b.dataset.mode; pressed($('modeTabs'), 'mode', S.mode); persistPrefs(); nextQuestion();
+};
+$('poolChips').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.pool = b.dataset.pool; pressed($('poolChips'), 'pool', S.pool); persistPrefs(); nextQuestion();
+};
+$('zoomIn').onclick = () => setZoom(zoom * 1.5);
+$('zoomOut').onclick = () => setZoom(zoom / 1.5);
+function setZoom(z) {
+  const st = $('stage'), pl = $('plate');
+  const cx = (st.scrollLeft + st.clientWidth / 2) / pl.offsetWidth, cy = (st.scrollTop + st.clientHeight / 2) / pl.offsetHeight;
+  zoom = Math.max(1, Math.min(4, z));
+  sizePlate();
+  const target = q && !q.done && S.mode !== 'find' ? q.c : { x: cx, y: cy };
+  focusOn(X(target), Y(target));
+}
+$('viewBtn').onclick = () => {
+  S.view = S.view === 'game' ? 'plan' : 'game';
+  applyView(); persistPrefs();
+  if (S.mode === 'study') { drawPlate(view.map, view.fi); renderStudy(); }
+  else if (q && !q.done) paintQuestion();
+  else nextQuestion();
+};
+function applyView() {
+  $('viewBtn').textContent = S.view === 'game' ? 'In-game' : 'Call sheet';
+  $('viewBtn').setAttribute('aria-pressed', String(S.view === 'game'));
+}
+$('optOthers').onchange = e => { S.others = e.target.checked; persistPrefs(); if (S.mode !== 'study') nextQuestion(); };
+let armed = false;
+$('resetBtn').onclick = () => {
+  if (!armed) { armed = true; $('resetBtn').textContent = 'Tap again to erase all saved progress'; setTimeout(() => { armed = false; $('resetBtn').textContent = 'Reset my progress'; }, 4000); return; }
+  for (const k of Object.keys(stats)) delete stats[k];
+  save(); armed = false; $('resetBtn').textContent = 'Progress erased';
+  renderMastery(); renderMapChips();
+};
+document.addEventListener('keydown', e => {
+  if (!q) return;
+  if (S.mode === 'pick' && !q.done && /^[1-4]$/.test(e.key)) choose(+e.key - 1);
+  else if (q.done && e.key === 'Enter' && document.activeElement?.id !== 'guess' && document.activeElement?.id !== 'goBtn') { e.preventDefault(); nextQuestion(); }
+});
+window.addEventListener('resize', () => sizePlate());
+
+pressed($('modeTabs'), 'mode', S.mode);
+pressed($('poolChips'), 'pool', S.pool);
+$('optOthers').checked = S.others;
+applyView(); renderStats(); renderMastery(); renderMapChips();
+$('planImg').addEventListener('load', () => sizePlate());
+nextQuestion();
+</script>

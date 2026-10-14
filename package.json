@@ -1,0 +1,41 @@
+{
+  "name": "r6-callout-drill",
+  "productName": "R6 Callout Drill",
+  "version": "1.0.0",
+  "description": "Callout trainer for the Rainbow Six Siege Pro League map pool",
+  "main": "desktop/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win portable --x64",
+    "dist:dir": "electron-builder --win dir --x64"
+  },
+  "build": {
+    "appId": "com.atrejo26.r6calloutdrill",
+    "productName": "R6 Callout Drill",
+    "files": [
+      "desktop/**",
+      "index.html",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "R6-Callout-Drill-${version}.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "author": "atrejo26",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atrejo26/r6-callout-drill.git"
+  }
+}
