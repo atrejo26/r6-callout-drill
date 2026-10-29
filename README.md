@@ -3,6 +3,9 @@
 A trainer for Rainbow Six Siege callouts on the Pro League map pool: Border, Chalet,
 Clubhouse, Villa, Nighthaven Labs, Fortress, Bank, Kafe Dostoyevsky and Lair.
 
+**Play it in your browser: https://atrejo26.github.io/r6-callout-drill/** (no download).
+It updates whenever `index.html` changes on main.
+
 Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), 594 callouts
 across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels,
 line-of-sight walls and line-of-sight floors off) with the call sheet's callouts
