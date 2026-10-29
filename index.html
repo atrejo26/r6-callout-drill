@@ -109,6 +109,7 @@ h1 span { color: var(--amber); }
 
 .controls { display: grid; gap: 10px; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.row[hidden] { display: none; }
 .row-label {
   font: 600 12px/1 var(--display); letter-spacing: .12em; text-transform: uppercase;
   color: var(--muted); width: 58px; flex: none;
@@ -130,7 +131,8 @@ h1 span { color: var(--amber); }
 .mode-tabs button[aria-pressed="true"] { background: var(--raised); color: var(--amber); box-shadow: inset 0 -2px 0 var(--amber); }
 
 .main { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
-@media (max-width: 900px) { .main { grid-template-columns: 1fr; } }
+.main.pool-answers { grid-template-columns: minmax(0, 1fr) 420px; }
+@media (max-width: 900px) { .main, .main.pool-answers { grid-template-columns: 1fr; } }
 
 /* Map plate */
 .board { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
@@ -219,6 +221,20 @@ h1 span { color: var(--amber); }
 .choices button:hover:not(:disabled) { border-color: var(--muted); }
 .choices button.good { border-color: var(--good); color: var(--good); }
 .choices button.bad { border-color: var(--bad); color: var(--bad); }
+.bank {
+  position: relative; display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start;
+  max-height: min(52vh, 520px); overflow-y: auto; padding: 2px; margin: -2px;
+}
+.bank button {
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 6px 8px; font: 600 14px/1.1 var(--display); letter-spacing: .03em; text-transform: uppercase;
+}
+.bank button:hover:not(:disabled) { border-color: var(--muted); }
+.bank button.dim { opacity: .3; }
+.bank button:disabled { cursor: default; }
+.bank button.good { border-color: var(--good); color: var(--good); }
+.bank button.near { border-color: var(--amber); color: var(--amber); }
+.bank button.bad { border-color: var(--bad); color: var(--bad); }
 .feedback { min-height: 22px; font-weight: 600; }
 .feedback.good { color: var(--good); }
 .feedback.bad { color: var(--bad); }
@@ -268,9 +284,15 @@ footer { color: var(--muted); font-size: 12px; }
         <button class="chip" data-pool="misses">My misses</button>
       </div>
     </div>
+    <div class="row" id="answerRow"><span class="row-label">Answer</span>
+      <div class="row" id="answerChips">
+        <button class="chip" data-answer="type" aria-pressed="true">Type it</button>
+        <button class="chip" data-answer="pool">Callout pool</button>
+      </div>
+    </div>
   </section>
 
-  <div class="main">
+  <div class="main" id="main">
     <section class="board game-view" id="board" aria-label="Floor plan">
       <div class="board-bar">
         <div class="where" id="where">Border<small>1F</small></div>
@@ -397,7 +419,7 @@ saved.stats ||= {};
 saved.prefs ||= {};
 const stats = saved.stats;
 
-const S = Object.assign({ map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false }, saved.prefs);
+const S = Object.assign({ map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' }, saved.prefs);
 if (S.map !== 'all' && !mapById[S.map]) S.map = 'border';
 const session = { n: 0, c: 0, streak: 0, best: 0 };
 let zoom = 1;
@@ -407,7 +429,7 @@ let recent = [];
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
-function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others }; save(); }
+function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others, answer: S.answer }; save(); }
 
 // ---------- pool & picking ----------
 function inPool(c) {
@@ -553,6 +575,7 @@ const fullLine = c => c.full ? el('span', { className: 'alt', textContent: `${c.
 const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 function renderName() {
+  if (S.answer === 'pool') return renderPool();
   const input = el('input', { id: 'guess', placeholder: 'Type the callout', autocomplete: 'off', spellcheck: false });
   input.setAttribute('autocapitalize', 'off');
   input.setAttribute('aria-label', 'Your callout');
@@ -573,6 +596,47 @@ function renderName() {
        el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Short forms and full names both count (Kitch H or Kitchen Hallway), and small typos in full words are fine.' }));
   input.focus({ preventScroll: true });
 }
+// Name it, answered from a bank of every callout on the map (A to Z).
+function poolFor(m) {
+  if (!m._pool) {
+    const seen = new Map();
+    m.floors.forEach(f => f.callouts.forEach(o => { if (!seen.has(compact(o.name))) seen.set(compact(o.name), o); }));
+    m._pool = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+  }
+  return m._pool;
+}
+function renderPool() {
+  const c = q.c, pool = poolFor(c.map);
+  const bank = el('div', { className: 'bank', id: 'bank', role: 'group' }, ...pool.map(o => {
+    const b = el('button', { textContent: o.name, title: o.full || '' });
+    b.dataset.key = compact(o.name);
+    b.onclick = () => pickFromPool(o);
+    return b;
+  }));
+  bank.setAttribute('aria-label', `Every callout on ${c.map.name}`);
+  const go = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
+  go.onclick = nextQuestion;
+  const hint = el('button', { className: 'btn ghost', textContent: 'Hint', id: 'hintBtn' });
+  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
+  hint.onclick = () => {
+    q.hinted = true; hint.disabled = true;
+    const k = compact(c.name)[0];
+    bank.querySelectorAll('button').forEach(b => b.classList.toggle('dim', b.dataset.key[0] !== k));
+    $('fb').className = 'feedback';
+    $('fb').textContent = `Starts with “${c.name[0]}”, ${c.name.replace(/[^A-Za-z0-9½]/g, '').length} characters`;
+  };
+  skip.onclick = () => finishName(false, '');
+  card(...header('Which callout is the <em>marked spot</em>?'),
+       el('div', { className: 'hint', textContent: `All ${pool.length} callouts on ${c.map.name}, A to Z.` }),
+       bank, fb(), el('div', { className: 'actions' }, go, hint, skip));
+}
+// Only exact answers here: the bank holds other floors' near-identical names (Locker, Lockers).
+function pickFromPool(o) {
+  if (q.done) return;
+  const c = q.c, k = compact(o.name);
+  const ok = forms(c).some(([t]) => t === k) ? 'exact' : (c.broad || []).some(t => compact(t) === k) ? 'broad' : false;
+  finishName(ok, o.name);
+}
 function submitName(v) {
   if (!v.trim()) return;
   finishName(accepts(q.c, v), v);
@@ -586,13 +650,27 @@ function finishName(ok, guess) {
   const box = $('fb');
   box.className = 'feedback ' + (ok ? 'good' : 'bad');
   const same = compact(guess) === compact(c.name);
+  // a wrong pick from the bank that is on this floor gets shown too
+  const other = !ok && $('bank') && guess ? c.floor.callouts.find(o => compact(o.name) === compact(guess)) : null;
+  if (other) $('layer').append(pos(el('div', { className: 'marker small bad' }), other), tagFor(other, 'answer other'));
   box.replaceChildren(ok === 'broad' ? `Accepted. More specific: ${c.name}.`
-    : ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` : `It's ${c.name}.`);
+    : ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` + (other ? ` ${other.name} is the red dot.` : '') : `It's ${c.name}.`);
   box.append(fullLine(c));
   const alts = c.aliases.filter(a => !/^\d+$/.test(a));
   if (alts.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + alts.join(', ') }));
-  const input = $('guess'); input.readOnly = true;
-  $('goBtn').textContent = 'Next';
+  if ($('guess')) $('guess').readOnly = true;
+  const bank = $('bank');
+  if (bank) {
+    const k = compact(c.name), g = compact(guess);
+    let good = null;
+    bank.querySelectorAll('button').forEach(b => {
+      b.disabled = true; b.classList.remove('dim');
+      if (b.dataset.key === k) b.classList.add('good'), good = b;
+      else if (b.dataset.key === g) b.classList.add(ok === 'exact' ? 'good' : ok ? 'near' : 'bad');  // ½ W picked as Half wall
+    });
+    if (good) bank.scrollTop = good.offsetTop - (bank.clientHeight - good.offsetHeight) / 2;
+  }
+  $('goBtn').textContent = 'Next'; $('goBtn').hidden = false;
   $('hintBtn').disabled = true;
   $('skipBtn').hidden = true;
   $('goBtn').focus({ preventScroll: true });
@@ -746,8 +824,20 @@ function pressed(container, attr, val) {
 // ---------- wiring ----------
 $('modeTabs').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
-  S.mode = b.dataset.mode; pressed($('modeTabs'), 'mode', S.mode); persistPrefs(); nextQuestion();
+  S.mode = b.dataset.mode; pressed($('modeTabs'), 'mode', S.mode); persistPrefs(); applyAnswer(); nextQuestion();
 };
+$('answerChips').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.answer = b.dataset.answer; persistPrefs(); applyAnswer();
+  if (!q) return nextQuestion();
+  if (q.done) return nextQuestion();
+  paintQuestion(); renderName();  // same spot, answered the other way
+};
+function applyAnswer() {
+  pressed($('answerChips'), 'answer', S.answer);
+  $('answerRow').hidden = S.mode !== 'name';
+  $('main').classList.toggle('pool-answers', S.mode === 'name' && S.answer === 'pool');
+}
 $('poolChips').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
   S.pool = b.dataset.pool; pressed($('poolChips'), 'pool', S.pool); persistPrefs(); nextQuestion();
@@ -790,6 +880,7 @@ window.addEventListener('resize', () => sizePlate());
 
 pressed($('modeTabs'), 'mode', S.mode);
 pressed($('poolChips'), 'pool', S.pool);
+applyAnswer();
 $('optOthers').checked = S.others;
 applyView(); renderStats(); renderMastery(); renderMapChips();
 $('planImg').addEventListener('load', () => sizePlate());

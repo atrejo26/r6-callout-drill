@@ -12,7 +12,8 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 
 - **Name it**: a spot is marked; type its callout. The call sheet's short form and the full
   name both count, in any mix (`Kitch H`, `Kitchen Hallway`, `kitchen h`), and small typos
-  in full words are forgiven.
+  in full words are forgiven. Set **Answer** to **Callout pool** to pick the name from a bank
+  of every callout on the map (A to Z) instead of typing it.
 - **Pick it**: a spot is marked; choose from four callouts on the same map (keys 1 to 4).
 - **Find it**: you get a callout; tap where it is on the floor.
 - **Study**: every callout on a floor. Hide the names and tap dots to test yourself.
