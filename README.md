@@ -65,7 +65,9 @@ and either one counts, typed or picked.
 
 On Kafe 2F, `Red` and `Green` are the red and green train carts in Train, not the red
 stairs. The app says "train cart" next to them wherever they're asked for or offered, and
-`Red cart`, `Red train` and `Red train cart` (and the same for Green) count too.
+`Red cart`, `Red train` and `Red train cart` (and the same for Green) count too. On Kafe 3F,
+`Inner` and `Outer` are Inner bar and Outer bar, the inside and outside of the bar;
+`Inner bar`, `Inside bar`, `Outer bar` and `Outside bar` count too.
 
 It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
 `Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in

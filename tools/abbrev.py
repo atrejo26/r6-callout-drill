@@ -76,7 +76,7 @@ BROAD = {
     'lair': {'L1': ['Lab', 'Labs'], 'L2': ['Lab', 'Labs'], 'L3': ['Lab', 'Labs']},
 }
 
-# Callouts named after a thing rather than an area: map -> callout -> (what it is,
+# Callouts whose name alone doesn't say what they are: map -> callout -> (what it is,
 # more ways to say it, a note). Red on Kafe is a train cart, not the red stairs.
 THINGS = {
     'kafe': {
@@ -84,6 +84,8 @@ THINGS = {
                 'Red is the red train cart in Train, not the red stairs.'),
         'Green': ('train cart', ['Green train cart', 'Green cart', 'Green train'],
                   'Green is the green train cart in Train, next to Red.'),
+        'Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar.'),
+        'Outer': ('bar', ['Outer bar', 'Outside bar'], 'Outer is Outer bar, the outside of the bar.'),
     },
 }
 
