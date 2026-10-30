@@ -4218,7 +4218,7 @@
       {
        "name": "Cash",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 90,
        "x": 0.4052,
        "y": 0.1123,
@@ -4228,7 +4228,7 @@
       {
        "name": "Gold",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 90,
        "x": 0.5761,
        "y": 0.1048,
@@ -4328,7 +4328,7 @@
       {
        "name": "PC",
        "aliases": [],
-       "room": true,
+       "room": false,
        "rot": 0,
        "x": 0.0841,
        "y": 0.459,
@@ -4437,7 +4437,7 @@
       {
        "name": "Bunker",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.3703,
        "y": 0.465,
@@ -4507,7 +4507,7 @@
       {
        "name": "Spiral",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 45,
        "x": 0.1749,
        "y": 0.5431,
@@ -4567,7 +4567,7 @@
       {
        "name": "Admin",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.6246,
        "y": 0.6377,
@@ -4607,7 +4607,7 @@
       {
        "name": "Printer",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.7676,
        "y": 0.9315,
@@ -4706,7 +4706,7 @@
       {
        "name": "Spiral",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 45,
        "x": 0.1973,
        "y": 0.5516,
@@ -4726,7 +4726,7 @@
       {
        "name": "Achieved",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 270,
        "x": 0.5024,
        "y": 0.2108,
@@ -4756,7 +4756,7 @@
       {
        "name": "Kanto",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 90,
        "x": 0.0085,
        "y": 0.7341,
@@ -4766,7 +4766,7 @@
       {
        "name": "Banana",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 332,
        "x": 0.3306,
        "y": 0.3559,
@@ -4776,7 +4776,7 @@
       {
        "name": "Loaf",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.5159,
        "y": 0.3317,
@@ -4836,7 +4836,7 @@
       {
        "name": "Curve",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 306,
        "x": 0.7487,
        "y": 0.6787,
@@ -4866,7 +4866,7 @@
       {
        "name": "Janitor",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.6575,
        "y": 0.6388,
@@ -4876,7 +4876,7 @@
       {
        "name": "Meeting",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.511,
        "y": 0.6307,

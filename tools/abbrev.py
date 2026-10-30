@@ -85,6 +85,11 @@ THINGS = {
         '1F Short': ('45', ['45 short', 'Short 45'], 'Short is the short side of 45.'),
         '1F Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar in Bar.'),
     },
+    'bank': {
+        '1F Quad': ('wall', ['Quad wall'], 'Quad is Quad wall, four wall segments.'),
+        '1F Light': ('elevator', [], 'Light is a spot of the elevator.'),
+        '1F Dark': ('elevator', [], 'Dark is a spot of the elevator.'),
+    },
     'clubhouse': {
         'Short': ('hallway', ['Short hallway', 'Short hall', 'Short H'], 'Short is Short hallway.'),
         'Long': ('hallway', ['Long hallway', 'Long hall', 'Long H'], 'Long is Long hallway.'),
@@ -156,8 +161,9 @@ def annotate(map_id, c, floor=None):
     thing = here.get(f"{floor} {c['name']}") or here.get(c['name'])
     if thing:
         c['what'], answers, c['note'] = thing
-        c['slots'] = [[c['name'], answers, []]]
-        c['full'] = answers[0]
+        if answers:
+            c['slots'] = [[c['name'], answers, []]]
+            c['full'] = answers[0]
     extra = BROAD.get(map_id, {}).get(c['name'], [])
     if extra:
         c['broad'] = c.get('broad', []) + [b for b in extra if b not in c.get('broad', [])]
