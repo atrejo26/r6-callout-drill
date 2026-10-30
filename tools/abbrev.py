@@ -85,6 +85,10 @@ THINGS = {
         '1F Short': ('45', ['45 short', 'Short 45'], 'Short is the short side of 45.'),
         '1F Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar in Bar.'),
     },
+    'clubhouse': {
+        'Short': ('hallway', ['Short hallway', 'Short hall', 'Short H'], 'Short is Short hallway.'),
+        'Long': ('hallway', ['Long hallway', 'Long hall', 'Long H'], 'Long is Long hallway.'),
+    },
     'kafe': {
         'Red': ('train cart', ['Red train cart', 'Red cart', 'Red train'],
                 'Red is the red train cart in Train, not the red stairs.'),

@@ -1770,7 +1770,7 @@
       {
        "name": "Lockers",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 270,
        "x": 0.055,
        "y": 0.565,
@@ -1790,7 +1790,7 @@
       {
        "name": "Pool",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.3256,
        "y": 0.5154,
@@ -1900,7 +1900,7 @@
       {
        "name": "Stage",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 90,
        "x": 0.6468,
        "y": 0.3849,
@@ -1919,8 +1919,10 @@
       },
       {
        "name": "Wolf",
-       "aliases": [],
-       "room": false,
+       "aliases": [
+        "Wolf door"
+       ],
+       "room": true,
        "rot": 0,
        "x": 0.6344,
        "y": 0.6304,
