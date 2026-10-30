@@ -8,6 +8,9 @@ annotate() adds to each callout:
   full   the name with every abbreviation written out ("Kitchen Hallway"), shown
          when an answer is revealed. Left out when nothing in the name is short.
   broad  less specific answers that still count ("Showers" for "S1").
+  what   for a callout named after a thing, what it is ("train cart"), shown beside
+         the name wherever it is asked for or offered
+  note   a sentence saying what the callout is, shown with it in place of "short for"
 
 The abbreviations come from the team. Names that aren't short for anything (Emo,
 Dias and Achieved are pro players, K9, AK, PRO, CC on Border, J desk and L desk) stay
@@ -73,6 +76,17 @@ BROAD = {
     'lair': {'L1': ['Lab', 'Labs'], 'L2': ['Lab', 'Labs'], 'L3': ['Lab', 'Labs']},
 }
 
+# Callouts named after a thing rather than an area: map -> callout -> (what it is,
+# more ways to say it, a note). Red on Kafe is a train cart, not the red stairs.
+THINGS = {
+    'kafe': {
+        'Red': ('train cart', ['Red train cart', 'Red cart', 'Red train'],
+                'Red is the red train cart in Train, not the red stairs.'),
+        'Green': ('train cart', ['Green train cart', 'Green cart', 'Green train'],
+                  'Green is the green train cart in Train, next to Red.'),
+    },
+}
+
 
 def shortenings(map_id):
     """Full word -> its abbreviations ("kitchen" -> ["Kitch"]), so a name written
@@ -126,6 +140,11 @@ def annotate(map_id, c):
         c['slots'] = slots
     if changed:
         c['full'] = ' '.join(shown)
+    thing = THINGS.get(map_id, {}).get(c['name'])
+    if thing:
+        c['what'], answers, c['note'] = thing
+        c['slots'] = [[c['name'], answers, []]]
+        c['full'] = answers[0]
     extra = BROAD.get(map_id, {}).get(c['name'], [])
     if extra:
         c['broad'] = c.get('broad', []) + [b for b in extra if b not in c.get('broad', [])]

@@ -63,6 +63,10 @@ desk's shape), `CC` on Border, `K9`, `AK`, `PRO`, and `Emo`, `Dias` and `Achieve
 after pro players). `½ W` was shortened to fit the call sheet; the usual answer is `Half wall`,
 and either one counts, typed or picked.
 
+On Kafe 2F, `Red` and `Green` are the red and green train carts in Train, not the red
+stairs. The app says "train cart" next to them wherever they're asked for or offered, and
+`Red cart`, `Red train` and `Red train cart` (and the same for Green) count too.
+
 It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
 `Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in
 `tools/abbrev.py`; names it doesn't cover are only accepted as written (or nearly).

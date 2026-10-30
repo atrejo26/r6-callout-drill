@@ -236,6 +236,8 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .bank button:disabled { cursor: default; }
 .bank button.near { border-color: var(--amber); color: var(--amber); }
 .chip { padding: 5px 10px; }
+.what { font: 500 11px/1 var(--mono); letter-spacing: .04em; color: var(--muted); margin-left: 5px; white-space: nowrap; }
+.choices button .what { margin-left: 0; }
 .feedback { min-height: 22px; font-weight: 600; }
 .feedback.good { color: var(--good); }
 .feedback.bad { color: var(--bad); }
@@ -623,7 +625,7 @@ function record(c, ok, hinted, said = '') {
   session.streak = ok && !hinted ? session.streak + 1 : ok ? session.streak : 0;
   session.best = Math.max(session.best, session.streak);
   recent.push(c.key);
-  session.log.unshift({ c, ok, note: ok && ok !== 'broad' ? c.full || '' : said });
+  session.log.unshift({ c, ok, note: ok && ok !== 'broad' ? (!c.what && c.full) || '' : said });
   session.log.length = Math.min(session.log.length, 60);
   renderStats(); renderMapChips(); renderLog();
 }
@@ -734,7 +736,12 @@ function header(text) {
           el('p', { className: 'prompt', innerHTML: text })];
 }
 const fb = () => el('div', { className: 'feedback', id: 'fb' });
-const fullLine = c => c.full ? el('span', { className: 'alt', textContent: `${c.name} is short for ${c.full}.` }) : '';
+// What a name means: "Kitch H is short for Kitchen Hallway.", or the note of a callout
+// named after a thing ("Red is the red train cart in Train, not the red stairs.").
+const about = c => c.note || (c.full ? `${c.name} is short for ${c.full}.` : '');
+const fullLine = c => about(c) ? el('span', { className: 'alt', textContent: about(c) }) : '';
+// A callout's name as offered in a list, with what it is when that isn't obvious (Red, train cart).
+const named = o => [o.name, o.what ? el('small', { className: 'what', textContent: o.what }) : ''];
 const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 function renderName() {
@@ -771,7 +778,7 @@ function poolFor(m) {
 function renderPool() {
   const c = q.c, pool = poolFor(c.map);
   const bank = el('div', { className: 'bank', id: 'bank', role: 'group' }, ...pool.map(o => {
-    const b = el('button', { textContent: o.name, title: o.full || '' });
+    const b = el('button', { title: o.note || o.full || '' }, ...named(o));
     b.dataset.key = compact(o.name);
     b.onclick = () => pickFromPool(o);
     return b;
@@ -811,7 +818,7 @@ function submitName(v) {
   keep.onclick = () => finishName(accepts(q.c, v), v);
   $('fb').className = 'feedback';
   $('fb').replaceChildren(el('div', { className: 'suggest' }, el('span', { textContent: 'Did you mean' }),
-    ...opts.map(o => { const b = el('button', { className: 'chip', textContent: o.name, title: o.full || '' }); b.onclick = () => pick(o.name); return b; }),
+    ...opts.map(o => { const b = el('button', { className: 'chip', title: o.note || o.full || '' }, ...named(o)); b.onclick = () => pick(o.name); return b; }),
     keep));
   $('guess').focus({ preventScroll: true });
 }
@@ -863,7 +870,7 @@ function renderPick() {
   }
   q.opts = shuffle(opts);
   const box = el('div', { className: 'choices' }, ...q.opts.map((o, i) => {
-    const b = el('button', {}, el('kbd', { textContent: i + 1 }), o.name);
+    const b = el('button', {}, el('kbd', { textContent: i + 1 }), ...named(o));
     b.onclick = () => choose(i);
     return b;
   }));
@@ -896,8 +903,8 @@ function renderFind() {
   next.onclick = nextQuestion;
   const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
   skip.onclick = () => findAt(null);
-  const said = q.c.full ? `${q.c.name} is short for ${q.c.full}. ` : '';
-  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said}Tap its spot on ${q.c.floor.name}.` }),
+  const said = about(q.c);
+  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said ? said + ' ' : ''}Tap its spot on ${q.c.floor.name}.` }),
        fb(), el('div', { className: 'actions' }, next, skip));
 }
 function findAt(pt) {
@@ -947,7 +954,7 @@ function renderStudy() {
   layer.replaceChildren(...f.callouts.filter(c => S.pool === 'rooms' ? c.room : S.pool === 'spots' ? !c.room : true).map(c => {
     const t = tagFor(c, studyHidden ? 'hidden' : '');
     t.tabIndex = 0; t.setAttribute('role', 'button');
-    if (c.full) t.title = c.full;
+    if (about(c)) t.title = about(c);
     const toggle = () => t.classList.toggle('hidden');
     t.onclick = toggle;
     t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
@@ -972,7 +979,7 @@ function renderStats() {
 function renderLog() {
   $('logCount').textContent = session.log.length ? `${session.log.length} answered` : '';
   $('logList').replaceChildren(...session.log.map(({ c, ok, note }) => el('li', { className: ok === 'broad' ? 'near' : ok ? 'good' : 'bad' },
-    el('b', { textContent: c.name }), el('span', { textContent: `${c.map.name} ${c.floor.name}` }),
+    el('b', {}, ...named(c)), el('span', { textContent: `${c.map.name} ${c.floor.name}` }),
     note ? el('small', { textContent: note }) : '')));
   $('logList').scrollTop = 0;
 }
