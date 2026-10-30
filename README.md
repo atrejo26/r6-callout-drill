@@ -35,17 +35,24 @@ for it was right). Progress stays in your browser.
 | Short | Full | Where |
 |---|---|---|
 | H | Hallway | all maps (`Kitch H`, `Fountain L H`) |
-| L / S | Long / Short | `Fountain L H`, `Fountain S H`, `L desk` |
+| L / S | Long / Short | `Fountain L H`, `Fountain S H` |
 | S | Stairs, after a word | `Main S`, `Red S1` (Red Stairs 1) |
 | HP | Harry Potter (under the stairs) | all maps |
 | S1, S2 | Shower 1, Shower 2 | Border 1F (`Showers` also counts) |
-| Sol | Solar | Chalet |
-| J Box | Juke Box | Clubhouse |
-| B2 | Bathroom 2nd floor | Clubhouse |
+| Sol, P ½ W | Solar, Piano Half Wall | Chalet |
+| J Box, Con | Juke Box, Construction | Clubhouse |
+| B2 | Bathroom 2nd floor | Clubhouse, Lair (also `B2 hall`) |
 | R | Rafters | Clubhouse (`R long`, `R90`) |
-| E1-E3 | Elevator 1-3 | Bank |
-| C, F, P, K | Cocktail, Freezer, Pillar, Kitchen | Kafe (`C1`, `F2`, `P1`, `K3`; `Cocktail` also counts for C1-C3) |
+| Triple w | Triple Wall | Villa |
+| S1, S2 | Storage 1, Storage 2 | Nighthaven 1F (`Storage` also counts) |
+| R1-R3, Con, CC | Rafters 1-3, Connector, Command Center | Nighthaven (`Rafters` also counts for R1-R3) |
+| E1-E3, CC | Elevator 1-3, CCTV | Bank |
+| C, F, P, K, R, B | Cocktail, Freezer, Pillar, Kitchen, Red, Box | Kafe (`C1`, `F2`, `P1`, `K3`, `R90`, `B1`; `Cocktail` also counts for C1-C3) |
+| L1-L3, Gen | Lab 1-3, Generator | Lair (`Lab` also counts for L1-L3) |
 | Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
+
+Some names aren't short for anything and stay as written: `L desk` and `J desk` (the
+desk's shape), `K9`, `AK`, `PRO`, and `Emo`, `Dias` and `Achieved` (named after pro players).
 
 It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
 `Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in

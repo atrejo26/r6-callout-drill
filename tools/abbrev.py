@@ -9,8 +9,9 @@ annotate() adds to each callout:
          when an answer is revealed. Left out when nothing in the name is short.
   broad  less specific answers that still count ("Showers" for "S1").
 
-The abbreviations come from the team. Names whose short forms we don't know yet
-(Nighthaven "R1", Kafe "B1", ...) stay exactly as written on the call sheet.
+The abbreviations come from the team. Names that aren't short for anything (Emo,
+Dias and Achieved are pro players, K9, AK, PRO, J desk and L desk) stay exactly as
+written on the call sheet.
 """
 import re
 
@@ -36,23 +37,30 @@ WORDS = {
 # Full words that also appear shortened on the sheets: accepted, never shown.
 SHORT = {'hall': ['H'], 'stairs': ['S']}
 
-# Abbreviations used on one map only.
+# B2: the bathroom on 2F, where a map has several bathrooms.
+BATHROOM_2F = ['Bathroom 2nd floor', 'Bathroom 2', 'Bathroom 2F', '2nd floor bathroom',
+               '2F bathroom', 'Second floor bathroom', 'Bathroom second floor']
+
+# Abbreviations used on one map only. An empty list keeps a word as written there.
 MAP_WORDS = {
-    'chalet': {'sol': ['Solar']},
-    'clubhouse': {
-        'j': ['Juke'],
-        'r': ['Rafters'],
-        'b2': ['Bathroom 2nd floor', 'Bathroom 2', 'Bathroom 2F', '2nd floor bathroom',
-               '2F bathroom', 'Second floor bathroom', 'Bathroom second floor'],
-    },
+    'border': {'l': []},  # L desk is L-shaped, not long
+    'chalet': {'sol': ['Solar'], 'p': ['Piano']},  # P ½ W
+    'clubhouse': {'j': ['Juke'], 'r': ['Rafters'], 'con': ['Construction'], 'b2': BATHROOM_2F},
+    'villa': {'w': ['Wall']},  # Triple w
+    'nighthaven': {'con': ['Connector'], 'cc': ['Command Center']},
+    'bank': {'cc': ['CCTV']},
+    'lair': {'gen': ['Generator'], 'b2': BATHROOM_2F},
 }
 
 # Letter + number on one map: "K2" -> "Kitchen 2".
 NUMBERED = {
     'border': {'s': ['Shower', 'Showers']},  # S1, S2 in the showers
     'clubhouse': {'r': ['Rafters']},         # R90
+    'nighthaven': {'s': ['Storage'], 'r': ['Rafters']},
     'bank': {'e': ['Elevator']},             # E1, E2 Hall, E3
-    'kafe': {'c': ['Cocktail'], 'f': ['Freezer'], 'p': ['Pillar'], 'k': ['Kitchen']},
+    'kafe': {'c': ['Cocktail'], 'f': ['Freezer'], 'p': ['Pillar'], 'k': ['Kitchen'],
+             'r': ['Red'], 'b': ['Box']},
+    'lair': {'l': ['Lab', 'Labs']},
 }
 
 # Less specific answers that still count: map -> callout -> answers.
@@ -60,6 +68,9 @@ BROAD = {
     'border': {'S1': ['Showers'], 'S2': ['Showers']},
     'kafe': {'Red S1': ['Red Stairs', 'Red S'], 'Red S2': ['Red Stairs', 'Red S'], 'Red S3': ['Red Stairs', 'Red S'],
              'C1': ['Cocktail'], 'C2': ['Cocktail'], 'C3': ['Cocktail']},
+    'nighthaven': {'S1': ['Storage'], 'S2': ['Storage'],
+                   'R1': ['Rafters'], 'R2': ['Rafters'], 'R3': ['Rafters']},
+    'lair': {'L1': ['Lab', 'Labs'], 'L2': ['Lab', 'Labs'], 'L3': ['Lab', 'Labs']},
 }
 
 
@@ -79,7 +90,8 @@ def word_forms(map_id, words, i):
     w, k = words[i], words[i].lower()
     nxt = words[i + 1].lower() if i + 1 < len(words) else None
     first, last = i == 0, i == len(words) - 1
-    full = list(MAP_WORDS.get(map_id, {}).get(k) or WORDS.get(k) or [])
+    here = MAP_WORDS.get(map_id, {})
+    full = list(here[k] if k in here else WORDS.get(k, []))
     short = list(SHORT.get(k, [])) if not (k == 'stairs' and first) else []
     num = re.fullmatch(r'([a-z])(\d+)', k)
     if k == 's':
