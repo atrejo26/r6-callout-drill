@@ -45,6 +45,7 @@ tap the answer box.
 | S | Stairs, after a word | `Main S`, `Red S1` (Red Stairs 1) |
 | HP | Harry Potter (under the stairs) | all maps |
 | S1, S2 | Shower 1, Shower 2 | Border 1F (`Showers` also counts) |
+| B desk | Break desk | Border 2F |
 | Sol, P ½ W | Solar, Piano Half Wall | Chalet |
 | J Box, Con | Juke Box, Construction | Clubhouse |
 | B2 | Bathroom 2nd floor | Clubhouse, Lair (also `B2 hall`) |
@@ -58,7 +59,9 @@ tap the answer box.
 | Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
 
 Some names aren't short for anything and stay as written: `L desk` and `J desk` (the
-desk's shape), `K9`, `AK`, `PRO`, and `Emo`, `Dias` and `Achieved` (named after pro players).
+desk's shape), `CC` on Border, `K9`, `AK`, `PRO`, and `Emo`, `Dias` and `Achieved` (named
+after pro players). `½ W` was shortened to fit the call sheet; the usual answer is `Half wall`,
+and either one counts, typed or picked.
 
 It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
 `Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in

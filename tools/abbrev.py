@@ -10,8 +10,8 @@ annotate() adds to each callout:
   broad  less specific answers that still count ("Showers" for "S1").
 
 The abbreviations come from the team. Names that aren't short for anything (Emo,
-Dias and Achieved are pro players, K9, AK, PRO, J desk and L desk) stay exactly as
-written on the call sheet.
+Dias and Achieved are pro players, K9, AK, PRO, CC on Border, J desk and L desk) stay
+exactly as written on the call sheet.
 """
 import re
 
@@ -43,7 +43,7 @@ BATHROOM_2F = ['Bathroom 2nd floor', 'Bathroom 2', 'Bathroom 2F', '2nd floor bat
 
 # Abbreviations used on one map only. An empty list keeps a word as written there.
 MAP_WORDS = {
-    'border': {'l': []},  # L desk is L-shaped, not long
+    'border': {'l': [], 'b': ['Break']},  # L desk is L-shaped, not long; B desk is Break desk
     'chalet': {'sol': ['Solar'], 'p': ['Piano']},  # P ½ W
     'clubhouse': {'j': ['Juke'], 'r': ['Rafters'], 'con': ['Construction'], 'b2': BATHROOM_2F},
     'villa': {'w': ['Wall']},  # Triple w
