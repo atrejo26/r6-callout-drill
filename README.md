@@ -27,6 +27,9 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 
 When an answer is revealed, an abbreviated callout also shows its full name.
 
+The map list shows how many callouts you have mastered on each map (your latest answer
+for it was right). Progress stays in your browser.
+
 ### Abbreviations
 
 | Short | Full | Where |
