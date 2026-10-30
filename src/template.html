@@ -180,6 +180,9 @@ h1 span { color: var(--amber); }
 .feedback { min-height: 22px; font-weight: 600; }
 .feedback.good { color: var(--good); }
 .feedback.bad { color: var(--bad); }
+.suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 400; color: var(--muted); }
+.suggest .chip { color: var(--text); }
+.suggest .chip.ghost { background: transparent; border-style: dashed; }
 .feedback .alt { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .hint { color: var(--muted); font-size: 13px; }
@@ -290,54 +293,104 @@ function norm(s) {
     .map(t => SAME[t] || t).join(' ');
 }
 const compact = s => norm(s).replace(/ /g, '');
+// Edits between two spellings; two swapped letters count as one.
 function lev(a, b) {
-  const m = a.length, n = b.length;
-  let prev = Array.from({ length: n + 1 }, (_, j) => j);
-  for (let i = 1; i <= m; i++) {
-    const cur = [i];
-    for (let j = 1; j <= n; j++)
-      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    prev = cur;
-  }
-  return prev[n];
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  return d[a.length][b.length];
 }
 const digits = s => s.replace(/\D/g, '');
-// A small typo is forgiven in letters only (R1 is not R2, Stall 1 is not Stalls),
-// and only where it can't be another callout's abbreviation (Back S vs Back h).
-function near(g, k) {
-  if (digits(g) !== digits(k)) return false;
-  const tol = k.length >= 8 ? 2 : k.length >= 4 ? 1 : 0;
-  return lev(g, k) <= tol;
-}
-// Every accepted way to say a callout, as [compact text, typos forgiven]: each
-// word as on the call sheet or written out, in any mix ("Kitch H", "Kitchen
-// Hallway", "kitchen h"), plus aliases. Typos count only when every abbreviated
-// word is written out.
+// The letters as typed, before plurals and spellings are merged: "showrs" is one
+// typo from "showers", two from "shower".
+const raw = s => s.toLowerCase().replace(/½|1\/2/g, 'half').replace(/[^a-z0-9]/g, '');
+// Typos forgiven: 1 from 4 letters, 2 from 8, 3 from 12; in 3 letters only an
+// extra letter or two swapped ones (Cafe or Fac for Caf), none in 2.
+const slack = (g, t) => t.length >= 12 ? 3 : t.length >= 8 ? 2 : t.length >= 4 ? 1
+  : t.length === 3 && (g.length === 4 || [...g].sort().join('') === [...t].sort().join('')) ? 1 : 0;
+// Every accepted way to say a callout, as [compact, spaced, as typed]: each word
+// as on the call sheet, written out or shortened, in any mix ("Kitch H",
+// "Kitchen Hallway", "kitchen h"), plus aliases.
 function forms(c) {
   if (!c._forms) {
-    let out = [['', true]];
+    let out = [''];
     for (const [w, full = [], short = []] of c.slots || [[c.name]]) {
-      const opts = [[w, !full.length], ...full.map(f => [f, true]), ...short.map(t => [t, false])];
-      out = out.flatMap(([p, ok]) => opts.map(([t, k]) => [(p ? p + ' ' : '') + t, ok && k])).slice(0, 500);
+      const opts = [w, ...full, ...short];
+      out = out.flatMap(p => opts.map(t => (p ? p + ' ' : '') + t)).slice(0, 500);
     }
-    c._forms = [...out, ...c.aliases.map(a => [a, true])].map(([t, k]) => [compact(t), k]);
+    c._forms = [...new Set([...out, ...c.aliases])].map(s => [compact(s), norm(s), raw(s)]);
   }
   return c._forms;
 }
-// 'exact' for the callout or an alias, 'broad' for an accepted but less specific
-// answer ("Stalls" for "Stall 1"), false otherwise.
+// Typos between a guess and an answer, both as [compact, as typed]; Infinity when
+// too many. The first letter and the numbers must be right (R1 is not R2).
+function typos([g, gr], [t, r]) {
+  if (digits(g) !== digits(t) || !(g[0] === t[0] || g[0] === t[1] && g[1] === t[0])) return Infinity;
+  return Math.min(...[[g, t], [gr, r]].map(([a, b]) => lev(a, b) <= slack(a, b) ? lev(a, b) : Infinity));
+}
+// The guess is the start of a callout: "Det" for Detention, "Piano long" for
+// Piano H long. Each typed word begins a word of the name, in order, starting
+// with its first word (3 letters at least), and the numbers match.
+function starts(c, words) {
+  const g = words.join('');
+  return forms(c).some(([t, s]) => {
+    const fw = s.split(' ');
+    if (digits(t) !== digits(g) || !fw[0].startsWith(words[0]) || (words[0].length < 3 && words[0] !== fw[0])) return false;
+    let j = 1;
+    return words.slice(1).every(w => {
+      while (j < fw.length && !fw[j].startsWith(w)) j++;
+      return j++ < fw.length;
+    });
+  });
+}
+// How well a guess fits a callout, lower is better: its typo count, or ½ when the
+// guess starts the callout's name. Infinity when it doesn't fit.
+function fit(c, guess) {
+  const g = [compact(guess), raw(guess)];
+  const d = Math.min(...forms(c).map(([t, , r]) => typos(g, [t, r])));
+  return starts(c, norm(guess).split(' ')) ? Math.min(d, 0.5) : d;
+}
+const isExact = (o, g) => forms(o).some(([t]) => t === g);
+const isBroad = (o, g) => (o.broad || []).some(b => compact(b) === g);
+const floorOf = c => c.floor ? [...new Map(c.floor.callouts.map(o => [compact(o.name), o])).values()] : [c];
+// 'exact' for the callout or an alias, 'typo' for a small misspelling of one,
+// 'partial' for the start of it, 'broad' for an accepted but less specific answer
+// ("Stalls" for "Stall 1"), false otherwise. A typo or partial answer counts when
+// whatever it fits best on the floor is this callout (or one of its broad answers).
 function accepts(c, guess) {
   const g = compact(guess);
   if (!g) return false;
-  const broad = (c.broad || []).map(compact);
-  if (forms(c).some(([t]) => t === g)) return 'exact';
-  if (broad.includes(g)) return 'broad';
+  if (isExact(c, g)) return 'exact';
+  if (isBroad(c, g)) return 'broad';
+  const others = floorOf(c).filter(o => compact(o.name) !== compact(c.name));
   // an exact answer for another callout on this floor is that callout, not a typo
-  if (c.floor && c.floor.callouts.some(o => o !== c && compact(o.name) !== compact(c.name)
-      && forms(o).some(([t]) => t === g))) return false;
-  if (forms(c).some(([t, typos]) => typos && near(g, t))) return 'exact';
-  if (broad.some(t => near(g, t))) return 'broad';
-  return false;
+  if (others.some(o => isExact(o, g) || isBroad(o, g))) return false;
+  // [how well it fits, what that would mean]; Showers is broad for S1
+  const fits = [[fit(c, guess), 'mine'],
+    ...others.map(o => [fit(o, guess), isBroad(c, compact(o.name)) ? 'broad' : 'other']),
+    ...(c.broad || []).map(b => [typos([g, raw(guess)], [compact(b), raw(b)]), 'broad'])];
+  const best = Math.min(...fits.map(([f]) => f));
+  const means = new Set(fits.filter(([f]) => f === best).map(([, m]) => m));
+  if (best === Infinity || means.size > 1) return false;
+  return means.has('mine') ? (best === 0.5 ? 'partial' : 'typo') : means.has('broad') ? 'broad' : false;
+}
+// Callouts to offer when a typed answer can't be read as one callout on the floor:
+// it fits several equally well ("logg": Log or Long; "pian": Piano, Piano H long,
+// ...) or is one typo past what counts ("shiko": Shaiiko). Depends only on what
+// was typed and the floor, never on the answer.
+function suggestions(c, guess) {
+  const g = compact(guess), gr = raw(guess), floor = floorOf(c);
+  if (!g || floor.some(o => isExact(o, g) || isBroad(o, g))) return [];
+  const fits = floor.map(o => [o, fit(o, guess)]).filter(([, f]) => f < Infinity).sort((a, b) => a[1] - b[1]);
+  if (fits.length) return fits.length > 1 && fits[0][1] === fits[1][1] ? fits.slice(0, 4).map(([o]) => o) : [];
+  const miss = ([t, , r]) => digits(t) !== digits(g) || t.length < 3 ? Infinity
+    : Math.min(lev(g, t) - slack(g, t), lev(gr, r) - slack(gr, r));
+  return floor.map(o => [o, Math.min(...forms(o).map(miss))]).filter(([, d]) => d <= 1)
+    .sort((a, b) => a[1] - b[1]).slice(0, 4).map(([o]) => o);
 }
 const covers = (o, c) => (o.broad || []).some(t => compact(t) === compact(c.name));
 
@@ -533,7 +586,7 @@ function renderName() {
   };
   skip.onclick = () => q.done ? nextQuestion() : finishName(false, '');
   card(...header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, hint, skip), fb(),
-       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Short forms and full names both count (Kitch H or Kitchen Hallway), and small typos in full words are fine.' }));
+       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Short or full names count (Kitch H, Kitchen Hallway), and so do small typos and the start of a name (Det for Detention). Close calls get a Did you mean.' }));
   input.focus({ preventScroll: true });
 }
 // Name it, answered from a bank of every callout on the map (A to Z).
@@ -579,7 +632,18 @@ function pickFromPool(o) {
 }
 function submitName(v) {
   if (!v.trim()) return;
-  finishName(accepts(q.c, v), v);
+  // a possible typo: offer the callouts it could be, once; Enter again keeps it
+  const opts = q.offered === compact(v) ? [] : suggestions(q.c, v);
+  if (!opts.length) return finishName(accepts(q.c, v), v);
+  q.offered = compact(v);
+  const pick = t => { $('guess').value = t; finishName(accepts(q.c, t), t); };
+  const keep = el('button', { className: 'chip ghost', textContent: `Keep “${v.trim()}”` });
+  keep.onclick = () => finishName(accepts(q.c, v), v);
+  $('fb').className = 'feedback';
+  $('fb').replaceChildren(el('div', { className: 'suggest' }, el('span', { textContent: 'Did you mean' }),
+    ...opts.map(o => { const b = el('button', { className: 'chip', textContent: o.name, title: o.full || '' }); b.onclick = () => pick(o.name); return b; }),
+    keep));
+  $('guess').focus({ preventScroll: true });
 }
 function finishName(ok, guess) {
   q.done = true;

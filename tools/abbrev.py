@@ -2,9 +2,9 @@
 
 annotate() adds to each callout:
   slots  one [word, full forms, short forms] per word of the name
-         ("Kitch H" -> [["Kitch", ["Kitchen"], []], ["H", ["Hallway"], []]]).
-         The app accepts any mix: "kitchen h", "kitch hallway", "kitchen hallway",
-         forgiving typos only where every abbreviation is written out.
+         ("Kitch H" -> [["Kitch", ["Kitchen"], []], ["H", ["Hallway"], []]];
+         "Kitchen" -> [["Kitchen", [], ["Kitch"]]]).
+         The app accepts any mix: "kitchen h", "kitch hallway", "kitchen hallway".
   full   the name with every abbreviation written out ("Kitchen Hallway"), shown
          when an answer is revealed. Left out when nothing in the name is short.
   broad  less specific answers that still count ("Showers" for "S1").
@@ -58,8 +58,20 @@ NUMBERED = {
 # Less specific answers that still count: map -> callout -> answers.
 BROAD = {
     'border': {'S1': ['Showers'], 'S2': ['Showers']},
-    'kafe': {'Red S1': ['Red Stairs'], 'Red S2': ['Red Stairs'], 'Red S3': ['Red Stairs']},
+    'kafe': {'Red S1': ['Red Stairs', 'Red S'], 'Red S2': ['Red Stairs', 'Red S'], 'Red S3': ['Red Stairs', 'Red S'],
+             'C1': ['Cocktail'], 'C2': ['Cocktail'], 'C3': ['Cocktail']},
 }
+
+
+def shortenings(map_id):
+    """Full word -> its abbreviations ("kitchen" -> ["Kitch"]), so a name written
+    out also takes its short form. One-letter ones are left to SHORT and context."""
+    out = {}
+    for short, fulls in {**WORDS, **MAP_WORDS.get(map_id, {})}.items():
+        for f in fulls:
+            if ' ' not in f and len(short) > 1 and short != '½':
+                out.setdefault(f.lower(), []).append(short.capitalize())
+    return out
 
 
 def word_forms(map_id, words, i):
@@ -81,6 +93,12 @@ def word_forms(map_id, words, i):
         full = ['Electrical', 'Electric']
     elif k == 'w' and i > 0 and words[i - 1] == '½':
         full = ['Wall']
+    elif k == 'wall' and i > 0 and words[i - 1].lower() in ('half', '½'):
+        short = ['W']  # Half Wall as ½ W
+    # the word's other spellings: Kitchen as Kitch, Mez as Mezz, Operation as Ops
+    abbr = shortenings(map_id)
+    for f in full or [w]:
+        short += [a for a in abbr.get(f.lower(), []) if a.lower() != k and a not in short]
     return full, short
 
 

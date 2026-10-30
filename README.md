@@ -14,9 +14,13 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 ## Modes
 
 - **Name it**: a spot is marked; type its callout. The call sheet's short form and the full
-  name both count, in any mix (`Kitch H`, `Kitchen Hallway`, `kitchen h`), and small typos
-  in full words are forgiven. Set **Answer** to **Callout pool** to pick the name from a bank
-  of every callout on the map (A to Z) instead of typing it.
+  name both count, in any mix (`Kitch H`, `Kitchen Hallway`, `kitchen h`, `Kitch` for
+  `Kitchen`). So do small typos (`Kitchn H`, `Dais` for `Dias`) and the start of a name
+  (`Det` for `Detention`, `Piano long` for `Piano H long`), as long as they point at one
+  callout on the floor. When an answer could be several callouts (`logg`: Log or Long) or
+  is just past what counts, you get **Did you mean** with the closest ones to pick from,
+  or keep your answer as typed. Set **Answer** to **Callout pool** to pick the name from a
+  bank of every callout on the map (A to Z) instead of typing it.
 - **Pick it**: a spot is marked; choose from four callouts on the same map (keys 1 to 4).
 - **Find it**: you get a callout; tap where it is on the floor.
 - **Study**: every callout on a floor. Hide the names and tap dots to test yourself.
@@ -37,10 +41,12 @@ When an answer is revealed, an abbreviated callout also shows its full name.
 | B2 | Bathroom 2nd floor | Clubhouse |
 | R | Rafters | Clubhouse (`R long`, `R90`) |
 | E1-E3 | Elevator 1-3 | Bank |
-| C, F, P, K | Cocktail, Freezer, Pillar, Kitchen | Kafe (`C1`, `F2`, `P1`, `K3`) |
+| C, F, P, K | Cocktail, Freezer, Pillar, Kitchen | Kafe (`C1`, `F2`, `P1`, `K3`; `Cocktail` also counts for C1-C3) |
 | Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
 
-The table lives in `tools/abbrev.py`; names it doesn't cover are only accepted as written.
+It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
+`Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in
+`tools/abbrev.py`; names it doesn't cover are only accepted as written (or nearly).
 
 Pools: **Main rooms** (bold on the call sheet), **Rooms + spots**, **Spots only**, and
 **My misses** (callouts you last got wrong). Callouts you miss come up more often.
