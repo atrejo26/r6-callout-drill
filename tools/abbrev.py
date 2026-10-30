@@ -70,7 +70,8 @@ NUMBERED = {
 BROAD = {
     'border': {'S1': ['Showers'], 'S2': ['Showers']},
     'kafe': {'Red S1': ['Red Stairs', 'Red S'], 'Red S2': ['Red Stairs', 'Red S'], 'Red S3': ['Red Stairs', 'Red S'],
-             'C1': ['Cocktail'], 'C2': ['Cocktail'], 'C3': ['Cocktail']},
+             'C1': ['Cocktail'], 'C2': ['Cocktail'], 'C3': ['Cocktail'],
+             'K1': ['Kitchen'], 'K2': ['Kitchen'], 'K3': ['Kitchen']},
     'nighthaven': {'S1': ['Storage'], 'S2': ['Storage'],
                    'R1': ['Rafters'], 'R2': ['Rafters'], 'R3': ['Rafters']},
     'lair': {'L1': ['Lab', 'Labs'], 'L2': ['Lab', 'Labs'], 'L3': ['Lab', 'Labs']},
@@ -99,8 +100,11 @@ THINGS = {
                 'Red is the red train cart in Train, not the red stairs.'),
         'Green': ('train cart', ['Green train cart', 'Green cart', 'Green train'],
                   'Green is the green train cart in Train, next to Red.'),
-        'Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar.'),
-        'Outer': ('bar', ['Outer bar', 'Outside bar'], 'Outer is Outer bar, the outside of the bar.'),
+        'Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar in Bar.'),
+        'Outer': ('bar', ['Outer bar', 'Outside bar'], 'Outer is Outer bar, the outside of the bar in Bar.'),
+        '3F West': ('window', ['West window'], 'West is the west window of Stage.'),
+        '3F South': ('window', ['South window'], 'South is the south window of Stage.'),
+        'Cryo': ('window', ['Cryo window'], 'Cryo is the Cryo window.'),
     },
 }
 
