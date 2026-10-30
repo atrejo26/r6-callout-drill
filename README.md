@@ -100,6 +100,23 @@ npm run dist:lite         # dist/R6-Callout-Drill-Lite.exe (needs Go)
 Pushing a tag like `v1.0.1` makes GitHub Actions build the exe on Windows and attach it
 to a release.
 
+## Security
+
+- The page loads nothing from the network: data, floor images and fonts are inside
+  `index.html`. Its Content Security Policy runs only its own script and style (by hash)
+  and allows images and fonts only from inside the file, so nothing injected can run
+  or send anything anywhere.
+- The app's code sits in one block, out of reach of the browser console, and the
+  answer isn't in the page until you've answered. That stops casual cheating from dev
+  tools; it can't stop someone reading the page source, which is true of any app that
+  runs entirely in the browser. Scores live only in your own browser and go nowhere.
+- Saved progress is checked on load; anything unexpected is dropped, not trusted.
+- The Electron app runs sandboxed with no Node access, can't navigate away from the
+  page, and only hands `https://` links to your browser.
+
+`python3 -I tools/build.py --test test.html` writes a copy with the app code reachable,
+for browser tests.
+
 ## Rebuilding the data
 
 `index.html` is generated; edit `src/template.html` and run the tools with Python 3

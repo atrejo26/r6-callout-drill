@@ -12,8 +12,13 @@ function createWindow() {
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true },
   });
-  // Links (if any are ever added) open in the user's browser, never inside the app.
-  win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+  // Links (if any are ever added) open in the user's browser, never inside the app,
+  // and only web links: the app window itself never leaves index.html.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://')) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', e => e.preventDefault());
   win.loadFile(path.join(__dirname, '..', 'index.html'));
 }
 

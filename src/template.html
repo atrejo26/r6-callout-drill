@@ -441,6 +441,10 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 </div>
 
 <script>
+'use strict';
+// The whole app lives in this block so the browser console can't reach it: no reading
+// the current answer or setting the score from there. tools/build.py --test opens it up.
+{/*SCOPE*/
 const DATA = /*DATA*/null;
 
 // ---------- answer matching ----------
@@ -571,15 +575,24 @@ const mapById = Object.fromEntries(DATA.maps.map(m => [m.id, m]));
 
 // ---------- persistence (per-browser convenience only) ----------
 const STORE = 'r6-callout-drill-v1';
-function load() { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } }
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+function load() { try { const v = JSON.parse(localStorage.getItem(STORE)); return isObj(v) ? v : {}; } catch { return {}; } }
 function save() { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch {} }
 const saved = load();
-saved.stats ||= {};
-saved.prefs ||= {};
+if (!isObj(saved.stats)) saved.stats = {};
+if (!isObj(saved.prefs)) saved.prefs = {};
 const stats = saved.stats;
 
-const S = Object.assign({ map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' }, saved.prefs);
-if (S.map !== 'all' && !mapById[S.map]) S.map = 'border';
+// Saved settings count only when they are values the app knows; anything else (an
+// older version's, or edited by hand) falls back to the default.
+const DEFAULTS = { map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' };
+const CHOICES = { mode: ['name', 'pick', 'find', 'study'], pool: ['rooms', 'all', 'spots', 'misses'], view: ['game', 'plan'], answer: ['type', 'pool'] };
+const S = Object.assign({}, DEFAULTS, saved.prefs);
+for (const [k, ok] of Object.entries(CHOICES)) if (!ok.includes(S[k])) S[k] = DEFAULTS[k];
+if (S.map !== 'all' && !Object.hasOwn(mapById, S.map)) S.map = 'border';
+if (typeof S.floor !== 'string') S.floor = null;
+S.others = S.others === true;
+for (const k of Object.keys(stats)) if (!isObj(stats[k])) delete stats[k];
 const session = { n: 0, c: 0, streak: 0, best: 0, log: [] };
 let zoom = 1;
 let q = null;              // current question
@@ -1100,4 +1113,5 @@ $('optOthers').checked = S.others;
 applyView(); renderStats(); renderMapChips(); renderSummary(); renderLog();
 $('planImg').addEventListener('load', () => sizePlate());
 nextQuestion();
+}/*SCOPE*/
 </script>
