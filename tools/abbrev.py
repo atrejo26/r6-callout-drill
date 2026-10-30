@@ -77,8 +77,14 @@ BROAD = {
 }
 
 # Callouts whose name alone doesn't say what they are: map -> callout -> (what it is,
-# more ways to say it, a note). Red on Kafe is a train cart, not the red stairs.
+# more ways to say it, a note). Red on Kafe is a train cart, not the red stairs. A key
+# can name the floor ("1F Long") when the same name means something else on another.
 THINGS = {
+    'chalet': {
+        '1F Long': ('45', ['45 long', 'Long 45'], 'Long is the long side of 45.'),
+        '1F Short': ('45', ['45 short', 'Short 45'], 'Short is the short side of 45.'),
+        '1F Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar in Bar.'),
+    },
     'kafe': {
         'Red': ('train cart', ['Red train cart', 'Red cart', 'Red train'],
                 'Red is the red train cart in Train, not the red stairs.'),
@@ -130,7 +136,7 @@ def word_forms(map_id, words, i):
     return full, short
 
 
-def annotate(map_id, c):
+def annotate(map_id, c, floor=None):
     words = c['name'].split()
     slots, shown, changed = [], [], False
     for i, w in enumerate(words):
@@ -142,7 +148,8 @@ def annotate(map_id, c):
         c['slots'] = slots
     if changed:
         c['full'] = ' '.join(shown)
-    thing = THINGS.get(map_id, {}).get(c['name'])
+    here = THINGS.get(map_id, {})
+    thing = here.get(f"{floor} {c['name']}") or here.get(c['name'])
     if thing:
         c['what'], answers, c['note'] = thing
         c['slots'] = [[c['name'], answers, []]]
@@ -159,6 +166,6 @@ if __name__ == '__main__':  # print every expansion for review
     for m in data['maps']:
         for f in m['floors']:
             for c in f['callouts']:
-                annotate(m['id'], c)
+                annotate(m['id'], c, f['name'])
                 if 'full' in c or c.get('broad'):
                     print(f"{m['id']:10s} {f['name']:8s} {c['name']:16s} -> {c.get('full', '-'):26s} broad {c.get('broad', [])}")

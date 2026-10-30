@@ -28,7 +28,7 @@ data = json.load(open(os.path.join(src, 'callouts.json')))
 for m in data['maps']:
     for f in m['floors']:
         for c in f['callouts']:
-            abbrev.annotate(m['id'], c)
+            abbrev.annotate(m['id'], c, f['name'])
         f['image'] = data_uri(os.path.join(src, f['image']), 'image/webp')
         if 'game' in f:
             f['game']['image'] = data_uri(os.path.join(src, f['game']['image']), 'image/webp')

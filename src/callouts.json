@@ -987,7 +987,7 @@
       {
        "name": "Stock",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.1672,
        "y": 0.9552,
@@ -1227,7 +1227,7 @@
       {
        "name": "Black",
        "aliases": [],
-       "room": true,
+       "room": false,
        "rot": 0,
        "x": 0.4124,
        "y": 0.9622,
@@ -1247,7 +1247,7 @@
       {
        "name": "45",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.5215,
        "y": 0.6267,
@@ -1316,7 +1316,7 @@
       {
        "name": "Box",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.3254,
        "y": 0.7216,
@@ -1336,7 +1336,7 @@
       {
        "name": "Ivy",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.4369,
        "y": 0.6479,
@@ -1396,7 +1396,7 @@
       {
        "name": "Ivy stairs",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 315,
        "x": 0.1347,
        "y": 0.6422,
@@ -1506,7 +1506,7 @@
       {
        "name": "Mez",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.6555,
        "y": 0.728,
@@ -1524,7 +1524,7 @@
        "gy": 0.8421
       },
       {
-       "name": "Main",
+       "name": "Main stairs",
        "aliases": [],
        "room": true,
        "rot": 0,
