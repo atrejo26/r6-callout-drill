@@ -13,7 +13,7 @@ annotate() adds to each callout:
   note   a sentence saying what the callout is, shown with it in place of "short for"
 
 The abbreviations come from the team. Names that aren't short for anything (Emo,
-Dias and Achieved are pro players, K9, AK, PRO, CC on Border, J desk and L desk) stay
+Dias and Achieved are pro players, K9, AK, PRO, R6 on Lair, CC on Border, J desk and L desk) stay
 exactly as written on the call sheet.
 """
 import re
@@ -90,6 +90,9 @@ THINGS = {
         '1F Quad': ('wall', ['Quad wall'], 'Quad is Quad wall, four wall segments.'),
         '1F Light': ('elevator', [], 'Light is a spot of the elevator.'),
         '1F Dark': ('elevator', [], 'Dark is a spot of the elevator.'),
+    },
+    'lair': {
+        '2F Desk': ('mask desk', ['Mask desk'], 'Desk is Mask desk.'),
     },
     'clubhouse': {
         'Short': ('hallway', ['Short hallway', 'Short hall', 'Short H'], 'Short is Short hallway.'),

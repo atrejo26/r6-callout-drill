@@ -6006,7 +6006,7 @@
        "aliases": [
         "Dead Man Zone"
        ],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.4165,
        "y": 0.3543,
@@ -6255,7 +6255,7 @@
       {
        "name": "Yellow stairs",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.6883,
        "y": 0.8676,
@@ -6354,7 +6354,7 @@
       {
        "name": "Mask",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.3048,
        "y": 0.5124,
@@ -6402,6 +6402,16 @@
        "gy": 0.4223
       },
       {
+       "name": "R6",
+       "aliases": [],
+       "room": true,
+       "rot": 0,
+       "x": 0.69,
+       "y": 0.45,
+       "gx": 0.722,
+       "gy": 0.436
+      },
+      {
        "name": "Tetris",
        "aliases": [],
        "room": false,
@@ -6414,7 +6424,7 @@
       {
        "name": "Maps",
        "aliases": [],
-       "room": true,
+       "room": false,
        "rot": 0,
        "x": 0.7456,
        "y": 0.4783,
@@ -6464,7 +6474,7 @@
       {
        "name": "Pebbles",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 90,
        "x": 0.6669,
        "y": 0.1914,
@@ -6474,7 +6484,7 @@
       {
        "name": "Blue stairs",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.1634,
        "y": 0.2344,
@@ -6484,7 +6494,7 @@
       {
        "name": "Courtyard",
        "aliases": [],
-       "room": false,
+       "room": true,
        "rot": 0,
        "x": 0.3479,
        "y": 0.2873,

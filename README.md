@@ -59,7 +59,7 @@ tap the answer box.
 | Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
 
 Some names aren't short for anything and stay as written: `L desk` and `J desk` (the
-desk's shape), `CC` on Border, `K9`, `AK`, `PRO`, and `Emo`, `Dias` and `Achieved` (named
+desk's shape), `CC` on Border, `K9`, `AK`, `PRO`, `R6` on Lair, and `Emo`, `Dias` and `Achieved` (named
 after pro players). `½ W` was shortened to fit the call sheet; the usual answer is `Half wall`,
 and either one counts, typed or picked.
 
