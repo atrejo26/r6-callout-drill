@@ -1,0 +1,699 @@
+<title>Callout Areas</title>
+<style>
+:root {
+  --bg: #f4f3ef; --panel: #ffffff; --text: #1c1d1f; --muted: #686b71; --line: #dddad3;
+  --hover: #efede8; --accent: #1f6feb; --accent-text: #ffffff; --warn: #b42318; --ok: #157f3b;
+  --map: #e6e4de; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131417; --panel: #1b1d21; --text: #e7e8ea; --muted: #9b9ea5; --line: #2d3036;
+    --hover: #24272c; --accent: #4c8dff; --accent-text: #0b0c0e; --warn: #ff7b72; --ok: #4ade80;
+    --map: #0c0d0f; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131417; --panel: #1b1d21; --text: #e7e8ea; --muted: #9b9ea5; --line: #2d3036;
+  --hover: #24272c; --accent: #4c8dff; --accent-text: #0b0c0e; --warn: #ff7b72; --ok: #4ade80;
+  --map: #0c0d0f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.app { display: grid; grid-template-columns: 320px 1fr; height: 100vh; height: 100dvh; }
+aside { border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+main { position: relative; background: var(--map); min-width: 0; overflow: hidden; }
+h1 { font-size: 16px; margin: 0; }
+.status { font-size: 12px; color: var(--muted); }
+.status.bad { color: var(--warn); }
+.status.good { color: var(--ok); }
+label.row { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+select, input[type=text], input[type=search] { width: 100%; font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+button { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:hover { background: var(--hover); }
+button.on, button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.danger { color: var(--warn); }
+button:disabled { opacity: .45; cursor: default; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; }
+.seg button { flex: 1 0 auto; }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.box h2 { font-size: 13px; margin: 0; color: var(--muted); font-weight: 600; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.warn { font-size: 12px; color: var(--warn); margin: 0; }
+.list { display: flex; flex-direction: column; }
+.list button { display: flex; align-items: center; gap: 8px; text-align: left; border: 0; border-radius: 6px; background: none; padding: 5px 6px; }
+.list button:hover { background: var(--hover); }
+.list button.sel { background: var(--accent); color: var(--accent-text); }
+.list .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag { font-size: 11px; padding: 0 6px; border-radius: 9px; border: 1px solid currentColor; opacity: .75; }
+.chk { width: 16px; text-align: center; font-size: 12px; }
+.progress { font-size: 12px; color: var(--muted); }
+svg#map { width: 100%; height: 100%; display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab; }
+svg#map.drawing, svg#map.placing { cursor: crosshair; }
+svg#map.panning { cursor: grabbing; }
+.banner { position: absolute; left: 12px; right: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: none; }
+.banner > * { pointer-events: auto; }
+.pill { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 13px; box-shadow: 0 1px 3px rgb(0 0 0 / .15); }
+.zoom { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 4px; }
+.zoom button { background: var(--panel); min-width: 34px; }
+/* Map overlay: fixed colours, since the floor plan underneath is the same in both themes. */
+.area { fill-opacity: .18; stroke-width: var(--sw); stroke-opacity: .8; }
+.area.room { fill: #f97316; stroke: #c2410c; }
+.area.spot { fill: #3b82f6; stroke: #1d4ed8; }
+.area.sel { fill: #22c55e; stroke: #15803d; fill-opacity: .3; stroke-opacity: 1; }
+.dot { stroke: #fff; stroke-width: var(--sw); }
+.dot.room { fill: #ea580c; }
+.dot.spot { fill: #2563eb; }
+.dot.sel { fill: #16a34a; }
+.dot.noarea { stroke: #111; stroke-dasharray: var(--dash); }
+.lbl { fill: #111; stroke: #fff; stroke-width: var(--lw); paint-order: stroke; font-family: system-ui, sans-serif; font-weight: 600; pointer-events: none; }
+.lbl.sel { fill: #14532d; }
+.vtx { fill: #fff; stroke: #15803d; stroke-width: var(--sw); cursor: move; }
+.mid { fill: #15803d; fill-opacity: .55; stroke: #fff; stroke-width: var(--sw); cursor: copy; }
+.draft { fill: #22c55e; fill-opacity: .15; stroke: #15803d; stroke-width: var(--sw); stroke-dasharray: var(--dash); }
+.draftpt { fill: #15803d; stroke: #fff; stroke-width: var(--sw); }
+@media (max-width: 800px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 62vh auto; height: auto; }
+  main { order: -1; height: 62vh; }
+  aside { border-right: 0; border-top: 1px solid var(--line); overflow: visible; }
+}
+</style>
+
+<div class="app">
+  <aside id="side"></aside>
+  <main>
+    <svg id="map" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <image id="plate" x="0" y="0"></image>
+      <g id="overlay"></g>
+    </svg>
+    <div class="banner" id="banner"></div>
+    <div class="zoom">
+      <button id="zin" title="Zoom in (+)">+</button>
+      <button id="zout" title="Zoom out (-)">−</button>
+      <button id="zfit" title="Fit (0)">Fit</button>
+    </div>
+  </main>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+'use strict';
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const NS = 'http://www.w3.org/2000/svg';
+const $ = id => document.getElementById(id);
+const el = (t, p = {}, ...kids) => {
+  const e = Object.assign(document.createElement(t), p);
+  e.append(...kids.filter(k => k != null && k !== false && k !== ''));
+  return e;
+};
+const sv = (t, a = {}) => {
+  const e = document.createElementNS(NS, t);
+  for (const k in a) e.setAttribute(k, a[k]);
+  return e;
+};
+const r4 = v => Math.round(v * 1e4) / 1e4;
+const clamp01 = v => Math.min(1, Math.max(0, v));
+
+// ---- State ----------------------------------------------------------------
+const floors = {};          // "map.floor" -> {m, f, callouts}
+for (const m of DATA.maps) for (const f of m.floors)
+  floors[`${m.id}.${f.name}`] = { m, f, callouts: f.callouts.map(c => ({ ...c, whole: null, area: null })) };
+
+const S = {
+  map: DATA.maps[0].id, floor: DATA.maps[0].floors[0].name,
+  view: 'game', layer: 'whole', sel: null, mode: 'select', draft: [], showAreas: true, showLabels: true, filter: '',
+};
+let vb = null;              // {x, y, w, h} in image pixels
+let drag = null;
+let spaceDown = false;
+const undo = [];
+
+const key = () => `${S.map}.${S.floor}`;
+const F = () => floors[key()];
+// Two passes: 'whole' outlines each main room's whole room (Main rooms pool only);
+// 'detail' outlines every callout's own smaller area (pools that include spots).
+const A = () => S.layer === 'whole' ? 'whole' : 'area';
+const shown = c => S.layer !== 'whole' || c.room;
+const cur = () => F().callouts.find(c => c.id === S.sel && shown(c)) || null;
+const img = f => (S.view === 'game' && f.game) ? f.game : f.plan;
+
+try {
+  const saved = JSON.parse(localStorage.getItem('areatool.ui') || 'null');
+  if (saved && floors[`${saved.map}.${saved.floor}`]) { S.map = saved.map; S.floor = saved.floor; }
+  if (saved && (saved.view === 'game' || saved.view === 'plan')) S.view = saved.view;
+  if (saved && (saved.layer === 'whole' || saved.layer === 'detail')) S.layer = saved.layer;
+} catch (e) {}
+const rememberUi = () => { try { localStorage.setItem('areatool.ui', JSON.stringify({ map: S.map, floor: S.floor, view: S.view, layer: S.layer })); } catch (e) {} };
+
+// Areas are kept in call-sheet coordinates; the in-game view goes through the floor's fit.
+const toView = (f, p) => {
+  if (S.view !== 'game' || !f.game) return p;
+  const [ax, bx, ay, by] = f.fit;
+  return [ax * p[0] + bx, ay * p[1] + by];
+};
+const fromView = (f, p) => {
+  if (S.view !== 'game' || !f.game) return p;
+  const [ax, bx, ay, by] = f.fit;
+  return [(p[0] - bx) / ax, (p[1] - by) / ay];
+};
+const dotView = (f, c) => (S.view === 'game' && f.game) ? [c.gx, c.gy] : [c.x, c.y];
+function setDot(f, c, p) {
+  const [ax, bx, ay, by] = f.fit;
+  if (S.view === 'game' && f.game) {
+    c.gx = r4(p[0]); c.gy = r4(p[1]);
+    c.x = r4(clamp01((p[0] - bx) / ax)); c.y = r4(clamp01((p[1] - by) / ay));
+  } else {
+    c.x = r4(p[0]); c.y = r4(p[1]);
+    c.gx = r4(clamp01(ax * p[0] + bx)); c.gy = r4(clamp01(ay * p[1] + by));
+  }
+}
+
+// ---- Saving ---------------------------------------------------------------
+let db = null, dbState = 'connecting', dbError = '';
+const dirty = new Set(), saving = {}, again = {}, timers = {};
+
+const strip = c => ({
+  id: c.id, name: c.name, aliases: c.aliases, room: !!c.room, rot: c.rot || 0,
+  x: r4(c.x), y: r4(c.y), gx: r4(c.gx), gy: r4(c.gy),
+  whole: c.room && c.whole ? c.whole.map(p => [r4(p[0]), r4(p[1])]) : null,
+  area: c.area ? c.area.map(p => [r4(p[0]), r4(p[1])]) : null,
+});
+
+function changed(k = key()) {
+  dirty.add(k);
+  clearTimeout(timers[k]);
+  timers[k] = setTimeout(() => save(k), 700);
+  renderStatus();
+}
+
+async function save(k, retried) {
+  if (!db) { renderStatus(); return; }
+  if (saving[k]) { again[k] = true; return; }
+  saving[k] = true;
+  dirty.delete(k);
+  renderStatus();
+  const { m, f, callouts } = floors[k];
+  try {
+    await db.doc('floors/' + k).set({ map: m.id, floor: f.name, at: Date.now(), callouts: callouts.map(strip) });
+    dbError = '';
+  } catch (err) {
+    dirty.add(k);
+    dbError = (err && err.message) || 'Save failed';
+    if (err && err.code === 'unavailable' && !retried) {
+      saving[k] = false;
+      setTimeout(() => save(k, true), 800 + Math.random() * 1200);
+      return;
+    }
+  }
+  saving[k] = false;
+  if (again[k]) { again[k] = false; save(k); }
+  renderStatus();
+}
+
+const isNum = v => typeof v === 'number' && Number.isFinite(v);
+function clean(list) {
+  if (!Array.isArray(list)) return null;
+  const out = [];
+  for (const c of list) {
+    if (!c || typeof c !== 'object' || typeof c.id !== 'string' || typeof c.name !== 'string') return null;
+    if (![c.x, c.y, c.gx, c.gy].every(isNum)) return null;
+    const poly = a => Array.isArray(a) && a.length >= 3 && a.every(p => Array.isArray(p) && p.length === 2 && p.every(isNum))
+      ? a.map(p => [p[0], p[1]]) : null;
+    out.push({
+      id: c.id, name: c.name.slice(0, 60), room: !!c.room, rot: isNum(c.rot) ? c.rot : 0,
+      aliases: Array.isArray(c.aliases) ? c.aliases.filter(a => typeof a === 'string').map(a => a.slice(0, 60)) : [],
+      x: c.x, y: c.y, gx: c.gx, gy: c.gy, whole: poly(c.whole), area: poly(c.area),
+    });
+  }
+  return out;
+}
+
+async function connect() {
+  const loadTimer = setTimeout(() => { if (dbState === 'connecting') { dbState = 'slow'; renderStatus(); } }, 10000);
+  try { db = await window.claude?.use('db'); } catch (e) { db = null; }
+  if (!db) { clearTimeout(loadTimer); dbState = 'off'; renderStatus(); return; }
+  db.collection('floors').onSnapshot(snap => {
+    for (const d of snap.docs) {
+      const k = d.id;
+      if (!floors[k] || dirty.has(k) || saving[k] || drag) continue;
+      const list = clean(d.data()?.callouts);
+      if (list) floors[k].callouts = list;
+    }
+    if (!snap.metadata.fromCache) { clearTimeout(loadTimer); dbState = 'live'; }
+    if (S.sel && !cur()) S.sel = null;
+    render();
+  }, err => {
+    clearTimeout(loadTimer);
+    dbState = 'error'; dbError = err.message || err.code;
+    renderStatus();
+  });
+  // Pending edits made before the store answered.
+  for (const k of dirty) save(k);
+}
+
+// ---- Edits ----------------------------------------------------------------
+function snapshot() {
+  undo.push({ k: key(), sel: S.sel, list: JSON.stringify(F().callouts) });
+  if (undo.length > 200) undo.shift();
+}
+function undoLast() {
+  const u = undo.pop();
+  if (!u) return;
+  const [map, ...rest] = u.k.split('.');
+  S.map = map; S.floor = rest.join('.');
+  floors[u.k].callouts = JSON.parse(u.list);
+  S.sel = u.sel; S.mode = 'select'; S.draft = [];
+  changed(u.k);
+  render(true);
+}
+
+function select(id) {
+  S.sel = id;
+  if (S.mode === 'draw') { S.mode = 'select'; S.draft = []; }
+  renderSide(); renderMap();
+}
+
+function addCallout(p) {
+  snapshot();
+  const f = F().f;
+  const c = { id: 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: 'New callout', aliases: [], room: true, rot: 0, x: 0, y: 0, gx: 0, gy: 0, whole: null, area: null };
+  setDot(f, c, p);
+  F().callouts.push(c);
+  S.sel = c.id; S.mode = 'select';
+  changed();
+  render();
+  setTimeout(() => { const n = $('nm'); if (n) { n.focus(); n.select(); } });
+}
+
+function finishDraft() {
+  const c = cur(), f = F().f;
+  if (!c || S.draft.length < 3) return;
+  snapshot();
+  c[A()] = S.draft.map(p => fromView(f, p));
+  S.draft = []; S.mode = 'select';
+  changed();
+  render();
+}
+
+// ---- Rendering ------------------------------------------------------------
+const svg = $('map'), plate = $('plate'), overlay = $('overlay');
+
+function fit() {
+  const I = img(F().f);
+  vb = { x: 0, y: 0, w: I.w, h: I.h };
+}
+function scale() {      // image pixels per screen pixel
+  const m = svg.getScreenCTM();
+  return m && m.a ? 1 / m.a : 1;
+}
+
+function renderMap() {
+  const { f } = F();
+  const callouts = F().callouts.filter(shown);
+  const I = img(f);
+  if (plate.getAttribute('href') !== I.src) {
+    plate.setAttribute('href', I.src);
+    plate.setAttribute('width', I.w); plate.setAttribute('height', I.h);
+  }
+  if (!vb) fit();
+  svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const k = scale();
+  svg.style.setProperty('--sw', 1.6 * k);
+  svg.style.setProperty('--lw', 3 * k);
+  svg.style.setProperty('--dash', `${3 * k} ${2 * k}`);
+  svg.classList.toggle('drawing', S.mode === 'draw');
+  svg.classList.toggle('placing', S.mode === 'place');
+  const px = p => [p[0] * I.w, p[1] * I.h];
+  const pts = a => a.map(p => px(toView(f, p)).map(v => v.toFixed(1)).join(',')).join(' ');
+  const kids = [];
+  const sel = cur();
+  for (const c of callouts) {
+    if (!c[A()] || (!S.showAreas && c !== sel)) continue;
+    if (c === sel) continue;
+    kids.push(sv('polygon', { class: `area ${c.room && S.layer !== 'whole' ? 'room' : 'spot'}`, points: pts(c[A()]), 'data-kind': 'area', 'data-id': c.id }));
+  }
+  if (sel && sel[A()] && !(S.mode === 'draw')) kids.push(sv('polygon', { class: 'area sel', points: pts(sel[A()]), 'data-kind': 'area', 'data-id': sel.id }));
+  for (const c of callouts) {
+    const [x, y] = px(dotView(f, c));
+    const s = c === sel;
+    kids.push(sv('circle', { class: `dot ${s ? 'sel' : c.room ? 'room' : 'spot'}${c[A()] ? '' : ' noarea'}`, cx: x, cy: y, r: (s ? 7 : c.room ? 6 : 4.5) * k, 'data-kind': 'dot', 'data-id': c.id }));
+    if (S.showLabels || s) {
+      const t = sv('text', { class: `lbl${s ? ' sel' : ''}`, x: x + 8 * k, y: y + 4 * k, 'font-size': (s ? 14 : 12) * k });
+      t.textContent = c.name;
+      kids.push(t);
+    }
+  }
+  if (sel && sel[A()] && S.mode === 'select') {
+    const a = sel[A()].map(p => px(toView(f, p)));
+    a.forEach((p, i) => {
+      const q = a[(i + 1) % a.length];
+      kids.push(sv('circle', { class: 'mid', cx: (p[0] + q[0]) / 2, cy: (p[1] + q[1]) / 2, r: 4 * k, 'data-kind': 'mid', 'data-i': i }));
+    });
+    a.forEach((p, i) => kids.push(sv('circle', { class: 'vtx', cx: p[0], cy: p[1], r: 5.5 * k, 'data-kind': 'vtx', 'data-i': i })));
+  }
+  if (S.mode === 'draw' && S.draft.length) {
+    const a = S.draft.map(px);
+    const line = a.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ');
+    kids.push(sv(S.draft.length > 2 ? 'polygon' : 'polyline', { class: 'draft', points: line }));
+    a.forEach((p, i) => kids.push(sv('circle', { class: 'draftpt', cx: p[0], cy: p[1], r: (i === 0 ? 6 : 4) * k })));
+  }
+  if (drag && drag.type === 'draw' && drag.rect) {
+    const [x0, y0] = px(drag.start), [x1, y1] = px(drag.rect);
+    kids.push(sv('rect', { class: 'draft', x: Math.min(x0, x1), y: Math.min(y0, y1), width: Math.abs(x1 - x0), height: Math.abs(y1 - y0) }));
+  }
+  overlay.replaceChildren(...kids);
+  renderBanner();
+}
+
+function renderBanner() {
+  const c = cur();
+  const msg = S.mode === 'draw'
+    ? [el('span', { className: 'pill' }, `Outlining ${c ? c.name : ''}: click corners, click the first point or press Enter to finish. Drag for a box. Backspace undoes a point, Esc cancels.`)]
+    : S.mode === 'place'
+      ? [el('span', { className: 'pill' }, 'Click the map to place the new callout. Esc cancels.')]
+      : [];
+  $('banner').replaceChildren(...msg);
+}
+
+let statusEl = null;
+function renderStatus() {
+  if (!statusEl) return;
+  const pending = dirty.size || Object.values(saving).some(Boolean);
+  let text, cls = '';
+  if (dbState === 'off') { text = 'Not saving: open this page signed in to claude.ai to keep edits.'; cls = 'bad'; }
+  else if (dbError) { text = `Not saved: ${dbError}`; cls = 'bad'; }
+  else if (dbState === 'error') { text = 'Can\'t reach saved edits.'; cls = 'bad'; }
+  else if (dbState === 'connecting') text = 'Loading saved edits…';
+  else if (dbState === 'slow') text = 'Saved edits can\'t be reached yet; they may be out of date.';
+  else if (pending) text = 'Saving…';
+  else { text = 'All changes saved.'; cls = 'good'; }
+  statusEl.textContent = text;
+  statusEl.className = `status ${cls}`;
+}
+
+let armedDelete = null;
+function renderSide() {
+  const { m, f } = F();
+  const callouts = F().callouts.filter(shown);
+  const side = $('side');
+  const focusId = document.activeElement && document.activeElement.id;
+  const caret = focusId && document.activeElement.selectionStart;
+
+  statusEl = el('div', { className: 'status' });
+
+  const mapSel = el('select', { id: 'mapsel', ariaLabel: 'Map' }, ...DATA.maps.map(x => el('option', { value: x.id, textContent: x.name, selected: x.id === S.map })));
+  mapSel.onchange = () => { S.map = mapSel.value; S.floor = DATA.maps.find(x => x.id === S.map).floors[0].name; goFloor(); };
+
+  const floorBtns = el('div', { className: 'seg' }, ...m.floors.map(x => {
+    const done = floors[`${m.id}.${x.name}`].callouts.filter(shown);
+    const b = el('button', { className: x.name === S.floor ? 'on' : '', textContent: `${x.name} ${done.filter(c => c[A()]).length}/${done.length}` });
+    b.onclick = () => { S.floor = x.name; goFloor(); };
+    return b;
+  }));
+
+  const viewBtns = el('div', { className: 'seg' }, ...[['game', 'In-game'], ['plan', 'Call sheet']].map(([v, t]) => {
+    const b = el('button', { className: S.view === v ? 'on' : '', textContent: t, disabled: v === 'game' && !f.game });
+    b.onclick = () => { S.view = v; S.draft = []; if (S.mode === 'draw') S.mode = 'select'; vb = null; rememberUi(); render(); };
+    return b;
+  }));
+
+  const layerBtns = el('div', { className: 'seg' }, ...[['whole', '1. Whole rooms'], ['detail', '2. Rooms + spots']].map(([v, t]) => {
+    const b = el('button', { className: S.layer === v ? 'on' : '', textContent: t });
+    b.onclick = () => { S.layer = v; S.mode = 'select'; S.draft = []; rememberUi(); render(); };
+    return b;
+  }));
+  const layerHint = el('p', { className: 'hint', textContent: S.layer === 'whole'
+    ? 'Main rooms only. Outline the whole room: in the Main rooms pool a tap anywhere inside counts.'
+    : 'Every callout. Outline the smaller area around each label: used when spots are in the pool.' });
+
+  const tog = (label, prop) => {
+    const i = el('input', { type: 'checkbox', checked: S[prop] });
+    i.onchange = () => { S[prop] = i.checked; renderMap(); };
+    return el('label', { className: 'row' }, i, label);
+  };
+
+  // Selected callout
+  const c = cur();
+  let panel;
+  if (c) {
+    const name = el('input', { type: 'text', id: 'nm', value: c.name, maxLength: 60, ariaLabel: 'Name' });
+    let snapped = false;
+    name.onfocus = () => { snapped = false; };
+    name.oninput = () => {
+      if (!snapped) { snapshot(); snapped = true; }
+      c.name = name.value; changed(); renderList(); renderMap();
+      dupe.textContent = dupeText(c);
+    };
+    const aliases = el('input', { type: 'text', id: 'al', value: c.aliases.join(', '), placeholder: 'Other names, comma separated', ariaLabel: 'Aliases' });
+    let snappedA = false;
+    aliases.onfocus = () => { snappedA = false; };
+    aliases.oninput = () => {
+      if (!snappedA) { snapshot(); snappedA = true; }
+      c.aliases = aliases.value.split(',').map(s => s.trim()).filter(Boolean); changed();
+    };
+    const dupe = el('p', { className: 'warn', textContent: dupeText(c) });
+    const kind = el('div', { className: 'seg' }, ...[[true, 'Main room'], [false, 'Spot']].map(([v, t]) => {
+      const b = el('button', { className: !!c.room === v ? 'on' : '', textContent: t });
+      b.onclick = () => { if (!!c.room !== v) { snapshot(); c.room = v; if (!shown(c)) S.sel = null; changed(); render(); } };
+      return b;
+    }));
+    const draw = el('button', { className: 'primary', textContent: S.mode === 'draw' ? 'Cancel outline' : c[A()] ? 'Redraw area' : 'Outline area' });
+    draw.onclick = () => { S.mode = S.mode === 'draw' ? 'select' : 'draw'; S.draft = []; render(); };
+    const clear = el('button', { textContent: 'Clear area', disabled: !c[A()] });
+    clear.onclick = () => { snapshot(); c[A()] = null; changed(); render(); };
+    const del = el('button', { className: 'danger', textContent: armedDelete === c.id ? 'Click again to delete' : 'Delete callout' });
+    del.onclick = () => {
+      if (armedDelete !== c.id) { armedDelete = c.id; renderSide(); setTimeout(() => { if (armedDelete === c.id) { armedDelete = null; renderSide(); } }, 3000); return; }
+      armedDelete = null; snapshot();
+      F().callouts = F().callouts.filter(x => x !== c); S.sel = null; S.mode = 'select';
+      changed(); render();
+    };
+    panel = el('div', { className: 'box' },
+      el('h2', { textContent: 'Selected callout' }),
+      name, dupe, aliases, kind,
+      el('div', { className: 'seg' }, draw, clear),
+      S.layer === 'detail' && c.room && c.whole ? el('p', { className: 'hint', textContent: 'Has a whole-room area too (pass 1).' }) : '',
+      el('p', { className: 'hint', textContent: c[A()]
+        ? 'Drag the white corners to reshape, drag a green middle dot to add a corner, double-click a corner to remove it. Drag the callout\'s dot to move it.'
+        : 'No area yet. Outline it, then drag corners to adjust. Drag the dot to move the callout.' }),
+      del);
+  } else {
+    panel = el('div', { className: 'box' }, el('p', { className: 'hint', textContent: 'Pick a callout from the list or click its dot on the map. Dots with a dashed ring have no area yet.' }));
+  }
+
+  const add = el('button', { textContent: S.mode === 'place' ? 'Cancel adding' : '+ Add callout', className: S.mode === 'place' ? 'on' : '' });
+  add.onclick = () => { S.mode = S.mode === 'place' ? 'select' : 'place'; S.draft = []; render(); };
+
+  const search = el('input', { type: 'search', id: 'flt', value: S.filter, placeholder: 'Filter callouts', ariaLabel: 'Filter callouts' });
+  search.oninput = () => { S.filter = search.value; renderList(); };
+
+  const done = callouts.filter(x => x[A()]).length;
+  side.replaceChildren(
+    el('div', {}, el('h1', { textContent: 'Callout areas' }), statusEl),
+    mapSel, floorBtns, viewBtns, layerBtns, layerHint,
+    el('div', { className: 'seg' }, tog('Show all areas', 'showAreas'), tog('Labels', 'showLabels')),
+    panel,
+    el('div', { className: 'seg' }, add, el('button', { textContent: 'Undo', disabled: !undo.length, onclick: undoLast, title: 'Ctrl+Z' })),
+    el('div', { className: 'progress', textContent: `${done} of ${callouts.length} ${S.layer === 'whole' ? 'main rooms' : 'callouts'} on ${m.name} ${f.name} have ${S.layer === 'whole' ? 'a whole-room area' : 'an area'}.` }),
+    search,
+    el('div', { className: 'list', id: 'list' }),
+  );
+  renderList();
+  renderStatus();
+  if (focusId && $(focusId)) {
+    const e = $(focusId); e.focus();
+    if (caret != null && e.setSelectionRange) try { e.setSelectionRange(caret, caret); } catch (x) {}
+  }
+}
+
+function dupeText(c) {
+  const n = c.name.trim().toLowerCase();
+  if (!n) return 'Name is empty.';
+  return F().callouts.some(x => x !== c && x.name.trim().toLowerCase() === n) ? 'Another callout on this floor has this name.' : '';
+}
+
+function renderList() {
+  const list = $('list');
+  if (!list) return;
+  const q = S.filter.trim().toLowerCase();
+  list.replaceChildren(...F().callouts.filter(shown)
+    .filter(c => !q || c.name.toLowerCase().includes(q) || c.aliases.some(a => a.toLowerCase().includes(q)))
+    .map(c => {
+      const b = el('button', { className: c.id === S.sel ? 'sel' : '' },
+        el('span', { className: 'chk', textContent: c[A()] ? '✓' : '·', title: c[A()] ? 'Has an area' : 'No area yet' }),
+        el('span', { className: 'nm', textContent: c.name }),
+        el('span', { className: 'tag', textContent: c.room ? 'room' : 'spot' }));
+      b.onclick = () => select(c.id);
+      return b;
+    }));
+}
+
+function render(resetView) {
+  if (resetView) vb = null;
+  renderSide();
+  renderMap();
+}
+
+function goFloor() {
+  S.sel = null; S.mode = 'select'; S.draft = []; S.filter = ''; vb = null;
+  rememberUi();
+  render();
+}
+
+// ---- Pointer and keys -----------------------------------------------------
+function pt(e) {   // pointer -> view fractions
+  const p = svg.createSVGPoint();
+  p.x = e.clientX; p.y = e.clientY;
+  const q = p.matrixTransform(svg.getScreenCTM().inverse());
+  const I = img(F().f);
+  return [q.x / I.w, q.y / I.h];
+}
+const clampP = p => [clamp01(p[0]), clamp01(p[1])];
+
+svg.addEventListener('contextmenu', e => e.preventDefault());
+svg.addEventListener('pointerdown', e => {
+  const t = e.target.closest('[data-kind]');
+  const p = pt(e);
+  const base = { x: e.clientX, y: e.clientY, moved: false };
+  if (e.button === 1 || e.button === 2 || spaceDown) {
+    drag = { ...base, type: 'pan' };
+  } else if (e.button !== 0) {
+    return;
+  } else if (S.mode === 'place') {
+    e.preventDefault();
+    addCallout(clampP(p));
+    return;
+  } else if (S.mode === 'draw') {
+    drag = { ...base, type: 'draw', start: clampP(p) };
+  } else if (t && t.dataset.kind === 'dot') {
+    if (S.sel !== t.dataset.id) select(t.dataset.id);
+    drag = { ...base, type: 'dot', id: t.dataset.id };
+  } else if (t && t.dataset.kind === 'vtx') {
+    drag = { ...base, type: 'vtx', i: +t.dataset.i };
+  } else if (t && t.dataset.kind === 'mid') {
+    snapshot();
+    const c = cur();
+    c[A()].splice(+t.dataset.i + 1, 0, fromView(F().f, clampP(p)));
+    drag = { ...base, type: 'vtx', i: +t.dataset.i + 1, moved: true };
+    changed(); renderMap();
+  } else if (t && t.dataset.kind === 'area') {
+    drag = { ...base, type: 'pan', pick: t.dataset.id };
+  } else {
+    drag = { ...base, type: 'pan' };
+  }
+  svg.setPointerCapture(e.pointerId);
+});
+
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const far = Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 4;
+  if (drag.type === 'pan') {
+    if (!drag.moved && !far) return;
+    drag.moved = true;
+    svg.classList.add('panning');
+    const k = scale();
+    vb.x -= (e.clientX - drag.x) * k; vb.y -= (e.clientY - drag.y) * k;
+    drag.x = e.clientX; drag.y = e.clientY;
+    renderMap();
+  } else if (drag.type === 'dot' || drag.type === 'vtx') {
+    if (!drag.moved && !far) return;
+    if (!drag.moved) { snapshot(); drag.moved = true; }
+    const p = clampP(pt(e)), f = F().f;
+    if (drag.type === 'dot') {
+      const c = F().callouts.find(x => x.id === drag.id);
+      if (c) setDot(f, c, p);
+    } else {
+      cur()[A()][drag.i] = fromView(f, p);
+    }
+    changed();
+    renderMap();
+  } else if (drag.type === 'draw') {
+    if (S.draft.length || (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8)) return;
+    drag.moved = true;
+    drag.rect = clampP(pt(e));
+    renderMap();
+  }
+});
+
+function endDrag(e) {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  svg.classList.remove('panning');
+  if (d.type === 'pan' && !d.moved && d.pick) select(d.pick);
+  if (d.type === 'draw') {
+    if (d.rect) {
+      const [x0, y0] = d.start, [x1, y1] = d.rect;
+      if (Math.abs(x1 - x0) > 0.003 && Math.abs(y1 - y0) > 0.003) {
+        S.draft = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+        finishDraft();
+      } else renderMap();
+      return;
+    }
+    const p = clampP(pt(e));
+    const I = img(F().f);
+    const k = scale();
+    const first = S.draft[0];
+    if (first && S.draft.length >= 3 && Math.hypot((p[0] - first[0]) * I.w, (p[1] - first[1]) * I.h) < 10 * k) finishDraft();
+    else { S.draft.push(p); renderMap(); }
+    return;
+  }
+  if (d.moved && (d.type === 'dot' || d.type === 'vtx')) renderSide();
+}
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', () => { drag = null; svg.classList.remove('panning'); renderMap(); });
+
+svg.addEventListener('dblclick', e => {
+  const t = e.target.closest('[data-kind="vtx"]');
+  const c = cur();
+  if (!t || !c || !c[A()] || c[A()].length <= 3) return;
+  snapshot();
+  c[A()].splice(+t.dataset.i, 1);
+  changed(); renderMap();
+});
+
+function zoom(factor, cx, cy) {
+  if (!vb) fit();
+  const I = img(F().f);
+  const w = Math.min(I.w * 2, Math.max(I.w / 16, vb.w * factor));
+  const f = w / vb.w;
+  if (cx == null) { cx = vb.x + vb.w / 2; cy = vb.y + vb.h / 2; }
+  vb = { x: cx - (cx - vb.x) * f, y: cy - (cy - vb.y) * f, w: vb.w * f, h: vb.h * f };
+  renderMap();
+}
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const p = pt(e), I = img(F().f);
+  zoom(Math.exp(Math.max(-1, Math.min(1, e.deltaY * (e.deltaMode ? 0.05 : 0.0015)))), p[0] * I.w, p[1] * I.h);
+}, { passive: false });
+$('zin').onclick = () => zoom(1 / 1.4);
+$('zout').onclick = () => zoom(1.4);
+$('zfit').onclick = () => { fit(); renderMap(); };
+
+const typing = () => {
+  const a = document.activeElement;
+  return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.tagName === 'SELECT');
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.mode !== 'select' || S.draft.length) { S.mode = 'select'; S.draft = []; render(); }
+    else if (typing()) document.activeElement.blur();
+    return;
+  }
+  if (typing()) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undoLast(); return; }
+  if (e.key === ' ') { spaceDown = true; e.preventDefault(); return; }
+  if (S.mode === 'draw') {
+    if (e.key === 'Enter') { e.preventDefault(); finishDraft(); return; }
+    if (e.key === 'Backspace') { e.preventDefault(); S.draft.pop(); renderMap(); return; }
+  }
+  if (e.key === '+' || e.key === '=') zoom(1 / 1.4);
+  else if (e.key === '-') zoom(1.4);
+  else if (e.key === '0') { fit(); renderMap(); }
+  else if (e.key.toLowerCase() === 'o' && cur()) { S.mode = 'draw'; S.draft = []; render(); }
+});
+document.addEventListener('keyup', e => { if (e.key === ' ') spaceDown = false; });
+window.addEventListener('resize', () => renderMap());
+
+render();
+connect();
+</script>
