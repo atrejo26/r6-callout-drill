@@ -763,7 +763,7 @@
       {
        "name": "B desk",
        "aliases": [],
-       "room": true,
+       "room": false,
        "rot": 0,
        "x": 0.5875,
        "y": 0.6945,
@@ -773,7 +773,7 @@
       {
        "name": "Tuck",
        "aliases": [],
-       "room": true,
+       "room": false,
        "rot": 0,
        "x": 0.6776,
        "y": 0.2962,
