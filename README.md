@@ -28,7 +28,13 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 When an answer is revealed, an abbreviated callout also shows its full name.
 
 The map list shows how many callouts you have mastered on each map (your latest answer
-for it was right). Progress stays in your browser.
+for it was right). Progress stays in your browser. **This session** lists every answer,
+newest first, with what you said when you missed.
+
+The page fills the window. On a desktop the settings sit in a column on the left; on
+tablets and phones they open from the menu button at the top, so the map and the question
+get the screen. On phones the map runs edge to edge and the keyboard only opens when you
+tap the answer box.
 
 ### Abbreviations
 

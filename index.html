@@ -84,36 +84,44 @@
   --r: 2px;
 }
 html, body { height: 100%; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font: 15px/1.45 var(--body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 12px 24px;
-  box-sizing: border-box;
-}
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 var(--body); }
 * { box-sizing: border-box; }
 button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
-.app { max-width: 1640px; margin: 0 auto; display: grid; gap: 14px; }
-
-header.top {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px;
-  padding-bottom: 10px; border-bottom: 1px solid var(--line);
+/* Phones and portrait screens: one column, map first. Wider landscape screens get
+   map and question side by side, and from 1181px the settings as a left column. */
+.app {
+  display: grid; gap: 12px 16px; min-height: 100vh; min-height: 100dvh;
+  grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "board" "panel";
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
-h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; margin: 0; }
+
+header.top { grid-area: top; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand { flex: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; margin: 0; }
 .tagline { font: 500 11px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
 /* uppercase mono for every label and number */
 .label { font: 500 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.menu-btn {
+  margin-left: auto; min-width: 0; display: flex; align-items: center; gap: 10px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 12px;
+  font: 600 15px/1.1 var(--display); letter-spacing: .05em; text-transform: uppercase;
+}
+.menu-btn:hover { border-color: var(--muted); }
+.menu-btn .bars {
+  flex: none; width: 16px; height: 12px; color: var(--amber);
+  background: linear-gradient(currentColor 0 0) 0 0 / 100% 2px, linear-gradient(currentColor 0 0) 0 50% / 100% 2px, linear-gradient(currentColor 0 0) 0 100% / 100% 2px;
+  background-repeat: no-repeat;
+}
+#menuSum { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.main { display: grid; grid-template-columns: 216px minmax(0, 1fr) 350px; gap: 16px; align-items: start; }
-.main.pool-answers { grid-template-columns: 216px minmax(0, 1fr) 420px; }
-
-/* Settings */
-.side { display: grid; gap: 18px; align-content: start; }
+/* Settings: a column on desktop, a drawer everywhere else */
+.side { grid-area: side; display: grid; gap: 16px; align-content: start; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.scrim { position: fixed; inset: 0; z-index: 29; background: rgba(0, 0, 0, .62); }
+.scrim[hidden] { display: none; }
 .group { display: grid; gap: 7px; align-content: start; }
 .group[hidden] { display: none; }
 /* button groups drawn as one ruled block: 1px gaps over the line colour */
@@ -128,8 +136,8 @@ h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: upp
   background: var(--raised); color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber);
 }
 .maps button {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 5px 8px;
-  padding: 7px 9px 8px; text-align: left; color: var(--text);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 8px;
+  padding: 6px 9px 7px; text-align: left; color: var(--text);
 }
 .maps .name { font: 600 15px/1.1 var(--display); letter-spacing: .04em; text-transform: uppercase; }
 .maps .num { font: 500 11px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -137,16 +145,21 @@ h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .maps i::before { content: ""; display: block; height: 100%; width: var(--p); background: var(--text); opacity: .7; }
 .maps button[aria-pressed="true"] .num { color: var(--amber); }
 .maps button[aria-pressed="true"] i::before { background: var(--amber); opacity: 1; }
-.switch { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 1.25; }
-.switch input { accent-color: var(--amber); width: 15px; height: 15px; flex: none; margin: 0; }
+.switch { display: flex; align-items: center; gap: 8px; font-size: 14px; line-height: 1.25; cursor: pointer; }
+.switch input { accent-color: var(--amber); width: 16px; height: 16px; flex: none; margin: 0; }
 .linkish {
   background: none; border: 0; padding: 0; justify-self: start; color: var(--muted);
   font: 500 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; text-decoration: underline; text-underline-offset: 3px;
 }
 .linkish:hover { color: var(--text); }
+.side-foot { display: grid; gap: 12px; }
 
 /* Map plate */
-.board { background: var(--panel); border: 1px solid var(--line); min-width: 0; }
+.board {
+  grid-area: board; background: var(--panel); border: 1px solid var(--line); min-width: 0; min-height: 0;
+  display: flex; flex-direction: column; container-type: inline-size;
+}
+.short { display: none; }
 .board-bar {
   display: flex; align-items: center; gap: 6px 8px; flex-wrap: wrap;
   padding: 7px 10px; border-bottom: 1px solid var(--line);
@@ -164,13 +177,26 @@ h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .floor-tabs button:hover, .tool:hover { color: var(--text); }
 .floor-tabs button[aria-pressed="true"], .tool[aria-pressed="true"] { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
 .tool[aria-pressed="true"] { box-shadow: none; border-color: var(--amber); }
+/* a narrow board keeps its bar on one row: no title, short floor and view names */
+@container (max-width: 640px) {
+  .where { display: none; }
+  .board-bar { gap: 5px; padding-inline: 8px; }
+  .tool { padding-inline: 8px; min-width: 36px; }
+  .floor-tabs { flex: 1 1 auto; }
+  .floor-tabs button { flex: 1; padding-inline: 6px; }
+  #zoomOut { margin-left: auto; }
+  .board-bar .long { display: none; }
+  .board-bar .short { display: inline; }
+}
+/* the plan is sized to fit (sizePlate); auto margins centre it until it is zoomed past the edges */
 .stage {
-  overflow: auto; max-height: min(74vh, 900px); display: grid; justify-items: center; overscroll-behavior: contain;
+  flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; overscroll-behavior: contain;
+  max-height: max(280px, calc(100vh - 330px)); max-height: max(280px, calc(100dvh - 330px));
   background-color: var(--plate);
   background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.plate { position: relative; flex: none; margin: 0; }
+.plate { position: relative; flex: none; margin: auto; }
 .plate img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
 .plan-view .plate img { filter: invert(1) brightness(.9) contrast(1.08); }
 .plate.clickable { cursor: crosshair; }
@@ -231,8 +257,8 @@ h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .tag.answer.other { transform: translate(-50%, 13px); font-size: 13px; color: var(--muted); }
 
 /* Question and session */
-.panel { display: grid; gap: 12px; align-content: start; }
-.card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: grid; gap: 12px; }
+.panel { grid-area: panel; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); padding: 16px; display: flex; flex-direction: column; gap: 12px; flex: none; }
 .eyebrow { font: 500 11px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .prompt { font: 700 28px/1.05 var(--display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; margin: 0; }
 .prompt em { font-style: normal; color: var(--amber); }
@@ -280,97 +306,196 @@ h1 { font: 700 28px/1 var(--display); letter-spacing: .03em; text-transform: upp
   margin: 0; padding: 18px 14px; border: 1px dashed var(--line); color: var(--muted); font-size: 14px;
 }
 
-.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
-.stat { background: var(--panel); padding: 10px 12px; display: grid; gap: 6px; }
+.stats { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.stat { background: var(--panel); padding: 9px 12px; display: grid; gap: 6px; }
 .stat span { font: 500 10px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .stat b { font: 500 20px/1 var(--mono); font-variant-numeric: tabular-nums; }
-footer { color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
 
-/* Desktop: the plan gets the window's height */
-@media (min-width: 1181px) { .stage { max-height: min(calc(100vh - 140px), 980px); } }
-/* Narrower: settings go above the plan and question */
-@media (max-width: 1180px) {
-  .main, .main.pool-answers { grid-template-columns: minmax(0, 1fr) 340px; }
-  .main.pool-answers { grid-template-columns: minmax(0, 1fr) 400px; }
-  .side { grid-column: 1 / -1; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px 16px; }
-  .side .map-group, .side .side-foot { grid-column: 1 / -1; }
-  /* the list wraps here, so each map gets its own ruled box (no empty cells) */
-  .maps { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; background: none; border: 0; }
-  .maps button { box-shadow: inset 0 0 0 1px var(--line); }
-  #modeTabs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+/* This session: every answer, newest first */
+.log { display: flex; flex-direction: column; gap: 7px; min-height: 0; flex: 1 1 auto; }
+.log-head { display: flex; justify-content: space-between; gap: 8px; }
+.log ol {
+  list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; align-content: start;
+  background: var(--line); border: 1px solid var(--line); overflow-y: auto; min-height: 0; max-height: 330px; scrollbar-width: thin;
 }
-@media (max-width: 900px) { .main, .main.pool-answers { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .prompt { font-size: 25px; } }
-.side-foot { display: grid; gap: 12px; }
+.log ol:empty { display: none; }
+.log ol:not(:empty) + .empty { display: none; }
+.log li {
+  position: relative; background: var(--panel); padding: 6px 10px 7px 14px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 10px;
+}
+.log li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--good); }
+.log li.bad::before { background: var(--bad); }
+.log li.near::before { background: var(--amber); }
+.log li b { font: 600 15px/1.15 var(--display); letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log li span { font: 500 10px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.log li small { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; line-height: 1.3; }
+.log .empty { flex: 1 1 auto; font-size: 13px; }
+.panel footer { flex: none; color: var(--muted); font-size: 11.5px; line-height: 1.45; border-top: 1px solid var(--line); padding-top: 9px; }
+
+/* Desktop (landscape, 1181px and up): settings | map | question, filling the window */
+@media (min-width: 1181px) and (orientation: landscape) {
+  .app {
+    height: 100vh; height: 100dvh;
+    grid-template-columns: clamp(232px, 14vw, 280px) minmax(0, 1fr) clamp(360px, 22vw, 440px); grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "top board panel" "side board panel";
+  }
+  .app.pool-answers { grid-template-columns: clamp(232px, 14vw, 280px) minmax(0, 1fr) clamp(420px, 25vw, 500px); }
+  header.top { align-self: start; padding: 2px 0 12px; border-bottom: 1px solid var(--line); }
+  .brand { display: grid; gap: 6px; flex: 1 1 auto; min-width: 0; }
+  .menu-btn, .side-head, .scrim { display: none !important; }
+  .side { min-height: 0; overflow-y: auto; scrollbar-width: thin; padding-bottom: 2px; }
+}
+/* Landscape below that (tablets, small laptops, phones on their side): map and question */
+@media (max-width: 1180px) and (orientation: landscape) {
+  .app {
+    height: 100vh; height: 100dvh;
+    grid-template-columns: minmax(0, 1fr) 330px; grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "board top" "board panel";
+  }
+  .app.pool-answers { grid-template-columns: minmax(0, 1fr) 380px; }
+  header.top { flex-wrap: wrap; gap: 8px; }
+  .tagline { display: none; }
+  .menu-btn { flex: 1 1 100%; margin-left: 0; }
+}
+/* Both side-by-side layouts: the map takes every pixel of height, the right column scrolls */
+@media (orientation: landscape) {
+  .stage { flex: 1 1 0; max-height: none; }
+  .panel { overflow-y: auto; scrollbar-width: thin; }
+  .log ol { max-height: none; }
+  .app.pool-answers .card { flex: 1 1 auto; min-height: 0; }
+  .app.pool-answers .bank { flex: 1 1 0; min-height: 150px; max-height: none; }
+  .app.pool-answers .log { display: none; }
+}
+/* Everywhere but desktop the settings slide in from the left */
+@media (max-width: 1180px), (orientation: portrait) {
+  .side {
+    position: fixed; z-index: 30; top: 0; bottom: 0; left: 0; width: min(360px, 100%); overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg); border-right: 1px solid var(--line); gap: 18px;
+    padding: max(14px, env(safe-area-inset-top, 0px)) 16px max(20px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    transform: translateX(-100%); visibility: hidden; transition: transform .2s ease, visibility 0s .2s;
+  }
+  .menu-open .side { transform: none; visibility: visible; transition: transform .2s ease; }
+  .side .btn { padding: 7px 18px; }
+}
+@media (orientation: portrait) {
+  html { scrollbar-gutter: stable; }
+}
+/* portrait tablets: question and numbers beside this session's answers */
+@media (orientation: portrait) and (min-width: 700px) {
+  .panel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "card log" "stats log" "foot foot"; align-items: start; }
+  .card { grid-area: card; }
+  .stats { grid-area: stats; }
+  .log { grid-area: log; align-self: stretch; }
+  .log ol { max-height: 420px; }
+  .panel footer { grid-area: foot; }
+}
+/* short screens */
+@media (orientation: landscape) and (max-height: 820px) {
+  .side { gap: 12px; }
+  .maps button { padding-block: 4px 5px; }
+  .seg button { padding-block: 6px; }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .tips { display: none; }
+  .prompt { font-size: 22px; }
+  .card { padding: 12px; gap: 10px; }
+  h1 { font-size: 22px; }
+}
+@media (max-width: 760px) { .tagline { display: none; } }
+/* Phones: the map runs edge to edge */
+@media (max-width: 600px) and (orientation: portrait) {
+  .board { margin-inline: -16px; border-inline: 0; }
+  h1 { font-size: 22px; }
+  .prompt { font-size: 25px; }
+  .card { padding: 14px; }
+}
+/* Touch: bigger targets */
+@media (pointer: coarse) {
+  .seg button, .maps button { min-height: 42px; }
+  .floor-tabs button, .tool { min-height: 36px; min-width: 40px; }
+  .chip, .bank button { min-height: 38px; }
+  .btn { min-height: 44px; }
+  .switch { min-height: 40px; }
+  .linkish { padding: 8px 0; }
+}
+@media (prefers-reduced-motion: reduce) { .side, .menu-open .side { transition: none; } }
 </style>
 
 </head>
 <body>
-<div class="app">
+<div class="app" id="main">
   <header class="top">
-    <h1>R6 Callout Drill</h1>
-    <p class="tagline">Pro League map pool / 9 maps / callouts from Paltry's call sheets</p>
+    <div class="brand">
+      <h1>R6 Callout Drill</h1>
+      <p class="tagline">Pro League map pool / Paltry's call sheets</p>
+    </div>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="side"><span class="bars" aria-hidden="true"></span><span id="menuSum">Settings</span></button>
   </header>
 
-  <div class="main" id="main">
-    <nav class="side" aria-label="Drill settings">
-      <div class="group map-group"><h2 class="label" id="mapLabel">Map / mastered</h2><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
-      <div class="group"><h2 class="label">Mode</h2>
-        <div class="seg" id="modeTabs" role="group" aria-label="Mode">
-          <button data-mode="name" aria-pressed="true">Name it</button>
-          <button data-mode="pick">Pick it</button>
-          <button data-mode="find">Find it</button>
-          <button data-mode="study">Study</button>
-        </div>
+  <nav class="side" id="side" aria-label="Drill settings">
+    <div class="side-head"><h2 class="label">Drill settings</h2><button class="btn" id="closeMenu">Done</button></div>
+    <div class="group map-group"><h2 class="label" id="mapLabel">Map / mastered</h2><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
+    <div class="group"><h2 class="label">Mode</h2>
+      <div class="seg" id="modeTabs" role="group" aria-label="Mode">
+        <button data-mode="name" aria-pressed="true">Name it</button>
+        <button data-mode="pick">Pick it</button>
+        <button data-mode="find">Find it</button>
+        <button data-mode="study">Study</button>
       </div>
-      <div class="group"><h2 class="label">Pool</h2>
-        <div class="seg" id="poolChips" role="group" aria-label="Pool">
-          <button data-pool="rooms" aria-pressed="true">Main rooms</button>
-          <button data-pool="all">Rooms + spots</button>
-          <button data-pool="spots">Spots only</button>
-          <button data-pool="misses">My misses</button>
-        </div>
+    </div>
+    <div class="group"><h2 class="label">Pool</h2>
+      <div class="seg" id="poolChips" role="group" aria-label="Pool">
+        <button data-pool="rooms" aria-pressed="true">Main rooms</button>
+        <button data-pool="all">Rooms + spots</button>
+        <button data-pool="spots">Spots only</button>
+        <button data-pool="misses">My misses</button>
       </div>
-      <div class="group" id="answerRow"><h2 class="label">Answer</h2>
-        <div class="seg" id="answerChips" role="group" aria-label="Answer">
-          <button data-answer="type" aria-pressed="true">Type it</button>
-          <button data-answer="pool">Callout pool</button>
-        </div>
+    </div>
+    <div class="group" id="answerRow"><h2 class="label">Answer</h2>
+      <div class="seg" id="answerChips" role="group" aria-label="Answer">
+        <button data-answer="type" aria-pressed="true">Type it</button>
+        <button data-answer="pool">Callout pool</button>
       </div>
-      <div class="side-foot">
-        <label class="switch"><input type="checkbox" id="optOthers"> Show the other callouts as landmarks</label>
-        <button class="linkish" id="resetBtn">Reset my progress</button>
-      </div>
-    </nav>
+    </div>
+    <div class="side-foot">
+      <label class="switch"><input type="checkbox" id="optOthers"> Show the other callouts as landmarks</label>
+      <button class="linkish" id="resetBtn">Reset my progress</button>
+    </div>
+  </nav>
 
-    <section class="board game-view" id="board" aria-label="Floor plan">
-      <div class="board-bar">
-        <div class="where" id="where">Border<small>1F</small></div>
-        <div class="floor-tabs" id="floorTabs" role="group" aria-label="Floor"></div>
-        <button class="tool" id="zoomOut" aria-label="Zoom out">−</button>
-        <button class="tool" id="zoomIn" aria-label="Zoom in">+</button>
-        <button class="tool" id="viewBtn" title="Switch between the in-game map and the call-sheet plan">In-game</button>
-      </div>
-      <div class="stage" id="stage">
-        <figure class="plate" id="plate">
-          <img id="planImg" alt="">
-          <div class="layer" id="layer"></div>
-        </figure>
-      </div>
+  <section class="board game-view" id="board" aria-label="Floor plan">
+    <div class="board-bar">
+      <div class="where" id="where">Border<small>1F</small></div>
+      <div class="floor-tabs" id="floorTabs" role="group" aria-label="Floor"></div>
+      <button class="tool" id="zoomOut" aria-label="Zoom out">−</button>
+      <button class="tool" id="zoomIn" aria-label="Zoom in">+</button>
+      <button class="tool" id="viewBtn" title="Switch between the in-game map and the call-sheet plan">In-game</button>
+    </div>
+    <div class="stage" id="stage">
+      <figure class="plate" id="plate">
+        <img id="planImg" alt="">
+        <div class="layer" id="layer"></div>
+      </figure>
+    </div>
+  </section>
+
+  <aside class="panel" id="panel">
+    <div class="card" id="qCard" aria-live="polite"></div>
+    <div class="stats" role="group" aria-label="Score this session">
+      <div class="stat"><span>Score</span><b id="sScore">0/0</b></div>
+      <div class="stat"><span>Accuracy</span><b id="sAcc">–</b></div>
+      <div class="stat"><span>Streak</span><b id="sStreak">0</b></div>
+      <div class="stat"><span>Best</span><b id="sBest">0</b></div>
+    </div>
+    <section class="log" aria-labelledby="logLabel">
+      <div class="log-head"><h2 class="label" id="logLabel">This session</h2><span class="label" id="logCount"></span></div>
+      <ol id="logList"></ol>
+      <p class="empty">Your answers show up here, newest first, so you can go back over the ones you missed.</p>
     </section>
-
-    <aside class="panel">
-      <div class="card" id="qCard" aria-live="polite"></div>
-      <div class="stats" role="group" aria-label="This session">
-        <div class="stat"><span>Score</span><b id="sScore">0/0</b></div>
-        <div class="stat"><span>Accuracy</span><b id="sAcc">–</b></div>
-        <div class="stat"><span>Streak</span><b id="sStreak">0</b></div>
-        <div class="stat"><span>Best</span><b id="sBest">0</b></div>
-      </div>
-    </aside>
-  </div>
-
-  <footer>Callout names and positions come from Paltry's R6 Map Call Sheets for FireBirds. In-game floor maps by R6Calls (r6calls.com), built on Ubisoft's maps. A callout counts as mastered once your latest answer for it was right. Progress is saved in this browser only.</footer>
+    <footer>Callouts from Paltry's R6 Map Call Sheets (FireBirds). In-game maps by R6Calls (r6calls.com), built on Ubisoft's maps. A callout is mastered once your latest answer for it was right; progress stays in this browser.</footer>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
 </div>
 
 <script>
@@ -513,15 +638,17 @@ const stats = saved.stats;
 
 const S = Object.assign({ map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' }, saved.prefs);
 if (S.map !== 'all' && !mapById[S.map]) S.map = 'border';
-const session = { n: 0, c: 0, streak: 0, best: 0 };
+const session = { n: 0, c: 0, streak: 0, best: 0, log: [] };
 let zoom = 1;
 let q = null;              // current question
 let view = null;           // { map, fi } currently drawn
 let recent = [];
 
 const $ = id => document.getElementById(id);
+const fine = matchMedia('(pointer: fine)');
+const grab = node => { if (fine.matches) node.focus({ preventScroll: true }); };
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
-function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others, answer: S.answer }; save(); }
+function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others, answer: S.answer }; save(); renderSummary(); }
 
 // ---------- pool & picking ----------
 function inPool(c) {
@@ -548,7 +675,7 @@ function pickNext() {
   for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
   return list[list.length - 1];
 }
-function record(c, ok, hinted) {
+function record(c, ok, hinted, said = '') {
   const s = stats[c.key] ||= { n: 0, c: 0, last: 0 };
   s.n++; if (ok) s.c++; s.last = ok ? 1 : 0;
   save();
@@ -556,7 +683,9 @@ function record(c, ok, hinted) {
   session.streak = ok && !hinted ? session.streak + 1 : ok ? session.streak : 0;
   session.best = Math.max(session.best, session.streak);
   recent.push(c.key);
-  renderStats(); renderMapChips();
+  session.log.unshift({ c, ok, note: ok && ok !== 'broad' ? c.full || '' : said });
+  session.log.length = Math.min(session.log.length, 60);
+  renderStats(); renderMapChips(); renderLog();
 }
 
 // ---------- drawing the plate ----------
@@ -567,8 +696,8 @@ const img = f => inGame(f) ? f.game : f;
 const X = c => c.floor ? (inGame(c.floor) ? c.gx : c.x) : c.x;
 const Y = c => c.floor ? (inGame(c.floor) ? c.gy : c.y) : c.y;
 function baseWidth(f) {
-  const stage = $('stage'), v = img(f);
-  const maxH = parseFloat(getComputedStyle(stage).maxHeight) || 700;
+  const stage = $('stage'), v = img(f), cap = getComputedStyle(stage).maxHeight;
+  const maxH = cap === 'none' ? stage.clientHeight : parseFloat(cap) || 700;
   return Math.min(stage.clientWidth, maxH * v.w / v.h);
 }
 function drawPlate(map, fi) {
@@ -587,13 +716,15 @@ function drawPlate(map, fi) {
   $('where').replaceChildren(...where);
   renderFloorTabs();
 }
+// a name with a shorter form for narrow boards
+const label = (long, short) => short ? [el('span', { className: 'long', textContent: long }), el('span', { className: 'short', textContent: short })] : [long];
 function renderFloorTabs() {
   const tabs = $('floorTabs');
   if (S.map === 'all' && S.mode !== 'study') return tabs.replaceChildren();
   const map = view.map, study = S.mode === 'study';
   const opts = (study ? [] : [[null, 'All']]).concat(map.floors.map((f, i) => [i, f.name]));
   tabs.replaceChildren(...opts.map(([i, name]) => {
-    const b = el('button', { textContent: name });
+    const b = el('button', {}, ...label(name, { Basement: 'Bsmt' }[name]));
     const on = study ? i === view.fi : (i === null ? !S.floor : map.floors[i].name === S.floor);
     b.setAttribute('aria-pressed', String(on));
     b.onclick = () => {
@@ -606,7 +737,7 @@ function renderFloorTabs() {
 }
 function sizePlate() {
   if (!view) return;
-  const w = Math.round(baseWidth(view.map.floors[view.fi]) * zoom);
+  const w = Math.floor(baseWidth(view.map.floors[view.fi]) * zoom);
   $('plate').style.width = w + 'px';
   document.documentElement.style.setProperty('--fs', Math.max(9, Math.min(18, w * 0.0125)).toFixed(1) + 'px');
 }
@@ -685,8 +816,8 @@ function renderName() {
   };
   skip.onclick = () => q.done ? nextQuestion() : finishName(false, '');
   card(...header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, hint, skip), fb(),
-       el('div', { className: 'hint', textContent: 'Enter submits, Enter again goes to the next one. Short or full names count (Kitch H, Kitchen Hallway), and so do small typos and the start of a name (Det for Detention). Close calls get a Did you mean.' }));
-  input.focus({ preventScroll: true });
+       el('div', { className: 'hint tips', textContent: 'Enter submits, Enter again goes to the next one. Short or full names count (Kitch H, Kitchen Hallway), and so do small typos and the start of a name (Det for Detention). Close calls get a Did you mean.' }));
+  grab(input);
 }
 // Name it, answered from a bank of every callout on the map (A to Z).
 function poolFor(m) {
@@ -746,7 +877,7 @@ function submitName(v) {
 }
 function finishName(ok, guess) {
   q.done = true;
-  record(q.c, ok, q.hinted);
+  record(q.c, ok, q.hinted, !guess.trim() ? 'Revealed' : $('bank') ? `You picked ${guess}` : `You said “${guess.trim()}”`);
   const c = q.c;
   $('qMarker').classList.add(ok ? 'good' : 'bad');
   $('layer').append(tagFor(c, `answer ${ok ? 'good' : 'bad'}`));
@@ -799,13 +930,13 @@ function renderPick() {
   const next = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
   next.onclick = nextQuestion;
   card(...header('Which callout is <em>marked</em>?'), box, fb(), el('div', { className: 'actions' }, next),
-       el('div', { className: 'hint', textContent: 'Keys 1 to 4 answer, Enter goes to the next one.' }));
+       el('div', { className: 'hint tips', textContent: 'Keys 1 to 4 answer, Enter goes to the next one.' }));
 }
 function choose(i) {
   if (q.done) return;
   q.done = true;
   const picked = q.opts[i], ok = compact(picked.name) === compact(q.c.name);
-  record(q.c, ok, false);
+  record(q.c, ok, false, `You picked ${picked.name}`);
   [...document.querySelectorAll('.choices button')].forEach((b, j) => {
     b.disabled = true;
     if (q.opts[j] === q.c) b.classList.add('good');
@@ -841,7 +972,7 @@ function findAt(pt) {
     nearest = f.callouts.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
     ok = compact(nearest.name) === compact(c.name) || covers(nearest, c) || targets.some(t => d(t, pt) <= 0.04);
   }
-  record(c, ok, false);
+  record(c, ok, false, pt ? `You tapped ${nearest.name}` : 'Revealed');
   const layer = $('layer');
   const shown = pt ? targets.reduce((a, t) => d(t, pt) < d(a, pt) ? t : a) : c;
   layer.append(pos(el('div', { className: `marker ${ok ? 'good' : 'bad'}` }), shown), tagFor(shown, `answer ${ok ? 'good' : 'bad'}`));
@@ -897,6 +1028,18 @@ function renderStats() {
   $('sAcc').textContent = session.n ? Math.round(100 * session.c / session.n) + '%' : '–';
   $('sStreak').textContent = session.streak;
   $('sBest').textContent = session.best;
+}
+function renderLog() {
+  $('logCount').textContent = session.log.length ? `${session.log.length} answered` : '';
+  $('logList').replaceChildren(...session.log.map(({ c, ok, note }) => el('li', { className: ok === 'broad' ? 'near' : ok ? 'good' : 'bad' },
+    el('b', { textContent: c.name }), el('span', { textContent: `${c.map.name} ${c.floor.name}` }),
+    note ? el('small', { textContent: note }) : '')));
+  $('logList').scrollTop = 0;
+}
+// what the menu button says on phones and tablets: map / mode / pool
+function renderSummary() {
+  const label = (box, attr) => box.querySelector(`[data-${attr}="${S[attr]}"]`).textContent;
+  $('menuSum').textContent = [S.map === 'all' ? 'All maps' : mapById[S.map].name, label($('modeTabs'), 'mode'), label($('poolChips'), 'pool')].join(' / ');
 }
 function renderMapChips() {
   const count = ms => {
@@ -956,7 +1099,7 @@ $('viewBtn').onclick = () => {
   else nextQuestion();
 };
 function applyView() {
-  $('viewBtn').textContent = S.view === 'game' ? 'In-game' : 'Call sheet';
+  $('viewBtn').replaceChildren(...(S.view === 'game' ? ['In-game'] : label('Call sheet', 'Sheet')));
   $('viewBtn').setAttribute('aria-pressed', String(S.view === 'game'));
 }
 $('optOthers').onchange = e => { S.others = e.target.checked; persistPrefs(); if (S.mode !== 'study') nextQuestion(); };
@@ -967,12 +1110,32 @@ $('resetBtn').onclick = () => {
   save(); armed = false; $('resetBtn').textContent = 'Progress erased';
   renderMapChips();
 };
+// Settings drawer (everything but the desktop layout)
+const wide = matchMedia('(min-width: 1181px) and (orientation: landscape)');
+const menuOpen = () => document.body.classList.contains('menu-open');
+function setMenu(open) {
+  open = open && !wide.matches;
+  document.body.classList.toggle('menu-open', open);
+  $('menuBtn').setAttribute('aria-expanded', String(open));
+  $('scrim').hidden = !open;
+  $('board').inert = $('panel').inert = $('menuBtn').inert = open;
+  if (open) $('closeMenu').focus();
+}
+$('menuBtn').onclick = () => setMenu(true);
+$('closeMenu').onclick = () => { setMenu(false); $('menuBtn').focus(); };
+$('scrim').onclick = () => setMenu(false);
+wide.addEventListener('change', () => setMenu(false));
 document.addEventListener('keydown', e => {
+  if (menuOpen()) { if (e.key === 'Escape') { setMenu(false); $('menuBtn').focus(); } return; }
   if (!q) return;
   if (S.mode === 'pick' && !q.done && /^[1-4]$/.test(e.key)) choose(+e.key - 1);
   else if (q.done && e.key === 'Enter' && document.activeElement?.id !== 'guess' && document.activeElement?.id !== 'goBtn') { e.preventDefault(); nextQuestion(); }
 });
-window.addEventListener('resize', () => sizePlate());
+let stageSize = '';
+new ResizeObserver(() => {
+  const st = $('stage'), now = `${st.clientWidth}x${st.clientHeight}`;
+  if (now !== stageSize) { stageSize = now; requestAnimationFrame(sizePlate); }
+}).observe($('stage'));
 $('plate').addEventListener('pointermove', e => {
   const pl = $('plate');
   if (e.pointerType !== 'mouse' || !pl.classList.contains('clickable')) return;
@@ -987,7 +1150,7 @@ pressed($('modeTabs'), 'mode', S.mode);
 pressed($('poolChips'), 'pool', S.pool);
 applyAnswer();
 $('optOthers').checked = S.others;
-applyView(); renderStats(); renderMapChips();
+applyView(); renderStats(); renderMapChips(); renderSummary(); renderLog();
 $('planImg').addEventListener('load', () => sizePlate());
 nextQuestion();
 </script>

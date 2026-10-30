@@ -45,7 +45,7 @@ bare = tpl.replace('/*DATA*/null', blob)
 
 page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-        + bare.replace('<div class="app">', '</head>\n<body>\n<div class="app">', 1) + '\n</body>\n</html>\n')
+        + bare.replace('<div class="app"', '</head>\n<body>\n<div class="app"', 1) + '\n</body>\n</html>\n')
 open(os.path.join(here, 'index.html'), 'w').write(page)
 print('index.html', len(page) // 1024, 'KB')
 if len(sys.argv) > 1:
