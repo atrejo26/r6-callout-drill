@@ -7,6 +7,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "test": "node tests/run.js",
     "dist:win": "electron-builder --win portable --x64",
     "dist:dir": "electron-builder --win dir --x64",
     "dist:lite": "cp index.html launcher/ && cd launcher && GOOS=windows GOARCH=amd64 go build -trimpath -ldflags \"-s -w -H=windowsgui\" -o ../dist/R6-Callout-Drill-Lite.exe ."
@@ -32,7 +33,8 @@
   },
   "devDependencies": {
     "electron": "33.2.1",
-    "electron-builder": "25.1.8"
+    "electron-builder": "25.1.8",
+    "playwright": "1.56.1"
   },
   "author": "atrejo26",
   "repository": {

@@ -16,7 +16,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+
   deploy:
+    needs: test       # nothing is published unless every test passes
     runs-on: ubuntu-latest
     environment:
       name: github-pages

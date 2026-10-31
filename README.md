@@ -4,7 +4,7 @@ A trainer for Rainbow Six Siege callouts on the Pro League map pool: Border, Cha
 Clubhouse, Villa, Nighthaven Labs, Fortress, Bank, Kafe Dostoyevsky and Lair.
 
 **Play it in your browser: https://atrejo26.github.io/r6-callout-drill/** (no download).
-It updates whenever `index.html` changes on main.
+It updates whenever `index.html` changes on main, once the tests pass.
 
 Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), with some
 renamed, added or removed by hand: 563 callouts across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels,
@@ -31,8 +31,18 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 When an answer is revealed, an abbreviated callout also shows its full name.
 
 The map list shows how many callouts you have mastered on each map (your latest answer
-for it was right). Progress stays in your browser. **This session** lists every answer,
-newest first, with what you said when you missed.
+for it was right). Progress stays in your browser, filed under each callout's id, so it
+stays with a callout that is renamed or moved; `src/old_keys.json` carries progress saved
+by earlier releases over to the ids. **This session** lists every answer, newest first,
+with what you said when you missed.
+
+**Full report**, next to the map list, shows your progress on every map: callouts
+mastered, main rooms and spots, answers and how many were right, and the callouts you
+missed most, with **Practice my misses**. To share it, add a name if you like, then use
+**Share…** (where your device has a share sheet), **Copy report** (a few lines of text
+and a link) or **Copy link**. The link opens the web app on a read-only copy of the
+report, and **See what they'll see** previews it. Opening someone's link never changes
+your own progress.
 
 The page fills the window. On a desktop the settings sit in a column on the left; on
 tablets and phones they open from the menu button at the top, so the map and the question
@@ -70,7 +80,10 @@ On Kafe 2F, `Red` and `Green` are the red and green train carts in Train, not th
 stairs. The app says "train cart" next to them wherever they're asked for or offered, and
 `Red cart`, `Red train` and `Red train cart` (and the same for Green) count too. On Kafe 3F,
 `Inner` and `Outer` are Inner bar and Outer bar, the inside and outside of the bar;
-`Inner bar`, `Inside bar`, `Outer bar` and `Outside bar` count too.
+`Inner bar`, `Inside bar`, `Outer bar` and `Outside bar` count too. `Red Hall 1F` and
+`Red Hall 2F` count without the floor (`Red hall`, `Red H`), since the floor is already
+known; so on 1F, `Red` alone is the start of Red Hall, and the red stairs need their S
+(`Red S`, `Red stairs`).
 
 It works both ways: a name written out also takes its short form (`Kitch` for `Kitchen`,
 `Sqr` for `Square`, `Ops` for `Operation`, `½ W` for `Half Wall`). The table lives in
@@ -102,8 +115,38 @@ npm run dist:win          # dist/R6-Callout-Drill-<version>.exe (works from Linu
 npm run dist:lite         # dist/R6-Callout-Drill-Lite.exe (needs Go)
 ```
 
-Pushing a tag like `v1.0.1` makes GitHub Actions build the exe on Windows and attach it
-to a release.
+Pushing a tag like `v1.0.1` makes GitHub Actions run the tests, then build both exes on
+Windows and attach them to a release. Running *Build Windows app* by hand does the same
+without the release.
+
+## Tests
+
+```sh
+npm install
+npx playwright install chromium   # once
+npm test                          # or: npm test -- answers progress
+```
+
+`npm test` rebuilds the pages and fails if `index.html` was out of date with `src/`, then
+runs each `tests/*.test.js` in Chromium (it needs Python 3 for the build):
+
+- `answers`: hundreds of typed answers (short and full forms, typos, the start of a
+  name), Did you mean offers, no two callouts on a floor sharing an answer, and thousands
+  of misspellings, none of which may count for the wrong callout
+- `didyoumean`, `pool`: choosing from Did you mean and from the callout pool, hints and
+  reveals, settings kept after a reload
+- `zones`: in Find it, a tap on every callout's label counts, and a wrong tap names what
+  you tapped
+- `layout`: the desktop and phone layouts, the menu, zooming, nothing scrolling sideways
+- `progress`: old progress carried over, the update note, the report and sharing it, and
+  shared links, well formed or damaged
+- `secure`: the app code out of the console's reach, the Content Security Policy, the
+  answer kept out of the page, damaged saves, no network requests
+
+Screenshots go to `test-results/`. GitHub Actions runs the tests on every push to a
+branch other than main (*Tests*), before publishing the web app (*Publish web app*) and
+before building the exes (*Build Windows app*): if any test fails, nothing is published
+or built.
 
 ## Security
 
@@ -114,13 +157,16 @@ to a release.
 - The app's code sits in one block, out of reach of the browser console, and the
   answer isn't in the page until you've answered. That stops casual cheating from dev
   tools; it can't stop someone reading the page source, which is true of any app that
-  runs entirely in the browser. Scores live only in your own browser and go nowhere.
+  runs entirely in the browser. Scores live only in your own browser and go nowhere unless you share a report.
 - Saved progress is checked on load; anything unexpected is dropped, not trusted.
+- A shared report link carries only the report's numbers and the name, after the `#`, so
+  it never reaches the web server. The app shows it only if every part is well formed and
+  the numbers add up, shows the name as plain text, and saves none of it.
 - The Electron app runs sandboxed with no Node access, can't navigate away from the
   page, and only hands `https://` links to your browser.
 
-`python3 -I tools/build.py --test test.html` writes a copy with the app code reachable,
-for browser tests.
+`python3 -I tools/build.py --test test-results/test.html` writes a copy with the app code
+reachable, for the tests.
 
 ## Rebuilding the data
 

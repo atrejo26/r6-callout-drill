@@ -1,0 +1,39 @@
+name: Tests
+
+# Every update has to pass these before it is published: the web app deploy
+# (pages.yml) and the Windows build (build.yml) run them first and stop if they fail.
+on:
+  push:
+    branches-ignore: [main]   # main runs them as part of publishing
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1   # the tests drive the page in Chromium, not Electron
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-screenshots
+          path: test-results/*.png
+          if-no-files-found: ignore

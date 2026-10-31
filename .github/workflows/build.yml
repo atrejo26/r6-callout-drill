@@ -9,7 +9,13 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+    permissions:
+      contents: read
+
   windows:
+    needs: test       # no exe is built unless every test passes
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
