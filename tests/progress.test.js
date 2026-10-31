@@ -9,18 +9,29 @@ const { run, open, ready, until, check, shot, errors, DATA, SHIPPED } = require(
 const KEY = 'r6-callout-drill-v1';
 const OLD_KEYS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'src', 'old_keys.json'), 'utf8'));
 
-// The report's numbers for some saved stats, worked out here from callouts.json.
-function expected(stats) {
-  const a = { n: 0, c: 0, t: 0, r: 0, m: 0, rm: 0, s: 0 }, misses = [];
-  for (const m of DATA.maps) for (const f of m.floors) for (const c of f.callouts) {
-    const st = stats[`${m.id}|${f.name}|${c.id}`];
-    a.t++; if (c.room) a.r++;
-    if (!st) continue;
-    a.s++; a.n += st.n; a.c += Math.min(st.c, st.n);
-    if (st.last === 1) { a.m++; if (c.room) a.rm++; }
-    if (st.last === 0) misses.push([c.name, st.n - st.c]);
+// A saved callout as the app reads it back: saves from before the stages have no p (right
+// answers in a row) or at (when last asked), and get them.
+const norm = s => ({ n: s.n, c: s.c, p: s.p ?? (s.last === 0 ? 0 : s.c === s.n ? Math.min(s.n, 8) : 1), last: s.last, at: s.at ?? 0 });
+const normAll = stats => Object.fromEntries(Object.entries(stats).map(([k, s]) => [k, norm(s)]));
+const stageOf = s => !s ? 0 : s.p >= 8 ? 4 : s.p >= 4 ? 3 : s.p > 0 ? 2 : 1;
+// The report's numbers for some saved stats, worked out here from callouts.json: callouts
+// (t), main rooms (r), tried (s), somewhat learned (a), learned (l), mastered (m), learned
+// or mastered (won, rooms rw), answers (n) and right (c), and what's to work on.
+function expected(saved) {
+  const a = { n: 0, c: 0, t: 0, r: 0, s: 0, a: 0, l: 0, m: 0, won: 0, rw: 0, maps: {} }, misses = [];
+  for (const m of DATA.maps) {
+    const mm = a.maps[m.id] = { t: 0, won: 0, n: 0, c: 0 };
+    for (const f of m.floors) for (const c of f.callouts) {
+      const raw = saved[`${m.id}|${f.name}|${c.id}`], st = raw && norm(raw), g = stageOf(st);
+      a.t++; mm.t++; if (c.room) a.r++;
+      if (!st) continue;
+      a.s++; a.n += st.n; a.c += st.c; mm.n += st.n; mm.c += st.c;
+      if (g === 2) a.a++; if (g === 3) a.l++; if (g === 4) a.m++;
+      if (g >= 3) { a.won++; mm.won++; if (c.room) a.rw++; }
+      if ((g === 1 || g === 2) && st.n > st.c) misses.push([c.name, g, st.n - st.c]);
+    }
   }
-  misses.sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0]));
+  misses.sort((x, y) => x[1] - y[1] || y[2] - x[2] || x[0].localeCompare(y[0]));
   return { ...a, misses: misses.map(x => x[0]) };
 }
 
@@ -61,7 +72,7 @@ run(async browser => {
   page = await start({ stats: { 'border|1F|Stall 2|35': { n: 2, c: 2, last: 1 }, 'lair|2F|Boost|19': { n: 1, c: 0, last: 0 } } });
   const v113 = await stored(page);
   check('1.1.3 progress: no note, marked seen', !(await isOpen(page, 'updateNote')) && v113.update === 1);
-  check('1.1.3 progress: carried to the ids', isDeepStrictEqual(v113.stats, { 'border|1F|o38': { n: 2, c: 2, last: 1 }, 'lair|2F|o21': { n: 1, c: 0, last: 0 } }), JSON.stringify(v113.stats));
+  check('1.1.3 progress: carried to the ids', isDeepStrictEqual(v113.stats, normAll({ 'border|1F|o38': { n: 2, c: 2, last: 1 }, 'lair|2F|o21': { n: 1, c: 0, last: 0 } })), JSON.stringify(v113.stats));
   await page.context().close();
   page = await start({ stats: { 'kafe|1F|o19': { n: 1, c: 1, last: 1 } } });
   check('progress saved since, the note never answered: no note', !(await isOpen(page, 'updateNote')) && (await stored(page)).update === 1);
@@ -70,21 +81,22 @@ run(async browser => {
   check('progress from before: the note shows', await isOpen(page, 'updateNote'));
   await page.reload(); await ready(page);
   const pending = await stored(page);
-  check('...and again until answered, after the progress moved to the ids', await isOpen(page, 'updateNote') && pending.update === 0 && isDeepStrictEqual(pending.stats, { 'kafe|1F|o19': { n: 1, c: 1, last: 1 } }), JSON.stringify(pending));
+  check('...and again until answered, after the progress moved to the ids', await isOpen(page, 'updateNote') && pending.update === 0 && isDeepStrictEqual(pending.stats, normAll({ 'kafe|1F|o19': { n: 1, c: 1, last: 1 } })), JSON.stringify(pending));
   await page.context().close();
 
   // 2. Progress under old keys moves to the callout ids, and the note shows: some of it is
   // from before 1.1.3.
   const old = {
     'border|1F|2|38': { n: 2, c: 1, last: 0 }, 'border|1F|Stall 2|38': { n: 3, c: 3, last: 1 }, 'border|1F|Stall 2|35': { n: 1, c: 0, last: 0 },
-    'kafe|1F|R1|18': { n: 1, c: 1, last: 1 }, 'kafe|1F|R1|19': { n: 2, c: 1, last: 1 },
+    'kafe|1F|R1|18': { n: 2, c: 2, last: 1 }, 'kafe|1F|R1|19': { n: 2, c: 2, last: 1 },
     'lair|2F|o21': { n: 1, c: 1, last: 1 }, 'lair|2F|Boost|19': { n: 2, c: 0, last: 0 },
     'border|1F|Nope|99': { n: 1, c: 1, last: 1 },
   };
-  const carried = {
-    'border|1F|o38': { n: 6, c: 4, last: 0 }, 'kafe|1F|o19': { n: 3, c: 2, last: 1 }, 'lair|2F|o21': { n: 3, c: 1, last: 0 },
+  // all 4 of Kafe's answers were right, so in a row: learned
+  const carried = normAll({
+    'border|1F|o38': { n: 6, c: 4, last: 0 }, 'kafe|1F|o19': { n: 4, c: 4, last: 1 }, 'lair|2F|o21': { n: 3, c: 1, last: 0 },
     'border|1F|Nope|99': { n: 1, c: 1, last: 1 },
-  };
+  });
   page = await start({ stats: old, prefs: { mode: 'pick' } });
   let st = await stored(page);
   check('old keys carried to the ids, answers added up', isDeepStrictEqual(st.stats, carried), JSON.stringify(st.stats));
@@ -97,7 +109,7 @@ run(async browser => {
   check('keys over the note do nothing behind it', await logRows(page) === 0 && await isOpen(page, 'updateNote'));
   await page.keyboard.press('Enter');   // the focused Keep button
   check('Enter keeps', !(await isOpen(page, 'updateNote')) && await logRows(page) === 0);
-  check('keep: note seen, progress kept', await seen(page) && (await stored(page)).stats['kafe|1F|o19'].n === 3);
+  check('keep: note seen, progress kept', await seen(page) && (await stored(page)).stats['kafe|1F|o19'].n === 4);
   await page.reload(); await ready(page);
   check('keep: no note after a reload', !(await isOpen(page, 'updateNote')));
   await page.context().close();
@@ -114,10 +126,11 @@ run(async browser => {
   check('Start over: the misses pool is empty now', (await page.textContent('#qCard')).includes('no misses'));
   await page.context().close();
 
-  // 3. The report: numbers, misses, practice, sharing.
+  // 3. The report: numbers, misses, practice, sharing. A callout at every stage, and two
+  // saved before the stages.
   const mine = {
-    'border|1F|o38': { n: 6, c: 4, last: 0 }, 'kafe|1F|o19': { n: 3, c: 2, last: 1 }, 'lair|2F|o21': { n: 3, c: 1, last: 0 },
-    'bank|1F|o0': { n: 2, c: 2, last: 1 }, 'bank|2F|o1': { n: 4, c: 1, last: 0 },
+    'border|1F|o38': { n: 6, c: 4, p: 0, last: 0, at: 5 }, 'kafe|1F|o19': { n: 9, c: 8, p: 8, last: 1, at: 7 }, 'lair|2F|o21': { n: 3, c: 1, p: 1, last: 1, at: 6 },
+    'bank|1F|o0': { n: 4, c: 4, last: 1 }, 'bank|2F|o1': { n: 4, c: 1, last: 0 }, 'bank|1F|o2': { n: 2, c: 2, p: 2, last: 1, at: 3 },
   };
   const e = expected(mine), pct = (a, b) => Math.round(100 * a / b);
   page = await start({ stats: mine, update: 1 }, { viewport: { width: 1440, height: 900 }, init: () => {
@@ -127,15 +140,20 @@ run(async browser => {
   await page.click('#reportBtn');
   check('the report opens', await isOpen(page, 'report'));
   const hero = await page.textContent('#reportBody .hero');
-  check('report: callouts mastered', hero.includes(`${e.m}/${e.t}`), hero);
+  check('report: callouts learned', hero === `${e.won}/${e.t}callouts learned${pct(e.won, e.t)}%` && e.won === 2, hero);
+  const legend = await page.$$eval('#reportBody .legend li', ns => ns.map(n => n.textContent));
+  check('report: how many at each stage', isDeepStrictEqual(legend, [`Mastered${e.m}`, `Learned${e.l}`, `Somewhat learned${e.a}`, `Unlearned${e.s - e.a - e.l - e.m}`, `Unasked${e.t - e.s}`])
+    && e.m === 1 && e.l === 1 && e.a === 2 && e.s === 6, JSON.stringify(legend));
   const cells = await page.$$eval('#reportBody .stat', ns => ns.map(n => n.textContent));
-  check('report: main rooms, spots, answers, right', isDeepStrictEqual(cells, [`Main rooms${e.rm}/${e.r}`, `Spots${e.m - e.rm}/${e.t - e.r}`, `Answers${e.n}`, `Right${pct(e.c, e.n)}%`]), JSON.stringify(cells));
+  check('report: main rooms, spots, answers, right', isDeepStrictEqual(cells, [`Main rooms${e.rw}/${e.r}`, `Spots${e.won - e.rw}/${e.t - e.r}`, `Answers${e.n}`, `Right${pct(e.c, e.n)}%`]), JSON.stringify(cells));
   const rows = await page.$$eval('#reportBody .rep li', ns => ns.map(n => n.textContent));
-  const bankT = DATA.maps.find(m => m.id === 'bank').floors.reduce((a, f) => a + f.callouts.length, 0);
+  const bank = e.maps.bank;
   check('report: a row per map', rows.length === DATA.maps.length, rows[0]);
-  check('report: the Bank row', rows.some(r => r.startsWith(`Bank1/${bankT}`) && r.includes('50% right')), rows.find(r => r.startsWith('Bank')));
+  check('report: the Bank row', rows.some(r => r.startsWith(`Bank${bank.won}/${bank.t}`) && r.includes(`${pct(bank.c, bank.n)}% right`)) && bank.won === 1, rows.find(r => r.startsWith('Bank')));
   const missed = await page.$$eval('#reportBody .log li b', ns => ns.map(n => n.firstChild.textContent));
-  check('report: to work on, most missed first', isDeepStrictEqual(missed, e.misses), JSON.stringify([missed, e.misses]));
+  check('report: to work on, unlearned first, then the most missed', isDeepStrictEqual(missed, e.misses) && missed.length === 3, JSON.stringify([missed, e.misses]));
+  const work = await page.$$eval('#reportBody .log li small', ns => ns.map(n => n.textContent));
+  check('report: to work on says the stage and the misses', work[0] === 'Unlearned · missed 3 of 4' && work[2] === 'Somewhat learned · missed 2 of 3', JSON.stringify(work));
   await shot(page, 'progress_report');
 
   await page.$eval('#shareName', n => { n.value = '  Ace <img src=x onerror=alert(1)>' + String.fromCharCode(0x202e) + ' \n'; n.dispatchEvent(new Event('input')); });
@@ -145,19 +163,19 @@ run(async browser => {
   await page.click('#copyLink');
   check('Copy link', await until(page, () => document.getElementById('shareMsg').textContent === 'Link copied.'));
   const link = await page.evaluate(() => window.__clip);
-  check('the link opens the site on the report', /^https:\/\/atrejo26\.github\.io\/r6-callout-drill\/#report=1~\d{8}~[A-Za-z0-9_-]+~border_/.test(link), link);
+  check('the link opens the site on the report', /^https:\/\/atrejo26\.github\.io\/r6-callout-drill\/#report=2~\d{8}~[A-Za-z0-9_-]+~border_/.test(link), link);
   check('the link is short enough to paste anywhere', link.length < 700, link.length);
   await page.click('#copyReport');
   check('Copy report', await until(page, () => document.getElementById('shareMsg').textContent === 'Report copied.'));
   const rep = await page.evaluate(() => window.__clip);
-  check('the copied report: who, how far, the link', rep.startsWith('R6 Callout Drill progress: Ace <img src=x onerror=a, ') && rep.includes(`Mastered ${e.m} of ${e.t} callouts`) && rep.trim().endsWith(link), rep);
+  check('the copied report: who, how far, the link', rep.startsWith('R6 Callout Drill progress: Ace <img src=x onerror=a, ') && rep.includes(`Learned ${e.won} of ${e.t} callouts`) && rep.includes(`Mastered ${e.m} · Learned ${e.l} · Somewhat learned ${e.a}`) && rep.trim().endsWith(link), rep);
   check('Share… shown where there is a share sheet', await page.isVisible('#shareBtn'));
   await page.click('#shareBtn');
   check('the share sheet gets the title, the text and the link', await until(page, () => !!window.__share));
   const sh = await page.evaluate(() => window.__share);
   check('...the link once, as the url', sh.url === link && sh.title === 'R6 Callout Drill progress' && sh.text.startsWith('R6 Callout Drill progress') && !sh.text.includes('https://'), JSON.stringify(sh).slice(0, 160));
   await page.click('#previewBtn');
-  check('preview: what they see', (await page.textContent('#reportTitle')) === 'Shared progress' && !(await page.isVisible('#reportShare')) && (await page.textContent('#reportBody .hero')).includes(`${e.m}/${e.t}`));
+  check('preview: what they see', (await page.textContent('#reportTitle')) === 'Shared progress' && !(await page.isVisible('#reportShare')) && (await page.textContent('#reportBody .hero')).includes(`${e.won}/${e.t}`));
   await page.click('#reportClose');
   check('Back from the preview', (await page.textContent('#reportTitle')) === 'Progress report' && await page.isVisible('#reportShare'));
   await page.mouse.click(100, 450);
@@ -183,10 +201,11 @@ run(async browser => {
   await page.context().close();
 
   // 4. Opening a shared link: their numbers, read-only, and nothing of yours changes.
-  const yours = { 'border|1F|o0': { n: 1, c: 0, last: 0 } };
+  const yours = { 'border|1F|o0': { n: 1, c: 0, p: 0, last: 0, at: 1 } };
   page = await start({ stats: yours, update: 0 }, { hash: '#' + link.split('#')[1] });   // the update note not answered yet
   check('shared: opens on its own', await isOpen(page, 'report') && (await page.textContent('#reportTitle')) === 'Shared progress');
-  check('shared: their numbers and name', (await page.textContent('#reportBody .hero')).includes(`${e.m}/${e.t}`) && (await page.textContent('#reportWho')).startsWith('Ace <img'));
+  check('shared: their numbers and name', (await page.textContent('#reportBody .hero')).includes(`${e.won}/${e.t}`)
+    && isDeepStrictEqual(await page.$$eval('#reportBody .legend b', ns => ns.map(n => +n.textContent)), [e.m, e.l, e.a, e.s - e.a - e.l - e.m, e.t - e.s]) && (await page.textContent('#reportWho')).startsWith('Ace <img'));
   check('shared: no misses list or share box', !(await page.$('#reportBody .log')) && !(await page.isVisible('#reportShare')));
   check('shared: the update note waits', !(await isOpen(page, 'updateNote')));
   await shot(page, 'progress_shared');
@@ -204,6 +223,10 @@ run(async browser => {
     'bad number': '#report=1~20261031~~border_1_1_1F.5.1.1.1.!', 'map twice': '#report=1~20261031~~bank_1_1_1F.5.1.1.1.1~bank_1_1_1F.5.1.1.1.1',
     'bad name': '#report=1~20261031~%%%~border_1_1_1F.5.1.1.1.1', 'not utf-8': '#report=1~20261031~' + Buffer.from([0xff, 0xfe]).toString('base64url') + '~border_1_1_1F.5.1.1.1.1',
     huge: '#report=1~20261031~~' + Array(500).fill('border_1_1_1F.5.1.1.1.1').join('~'),
+    'unknown version': '#report=3~20261031~~border_1_1_1F.5.1.1',
+    'stages > tried': '#report=2~20261031~~border_1_1_1F.5.1.1.1.1', 'rooms learned > learned': '#report=2~20261031~~border_1_1_1F.5.2.2.0.1.0.2',
+    'rooms learned > rooms': '#report=2~20261031~~border_1_1_1F.5.1.2.0.2.0.2', 'spots learned > spots': '#report=2~20261031~~border_1_1_1F.3.2.3.0.3',
+    'too many numbers': '#report=2~20261031~~border_1_1_1F.5.1.1.0.0.0.0.0', 'no numbers': '#report=2~20261031~~border_1_1_1F',
   };
   page = await start({ stats: {}, update: 1 });
   for (const [what, h] of Object.entries(bad)) {
@@ -214,11 +237,19 @@ run(async browser => {
     await page.keyboard.press('Escape');
     await until(page, () => !document.getElementById('report').open && location.hash === '');
   }
-  const odd = `#report=1~20261031~${enc('<img src=x onerror=window.__pwn=1>')}~zz-new_2_1_1F.4.1.1.1.2`;
+  const odd = `#report=2~20261031~${enc('<img src=x onerror=window.__pwn=1>')}~zz-new_2_1_1F.4.1.2.0.1`;
   await page.evaluate(h => { location.hash = h; }, odd);
   await until(page, () => document.getElementById('report').open);
   check('odd link: markup in the name stays text', (await page.textContent('#reportWho')).startsWith('<img src=x onerror=wi') && !(await page.$('#report img')) && !(await page.evaluate(() => window.__pwn)));
   check('odd link: a map this version lacks shows by its id', (await page.textContent('#reportBody .rep')).startsWith('zz-new1/4'));
+  await page.keyboard.press('Escape');
+  await until(page, () => !document.getElementById('report').open && location.hash === '');
+  // A link made before the stages: the callouts last got right show as somewhat learned.
+  await page.evaluate(h => { location.hash = h; }, '#report=1~20261031~~border_3_2_1F.5.1.1.1.2');
+  await until(page, () => document.getElementById('report').open);
+  const v1 = await page.$$eval('#reportBody .legend b', ns => ns.map(n => +n.textContent));
+  check('a link from before the stages still opens', (await page.textContent('#reportBody .hero')).startsWith('0/5') && isDeepStrictEqual(v1, [0, 0, 1, 1, 3])
+    && (await page.textContent('#reportNote')).includes('before callouts had stages'), JSON.stringify(v1));
   await page.context().close();
 
   // 5. Phone: the report fits, nothing scrolls sideways, practice closes the menu too.

@@ -276,7 +276,7 @@ run(async browser => {
   const wrong = await page.evaluate(cases => cases.map(([m, f, n, typed, want]) => {
     const c = ALL.find(c => c.map.id === m && c.floor.name === f && c.name === n);
     if (!c) return `no callout ${m} ${f} ${n}`;
-    const got = accepts(c, typed);
+    const got = c.accepts(typed);
     return (want === 'ok' ? got === 'typo' || got === 'partial' : got === want) ? null : `${m} ${f} ${n} <- "${typed}": got ${got}, want ${want}`;
   }).filter(Boolean), CASES);
   check(`${CASES.length} typed answers`, !wrong.length, '\n  ' + wrong.join('\n  '));
@@ -284,18 +284,18 @@ run(async browser => {
   const offers = await page.evaluate(cases => cases.map(([m, f, n, typed, want]) => {
     const c = ALL.find(c => c.map.id === m && c.floor.name === f && c.name === n);
     if (!c) return `no callout ${m} ${f} ${n}`;
-    const got = suggestions(c, typed).map(o => o.name);
+    const got = c.floor.suggestions(typed).map(o => o.name);
     return got.join('|') === want.join('|') ? null : `${m} ${f} "${typed}": offered [${got}], want [${want}]`;
   }).filter(Boolean), OFFERS);
   check(`${OFFERS.length} Did you mean offers`, !offers.length, '\n  ' + offers.join('\n  '));
 
   const shared = await page.evaluate(() => {
     const out = [];
-    for (const m of DATA.maps) for (const f of m.floors) {
+    for (const m of MAPS) for (const f of m.floors) {
       const seen = new Map();
-      for (const c of f.callouts) for (const [t] of forms(c)) {
+      for (const c of f.callouts) for (const [t] of c.forms) {
         const o = seen.get(t);
-        if (o && compact(o.name) !== compact(c.name)) out.push(`${m.id} ${f.name}: "${t}" is ${o.name} and ${c.name}`);
+        if (o && o.ck !== c.ck) out.push(`${m.id} ${f.name}: "${t}" is ${o.name} and ${c.name}`);
         else seen.set(t, c);
       }
     }
@@ -310,8 +310,8 @@ run(async browser => {
   const scan = await page.evaluate(() => {
     const out = [];
     let variants = 0, accepted = 0;
-    for (const m of DATA.maps) for (const f of m.floors) {
-      const uniq = [...new Map(f.callouts.map(c => [compact(c.name), c])).values()];
+    for (const m of MAPS) for (const f of m.floors) {
+      const uniq = f.unique;
       // each misspelling -> the callouts it came from; its compact form -> all the callouts it could misspell
       const from = new Map(), srcs = new Map();
       for (const o of uniq) {
@@ -325,10 +325,10 @@ run(async browser => {
         for (const v of vs) if (compact(v)) { from.set(v, [...from.get(v) || [], o]); srcs.set(compact(v), [...srcs.get(compact(v)) || [], o]); }
       }
       for (const [v, mine] of from) {
-        const g = compact(v), hits = uniq.filter(c => accepts(c, v)), could = srcs.get(g);
+        const g = compact(v), hits = uniq.filter(c => c.accepts(v)), could = srcs.get(g);
         variants += mine.length; accepted += mine.filter(o => hits.includes(o)).length;
-        const other = hits.filter(c => !could.includes(c) && !isExact(c, g) && !isBroad(c, g) && !could.some(o => covers(c, o)));
-        if (other.length) out.push(`${m.id} ${f.name}: "${v}" (from ${mine.map(o => o.name).join(', ')}) taken as ${other.map(c => c.name + '/' + accepts(c, v)).join(', ')}`);
+        const other = hits.filter(c => !could.includes(c) && !c.isExact(g) && !c.isBroad(g) && !could.some(o => c.covers(o)));
+        if (other.length) out.push(`${m.id} ${f.name}: "${v}" (from ${mine.map(o => o.name).join(', ')}) taken as ${other.map(c => c.name + '/' + c.accepts(v)).join(', ')}`);
       }
     }
     return { out, variants, accepted };
@@ -339,28 +339,28 @@ run(async browser => {
   // Border 1F: Stalls covers Stall 1 and Stall 2.
   const stalls = await page.evaluate(() => {
     const s1 = ALL.find(c => c.name === 'Stall 1'), all = ALL.find(c => c.name === 'Stalls' && c.map.id === 'border');
-    return { '1': accepts(s1, '1'), 'stall 1': accepts(s1, 'stall 1'), 'stalls 1': accepts(s1, 'stalls 1'), stalls: accepts(s1, 'stalls'),
-      stall: accepts(s1, 'stall'), 'stall 2': accepts(s1, 'stall 2'), 'Stalls/stalls': accepts(all, 'stalls'), 'Stalls/stall 1': accepts(all, 'stall 1'), covers: covers(s1, all) };
+    return { '1': s1.accepts('1'), 'stall 1': s1.accepts('stall 1'), 'stalls 1': s1.accepts('stalls 1'), stalls: s1.accepts('stalls'),
+      stall: s1.accepts('stall'), 'stall 2': s1.accepts('stall 2'), 'Stalls/stalls': all.accepts('stalls'), 'Stalls/stall 1': all.accepts('stall 1'), covers: s1.covers(all) };
   });
   check('Stall 1 and Stalls', isDeepStrictEqual(stalls, { '1': 'exact', 'stall 1': 'exact', 'stalls 1': 'typo', stalls: 'broad',
     stall: 'broad', 'stall 2': false, 'Stalls/stalls': 'exact', 'Stalls/stall 1': false, covers: true }), JSON.stringify(stalls));
 
-  await page.evaluate(() => { q = { c: ALL.find(c => c.name === 'Stall 1'), done: false, hinted: false }; paintQuestion(); renderName(); });
+  await page.evaluate(() => drill.ask(ALL.find(c => c.name === 'Stall 1')));
   await page.fill('#guess', 'stalls'); await page.press('#guess', 'Enter');
   const fb = await text('#fb'), score = await text('#sScore');
   check('name it: Stalls for Stall 1 counts and names the spot', fb === 'Accepted. More specific: Stall 1.' && score === '1/1', `${fb} | ${score}`);
 
   await page.click('[data-mode=pick]');
   const picks = await page.evaluate(() => Array.from({ length: 30 }, () => {
-    q = { c: ALL.find(c => c.name === 'Stall 1'), done: false }; paintQuestion(); renderPick(); return q.opts.map(o => o.name);
+    drill.ask(ALL.find(c => c.name === 'Stall 1')); return drill.q.opts.map(o => o.name);
   }));
   check('pick it: four choices, Stall 1 among them, never Stalls', picks.every(o => o.length === 4 && o.includes('Stall 1') && !o.includes('Stalls')), JSON.stringify(picks.slice(0, 3)));
 
-  await page.evaluate(() => { S.pool = 'all'; });
+  await page.evaluate(() => { settings.pool = 'all'; });
   await page.click('[data-mode=find]');
   const found = await page.evaluate(() => {
-    q = { c: ALL.find(c => c.name === 'Stalls' && c.map.id === 'border'), done: false }; paintQuestion(); renderFind();
-    const s2 = ALL.find(c => c.name === 'Stall 2'); findAt({ x: X(s2), y: Y(s2) }); return $('fb').textContent;
+    drill.ask(ALL.find(c => c.name === 'Stalls' && c.map.id === 'border'));
+    const s2 = ALL.find(c => c.name === 'Stall 2'); drill.q.tap({ x: plate.x(s2), y: plate.y(s2) }); return $('fb').textContent;
   });
   check('find it: a tap on Stall 2 is in Stalls', found === 'Correct.', found);
 });

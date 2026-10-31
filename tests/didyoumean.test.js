@@ -6,11 +6,11 @@ const { run, open, check, shot, TEST_PAGE } = require('./lib');
 run(async browser => {
   const page = await open(browser, TEST_PAGE);
   const ask = (m, f, n) => page.evaluate(([m, f, n]) => {
-    S.answer = 'type'; applyAnswer();
-    q = { c: ALL.find(c => c.map.id === m && c.floor.name === f && c.name === n), done: false, hinted: false }; paintQuestion(); renderName();
+    controls.set({ answer: 'type' });
+    drill.ask(ALL.find(c => c.map.id === m && c.floor.name === f && c.name === n));
   }, [m, f, n]);
   const type = async v => { await page.fill('#guess', v); await page.press('#guess', 'Enter'); };
-  const state = () => page.evaluate(() => ({ fb: $('fb').textContent.trim(), done: q.done, answers: session.n,
+  const state = () => page.evaluate(() => ({ fb: $('fb').textContent.trim(), done: drill.q.done, answers: session.n,
     offered: [...document.querySelectorAll('.suggest .chip')].map(b => b.textContent) }));
   let s;
 

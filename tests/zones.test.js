@@ -7,30 +7,30 @@ run(async browser => {
   const page = await open(browser, TEST_PAGE);
   await page.click('[data-mode=find]');
   const res = await page.evaluate(() => {
-    const realRecord = record; record = () => {};   // scoring isn't under test here, and it is slow
+    drill.file = () => ({ was: 0, mixed: null, mixedWas: 0 });   // scoring isn't under test here, and it is slow
     const out = { asked: 0, ok: 0, fail: [], wrong: 0, wrongFail: [] };
     for (const view of ['game', 'plan']) for (const pool of ['rooms', 'all']) {
-      S.view = view; S.pool = pool;
+      settings.view = view; settings.pool = pool;
       for (const c of ALL) {
         if (pool === 'rooms' && !c.room) continue;
         const f = c.floor;
         if (view === 'game' && !f.game) continue;
         out.asked++;
-        q = { c, done: false }; paintQuestion(); renderFind();
-        findAt({ x: X(c), y: Y(c) });
+        drill.ask(c);
+        drill.q.tap({ x: plate.x(c), y: plate.y(c) });
         if ($('fb').textContent === 'Correct.') out.ok++; else out.fail.push(`${view}/${pool} ${c.map.id} ${f.name} ${c.name}: ${$('fb').textContent}`);
-        const other = f.callouts.find(o => o !== c && (pool !== 'rooms' || o.room) && compact(o.name) !== compact(c.name) && !covers(o, c) && zoneOf(o) && inZone(zoneOf(o), toPlan(f, { x: X(o), y: Y(o) })));
+        const other = f.callouts.find(o => o !== c && (pool !== 'rooms' || o.room) && o.ck !== c.ck && !o.covers(c) && o.area(pool) && inZone(o.area(pool), f.toPlan({ x: plate.x(o), y: plate.y(o) }, plate.inGame(f))));
         if (other) {
-          q = { c, done: false }; paintQuestion(); renderFind();
-          findAt({ x: X(other), y: Y(other) });
+          drill.ask(c);
+          drill.q.tap({ x: plate.x(other), y: plate.y(other) });
           if ($('fb').textContent.startsWith('You tapped ')) out.wrong++; else out.wrongFail.push(`${view}/${pool} ${c.name} via ${other.name}: ${$('fb').textContent}`);
         }
       }
     }
-    q = { c: ALL[0], done: false }; paintQuestion(); renderFind(); findAt({ x: 0.001, y: 0.001 });
+    drill.ask(ALL[0]); drill.q.tap({ x: 0.001, y: 0.001 });
     out.outside = $('fb').textContent;
     out.outlines = document.querySelectorAll('#layer svg.zone').length;
-    record = realRecord;
+    delete drill.file;
     return out;
   });
   check(`a tap on the label counts (${res.ok} of ${res.asked})`, res.asked > 1000 && !res.fail.length, '\n  ' + res.fail.slice(0, 20).join('\n  '));
@@ -40,9 +40,9 @@ run(async browser => {
 
   // A miss in the in-game view, for the record.
   await page.evaluate(() => {
-    S.view = 'game'; S.pool = 'all';
+    settings.view = 'game'; settings.pool = 'all';
     const c = ALL.find(x => x.name === 'Stall 2'), o = c.floor.callouts.find(x => x.name === 'Showers');
-    q = { c, done: false }; drawPlate(c.map, c.map.floors.indexOf(c.floor)); paintQuestion(); renderFind(); findAt({ x: X(o), y: Y(o) });
+    drill.ask(c); drill.q.tap({ x: plate.x(o), y: plate.y(o) });
   });
   const miss = await page.textContent('#fb');
   check('a miss names what was tapped', miss.startsWith('You tapped Showers'), miss);

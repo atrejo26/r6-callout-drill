@@ -4,8 +4,8 @@
 const { run, open, ready, check, errors, SHIPPED, TEST_PAGE, VIOLATION } = require('./lib');
 
 // What the console must not reach on the shipped page (the test page has them all).
-const reach = () => ({ q: typeof q, S: typeof S, DATA: typeof DATA, ALL: typeof ALL, accepts: typeof accepts, stats: typeof stats,
-  session: typeof session, saved: typeof saved, finishName: typeof finishName, record: typeof record, nextQuestion: typeof nextQuestion });
+const reach = () => ({ drill: typeof drill, settings: typeof settings, DATA: typeof DATA, ALL: typeof ALL, Callout: typeof Callout,
+  progress: typeof progress, store: typeof store, session: typeof session, Plate: typeof Plate, controls: typeof controls, Picker: typeof Picker });
 // The one refusal expected is the script injected below. Engines log refusals each in their
 // own words, or not at all, so what counts is the page's own report of each (tests/lib.js).
 const ENGINE_LOG = new RegExp(`^(?!${VIOLATION}).*Content[ -]Security[ -]Policy`, 'is');
@@ -30,7 +30,7 @@ run(async browser => {
   check('floor image shown', await page.evaluate(() => { const i = document.getElementById('planImg'); return i.complete && i.naturalWidth > 0; }));
   const reached = await page.evaluate(reach);
   check('app state out of reach of the console', Object.values(reached).every(t => t === 'undefined'), JSON.stringify(reached));
-  check('nothing on window', await page.evaluate(() => !('q' in window) && !('nextQuestion' in window)));
+  check('nothing on window', await page.evaluate(() => !('drill' in window) && !('progress' in window)));
   check('the page keeps to its own policy', !violations.length, violations.join(' | '));
   check('injected inline script is blocked', await page.evaluate(() => { window.__x = 0; const s = document.createElement('script'); s.textContent = 'window.__x = 1'; document.body.append(s); return window.__x === 0; }));
   check('the policy reported it', await soon(() => violations.length) && INLINE_SCRIPT.test(violations[0]), violations.join(' | '));
@@ -65,7 +65,7 @@ run(async browser => {
   await page.keyboard.press('Escape');
   await page.click('#reportBtn');
   const hero = await page.textContent('#reportBody .hero');
-  check('bad save: the report still adds up', /^\d+\/\d+callouts mastered\d+%$/.test(hero), hero);
+  check('bad save: the report still adds up', /^\d+\/\d+callouts learned\d+%$/.test(hero), hero);
   check('no network requests', reqs.length === 0, reqs.join(' '));
   check('no other policy violations', violations.length === 1, violations.join(' | '));
 });

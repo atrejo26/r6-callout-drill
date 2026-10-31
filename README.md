@@ -30,8 +30,25 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 
 When an answer is revealed, an abbreviated callout also shows its full name.
 
-The map list shows how many callouts you have mastered on each map (your latest answer
-for it was right). Progress stays in your browser, filed under each callout's id, so it
+Each callout moves through five stages as you answer it: **Unasked**, **Unlearned**,
+**Somewhat learned** (1 to 3 right answers in a row), **Learned** (4 in a row) and
+**Mastered** (8 in a row). A miss always takes a callout back below learned, and how far
+depends on how well it was known: a mastered callout drops to 2 in a row, a learned one
+to 1, anything else to unlearned. Mixing another callout up with the one asked (tapping
+its area, picking it, or naming it) counts against that one too: it loses a step and
+can't stay learned. A right answer after a hint doesn't count toward learned.
+
+What comes up next follows the stages, in every mode. Callouts you haven't learned come
+up the most, a missed one a little more often than one you've never been asked. A
+learned callout waits until every callout in the pool has been asked and at least three
+in four of the others have come up since it last did, so it isn't asked again until the
+rest have had their turn; a mastered one waits longer still. The last few callouts asked
+never come straight back. The next three questions are planned while you answer and their
+floor plans made ready, so Next shows the next one at once.
+
+The map list shows how many callouts you have learned (or mastered) on each map.
+Progress from before the stages carries over: a callout you always got right counts
+those answers as in a row, otherwise only your latest answer counts. Progress stays in your browser, filed under each callout's id, so it
 stays with a callout that is renamed or moved; `src/old_keys.json` carries progress saved
 by earlier releases over to the ids. Progress from before 1.1.3, the update that renamed,
 added and removed many callouts, gets a one-time note suggesting a fresh start
@@ -40,8 +57,9 @@ sees it. **This session** lists every answer, newest first, with what you said w
 missed.
 
 **Full report**, next to the map list, shows your progress on every map: callouts
-mastered, main rooms and spots, answers and how many were right, and the callouts you
-missed most, with **Practice my misses**. To share it, add a name if you like, then use
+learned, how many are at each stage, main rooms and spots, answers and how many were
+right, and the callouts you've missed and not learned again (unlearned first, then the
+most missed), with **Practice my misses**. To share it, add a name if you like, then use
 **Share…** (where your device has a share sheet), **Copy report** (a few lines of text
 and a link) or **Copy link**. The link opens the web app on a read-only copy of the
 report, and **See what they'll see** previews it. Opening someone's link never changes
@@ -93,7 +111,8 @@ It works both ways: a name written out also takes its short form (`Kitch` for `K
 `tools/abbrev.py`; names it doesn't cover are only accepted as written (or nearly).
 
 Pools: **Main rooms** (bold on the call sheet), **Rooms + spots**, **Spots only**, and
-**My misses** (callouts you last got wrong). Callouts you miss come up more often.
+**My misses** (callouts you've missed and not learned again). Callouts you miss come up
+a little more often until they're learned.
 Progress is stored locally on your machine.
 
 ## Run it
@@ -118,6 +137,13 @@ npm run dist:win          # dist/R6-Callout-Drill-<version>.exe (works from Linu
 npm run dist:lite         # dist/R6-Callout-Drill-Lite.exe (needs Go)
 ```
 
+The app is `src/template.html`, with the callout data put in by `tools/build.py`. Its
+script is a set of classes in one block: the data and answer matching (`GameMap`,
+`Floor`, `Callout`), what is saved (`Store`, `Progress`, `Settings`), the drill
+(`Drill`, its `Picker` and the `Question` kinds for each mode) and the floor plan
+(`Plate`), and the rest of the page (`Sidebar`, `Report`, `UpdateNote`, `Menu`,
+`Controls`).
+
 Pushing a tag like `v1.0.1` makes GitHub Actions run the tests, then build both exes on
 Windows and attach them to a release. Running *Build Windows app* by hand does the same
 without the release.
@@ -138,6 +164,8 @@ page asking that server for anything but itself fails the run. A browser that is
 installed fails too, rather than being skipped. Words after `--` narrow the run: a browser
 name picks that browser, anything else picks the test files whose names include it.
 
+- `ahead`: the next questions planned and their floors made ready, Next showing the
+  first of them at once, the plan following the map, floor, pool and view
 - `answers`: hundreds of typed answers (short and full forms, typos, the start of a
   name), Did you mean offers, no two callouts on a floor sharing an answer, and thousands
   of misspellings, none of which may count for the wrong callout
@@ -146,8 +174,12 @@ name picks that browser, anything else picks the test files whose names include 
 - `zones`: in Find it, a tap on every callout's label counts, and a wrong tap names what
   you tapped
 - `layout`: the desktop and phone layouts, the menu, zooming, nothing scrolling sideways
+- `stages`: right answers up the stages, misses and mix-ups setting callouts back in
+  every mode, hints, what comes up next (learned callouts held back, misses a little more
+  often), a drill to mastery, and saves from before the stages
 - `progress`: old progress carried over, the update note (for progress from before 1.1.3
-  only), the report and sharing it, and shared links, well formed or damaged
+  only), the report and sharing it, and shared links (from before the stages too), well
+  formed or damaged
 - `secure`: the app code out of the console's reach, the Content Security Policy, the
   answer kept out of the page, damaged saves, no network requests
 

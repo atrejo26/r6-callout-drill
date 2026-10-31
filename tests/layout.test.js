@@ -16,12 +16,12 @@ run(async browser => {
   check('behind it is inert', await is(() => $('board').inert && $('panel').inert));
   check('focus goes to Done', await is(() => document.activeElement.id === 'closeMenu'));
   await page.tap('#mapChips button:nth-child(4)');   // Clubhouse
-  check('a map picked in the drawer', await is(() => S.map === 'clubhouse' && q.c.map.id === 'clubhouse'), await is(() => S.map));
+  check('a map picked in the drawer', await is(() => settings.map === 'clubhouse' && drill.q.c.map.id === 'clubhouse'), await is(() => settings.map));
   check('the summary follows', (await page.textContent('#menuSum')).startsWith('Clubhouse'), await page.textContent('#menuSum'));
   await page.tap('[data-mode=pick]');
-  const before = await is(() => q.c.key);
+  const before = await is(() => drill.q.c.key);
   await page.keyboard.press('1');
-  check('keys do nothing while it is open', await page.evaluate(k => q.c.key === k && !q.done, before));
+  check('keys do nothing while it is open', await page.evaluate(k => drill.q.c.key === k && !drill.q.done, before));
   await page.tap('#closeMenu');
   check('Done closes it', await shown('#side .maps', 'hidden') && await is(() => !$('board').inert));
   await page.tap('#menuBtn'); await shown('#side .maps');
@@ -30,7 +30,7 @@ run(async browser => {
   await page.tap('#menuBtn'); await shown('#side .maps');
   await page.keyboard.press('Escape');
   check('Escape closes it and focus goes back', await shown('#side .maps', 'hidden') && await is(() => document.activeElement.id === 'menuBtn'));
-  check('Pick it works after', await is(() => { choose(0); return q.done; }));
+  check('Pick it works after', await is(() => { drill.q.choose(0); return drill.q.done; }));
 
   // The plate fills the stage one way and fits it the other, nothing scrolls.
   await page.evaluate(() => {
@@ -40,7 +40,7 @@ run(async browser => {
         over: $('stage').scrollWidth > $('stage').clientWidth + 1 || $('stage').scrollHeight > $('stage').clientHeight + 1 };
       return { ...f, fits: !f.over && (Math.abs(f.pw - f.sw) <= 1 || Math.abs(f.ph - f.sh) <= 1) };
     };
-    window.__sz = 0; const o = sizePlate; sizePlate = () => { window.__sz++; o(); };
+    window.__sz = 0; const o = plate.size.bind(plate); plate.size = () => { window.__sz++; o(); };
   });
   const fit = () => is(() => window.__fit());
   await page.tap('#menuBtn'); await shown('#side .maps');
@@ -65,7 +65,7 @@ run(async browser => {
   await page.setViewportSize({ width: 1600, height: 900 });
   check('menu cleared when the window grows', await until(page, () => !document.body.classList.contains('menu-open') && !$('board').inert));
 
-  await page.evaluate(() => { S.mode = 'name'; nextQuestion(); });
+  await page.evaluate(() => { settings.mode = 'name'; drill.next(); });
   await page.fill('#guess', 'zzzz'); await page.press('#guess', 'Enter');
   const top = await is(() => [$('logList').firstChild.className, $('logList').firstChild.textContent]);
   check('the log shows a miss with what was said', top[0] === 'bad' && top[1].includes('You said “zzzz”'), JSON.stringify(top));

@@ -250,6 +250,10 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 400; color: var(--muted); }
 .suggest .chip.ghost { background: transparent; border-style: dashed; }
 .feedback .alt { display: block; color: var(--muted); font-weight: 400; font-size: 13px; }
+.stage-note { margin: -4px 0 0; color: var(--muted); font-size: 13px; }
+.stage-note b { color: var(--text); font-weight: 600; }
+.stage-note.up b { color: var(--good); }
+.stage-note.down b { color: var(--bad); }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .hint { color: var(--muted); font-size: 13px; }
 .empty {
@@ -300,8 +304,18 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .hero b { font: 700 46px/1 var(--display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
 .hero span { color: var(--muted); }
 .hero em { margin-left: auto; font: 500 20px/1 var(--mono); font-style: normal; color: var(--amber); }
-.bar { display: block; height: 3px; margin-top: -8px; background: var(--line); }
-.bar::before { content: ""; display: block; height: 100%; width: var(--p); background: var(--amber); }
+/* The stages, mastered to unlearned, in one bar; unasked is what's left */
+.stage-bar { display: flex; height: 6px; margin-top: -6px; background: var(--line); overflow: hidden; }
+.stage-bar i, .legend i { display: block; flex: none; }
+.mastered { background: var(--good); }
+.learned { background: #2a8a5c; }
+.somewhat { background: var(--amber); }
+.unlearned { background: var(--bad); }
+.unasked { background: var(--line); }
+.legend { list-style: none; margin: -4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--muted); }
+.legend li { display: flex; align-items: center; gap: 6px; }
+.legend i { width: 9px; height: 9px; }
+.legend b { color: var(--text); font: 500 13px/1 var(--mono); font-variant-numeric: tabular-nums; }
 .maps.rep { list-style: none; margin: 0; padding: 0; }
 .rep li {
   background: var(--panel); padding: 7px 10px 8px;
@@ -424,7 +438,7 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 
   <nav class="side" id="side" aria-label="Drill settings">
     <div class="side-head"><h2 class="label">Drill settings</h2><button class="btn" id="closeMenu">Done</button></div>
-    <div class="group map-group"><div class="group-head"><h2 class="label" id="mapLabel">Map / mastered</h2><button class="linkish" id="reportBtn">Full report</button></div><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
+    <div class="group map-group"><div class="group-head"><h2 class="label" id="mapLabel">Map / learned</h2><button class="linkish" id="reportBtn">Full report</button></div><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
     <div class="group"><h2 class="label">Mode</h2>
       <div class="seg" id="modeTabs" role="group" aria-label="Mode">
         <button data-mode="name" aria-pressed="true">Name it</button>
@@ -482,7 +496,7 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
       <ol id="logList"></ol>
       <p class="empty">Your answers show up here, newest first, so you can go back over the ones you missed.</p>
     </section>
-    <footer>Callouts from Paltry's R6 Map Call Sheets (FireBirds). In-game maps by R6Calls (r6calls.com), built on Ubisoft's maps. A callout is mastered once your latest answer for it was right; progress stays in this browser.</footer>
+    <footer>Callouts from Paltry's R6 Map Call Sheets (FireBirds). In-game maps by R6Calls (r6calls.com), built on Ubisoft's maps. A callout is learned after 4 right answers in a row and mastered after 8; progress stays in this browser.</footer>
   </aside>
   <div class="scrim" id="scrim" hidden></div>
 </div>
@@ -524,8 +538,37 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 'use strict';
 // The whole app lives in this block so the browser console can't reach it: no reading
 // the current answer or setting the score from there. tools/build.py --test opens it up.
+//
+// How it fits together: the data (GameMap, Floor, Callout, which also matches typed
+// answers) and what is saved (Store, Progress, Settings) know nothing of the page. A
+// Drill runs the questions: its Picker chooses what comes up and plans the next few, a
+// Question of the mode's kind asks and grades one, and the Plate draws the floor, keeping
+// the next floors' images decoded. Sidebar, Report, UpdateNote, Menu and Controls are the
+// rest of the page, and Controls connects the settings to all of it.
 {/*SCOPE*/
 const DATA = /*DATA*/null;
+
+// ---------- page helpers ----------
+const $ = id => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
+const card = (...kids) => $('qCard').replaceChildren(...kids);
+const fine = matchMedia('(pointer: fine)');
+const grab = node => { if (fine.matches) node.focus({ preventScroll: true }); };
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const count = v => Number.isSafeInteger(v) && v > 0 ? v : 0;     // a saved number of things: a whole number or 0
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+function shuffle(list) {
+  const a = [...list];
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+// a name with a shorter form for narrow boards
+const label = (long, short) => short ? [el('span', { className: 'long', textContent: long }), el('span', { className: 'short', textContent: short })] : [long];
+const pressed = (box, attr, val) => box.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === val)));
+// A callout's name as offered in a list, with what it is when that isn't obvious (Red, train cart).
+const named = o => [o.name, o.what ? el('small', { className: 'what', textContent: o.what }) : ''];
+const fullLine = c => c.about ? el('span', { className: 'alt', textContent: c.about }) : '';
 
 // ---------- answer matching ----------
 // Spellings that mean the same word. Abbreviations are not here: each callout
@@ -543,491 +586,48 @@ function norm(s) {
     .map(t => SAME[t] || t).join(' ');
 }
 const compact = s => norm(s).replace(/ /g, '');
-// Edits between two spellings; two swapped letters count as one.
-function lev(a, b) {
-  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-  for (let j = 1; j <= b.length; j++) d[0][j] = j;
-  for (let i = 1; i <= a.length; i++)
-    for (let j = 1; j <= b.length; j++) {
-      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
-    }
-  return d[a.length][b.length];
-}
 const digits = s => s.replace(/\D/g, '');
 // The letters as typed, before plurals and spellings are merged: "showrs" is one
 // typo from "showers", two from "shower".
 const raw = s => s.toLowerCase().replace(/½|1\/2/g, 'half').replace(/[^a-z0-9]/g, '');
+// Edits between two spellings; two swapped letters count as one. Three rows at a time.
+function lev(a, b) {
+  let before = [], prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      let d = Math.min(prev[j] + 1, row[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d = Math.min(d, before[j - 2] + 1);
+      row[j] = d;
+    }
+    before = prev; prev = row;
+  }
+  return prev[b.length];
+}
 // Typos forgiven: 1 from 4 letters, 2 from 8, 3 from 12; in 3 letters only an
 // extra letter or two swapped ones (Cafe or Fac for Caf), none in 2.
 const slack = (g, t) => t.length >= 12 ? 3 : t.length >= 8 ? 2 : t.length >= 4 ? 1
   : t.length === 3 && (g.length === 4 || [...g].sort().join('') === [...t].sort().join('')) ? 1 : 0;
-// Every accepted way to say a callout, as [compact, spaced, as typed]: each word
-// as on the call sheet, written out or shortened, in any mix ("Kitch H",
-// "Kitchen Hallway", "kitchen h"), plus aliases.
-function forms(c) {
-  if (!c._forms) {
-    let out = [''];
-    for (const [w, full = [], short = []] of c.slots || [[c.name]]) {
-      const opts = [w, ...full, ...short];
-      out = out.flatMap(p => opts.map(t => (p ? p + ' ' : '') + t)).slice(0, 500);
-    }
-    c._forms = [...new Set([...out, ...c.aliases])].map(s => [compact(s), norm(s), raw(s)]);
-  }
-  return c._forms;
+// Typos from a to b when few enough to forgive, else Infinity. Spellings further apart in
+// length than that can't be close, so they aren't compared letter by letter.
+function within(a, b) {
+  const k = slack(a, b);
+  if (Math.abs(a.length - b.length) > k) return Infinity;
+  const d = lev(a, b);
+  return d <= k ? d : Infinity;
 }
-// Typos between a guess and an answer, both as [compact, as typed]; Infinity when
-// too many. The first letter and the numbers must be right (R1 is not R2).
-function typos([g, gr], [t, r]) {
-  if (digits(g) !== digits(t) || !(g[0] === t[0] || g[0] === t[1] && g[1] === t[0])) return Infinity;
-  return Math.min(...[[g, t], [gr, r]].map(([a, b]) => lev(a, b) <= slack(a, b) ? lev(a, b) : Infinity));
+// A way of saying something, read once for matching: [compact, spaced, as typed, its numbers, its words].
+function form(s) { const sp = norm(s), t = sp.replace(/ /g, ''); return [t, sp, raw(s), digits(t), sp.split(' ')]; }
+// What was typed, read once for every callout it is checked against.
+class Guess { constructor(text) { [this.g, , this.r, this.d, this.words] = form(text); } }
+// Typos between a guess and a way of saying a callout; Infinity when too many. The first
+// letter and the numbers must be right (R1 is not R2).
+function typos({ g, r: gr, d }, [t, , r, td]) {
+  if (d !== td || !(g[0] === t[0] || g[0] === t[1] && g[1] === t[0])) return Infinity;
+  return Math.min(within(g, t), within(gr, r));
 }
-// The guess is the start of a callout: "Det" for Detention, "Piano long" for
-// Piano H long. Each typed word begins a word of the name, in order, starting
-// with its first word (3 letters at least), and the numbers match.
-function starts(c, words) {
-  const g = words.join('');
-  return forms(c).some(([t, s]) => {
-    const fw = s.split(' ');
-    if (digits(t) !== digits(g) || !fw[0].startsWith(words[0]) || (words[0].length < 3 && words[0] !== fw[0])) return false;
-    let j = 1;
-    return words.slice(1).every(w => {
-      while (j < fw.length && !fw[j].startsWith(w)) j++;
-      return j++ < fw.length;
-    });
-  });
-}
-// How well a guess fits a callout, lower is better: its typo count, or ½ when the
-// guess starts the callout's name. Infinity when it doesn't fit.
-function fit(c, guess) {
-  const g = [compact(guess), raw(guess)];
-  const d = Math.min(...forms(c).map(([t, , r]) => typos(g, [t, r])));
-  return starts(c, norm(guess).split(' ')) ? Math.min(d, 0.5) : d;
-}
-const isExact = (o, g) => forms(o).some(([t]) => t === g);
-const isBroad = (o, g) => (o.broad || []).some(b => compact(b) === g);
-const floorOf = c => c.floor ? [...new Map(c.floor.callouts.map(o => [compact(o.name), o])).values()] : [c];
-// 'exact' for the callout or an alias, 'typo' for a small misspelling of one,
-// 'partial' for the start of it, 'broad' for an accepted but less specific answer
-// ("Stalls" for "Stall 1"), false otherwise. A typo or partial answer counts when
-// whatever it fits best on the floor is this callout (or one of its broad answers).
-function accepts(c, guess) {
-  const g = compact(guess);
-  if (!g) return false;
-  if (isExact(c, g)) return 'exact';
-  if (isBroad(c, g)) return 'broad';
-  const others = floorOf(c).filter(o => compact(o.name) !== compact(c.name));
-  // an exact answer for another callout on this floor is that callout, not a typo
-  if (others.some(o => isExact(o, g) || isBroad(o, g))) return false;
-  // [how well it fits, what that would mean]; Showers is broad for S1
-  const fits = [[fit(c, guess), 'mine'],
-    ...others.map(o => [fit(o, guess), isBroad(c, compact(o.name)) ? 'broad' : 'other']),
-    ...(c.broad || []).map(b => [typos([g, raw(guess)], [compact(b), raw(b)]), 'broad'])];
-  const best = Math.min(...fits.map(([f]) => f));
-  const means = new Set(fits.filter(([f]) => f === best).map(([, m]) => m));
-  if (best === Infinity || means.size > 1) return false;
-  return means.has('mine') ? (best === 0.5 ? 'partial' : 'typo') : means.has('broad') ? 'broad' : false;
-}
-// Callouts to offer when a typed answer can't be read as one callout on the floor:
-// it fits several equally well ("logg": Log or Long; "pian": Piano, Piano H long,
-// ...) or is one typo past what counts ("shiko": Shaiiko). Depends only on what
-// was typed and the floor, never on the answer.
-function suggestions(c, guess) {
-  const g = compact(guess), gr = raw(guess), floor = floorOf(c);
-  if (!g || floor.some(o => isExact(o, g) || isBroad(o, g))) return [];
-  const fits = floor.map(o => [o, fit(o, guess)]).filter(([, f]) => f < Infinity).sort((a, b) => a[1] - b[1]);
-  if (fits.length) return fits.length > 1 && fits[0][1] === fits[1][1] ? fits.slice(0, 4).map(([o]) => o) : [];
-  const miss = ([t, , r]) => digits(t) !== digits(g) || t.length < 3 ? Infinity
-    : Math.min(lev(g, t) - slack(g, t), lev(gr, r) - slack(gr, r));
-  return floor.map(o => [o, Math.min(...forms(o).map(miss))]).filter(([, d]) => d <= 1)
-    .sort((a, b) => a[1] - b[1]).slice(0, 4).map(([o]) => o);
-}
-const covers = (o, c) => (o.broad || []).some(t => compact(t) === compact(c.name));
-
-// ---------- data ----------
-const ALL = [];
-DATA.maps.forEach(m => m.floors.forEach((f, fi) => f.callouts.forEach(c => {
-  c.key = `${m.id}|${f.name}|${c.id}`;   // progress is filed under the callout's id, which renames keep
-  c.map = m; c.floor = f; c.fi = fi;
-  ALL.push(c);
-})));
-const mapById = Object.fromEntries(DATA.maps.map(m => [m.id, m]));
-
-// ---------- persistence (per-browser convenience only) ----------
-const STORE = 'r6-callout-drill-v1';
-const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
-function load() { try { const v = JSON.parse(localStorage.getItem(STORE)); return isObj(v) ? v : {}; } catch { return {}; } }
-function save() { try { localStorage.setItem(STORE, JSON.stringify(saved)); } catch {} }
-const saved = load();
-if (!isObj(saved.stats)) saved.stats = {};
-if (!isObj(saved.prefs)) saved.prefs = {};
-const stats = saved.stats;
-
-// Saved settings count only when they are values the app knows; anything else (an
-// older version's, or edited by hand) falls back to the default.
-const DEFAULTS = { map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' };
-const CHOICES = { mode: ['name', 'pick', 'find', 'study'], pool: ['rooms', 'all', 'spots', 'misses'], view: ['game', 'plan'], answer: ['type', 'pool'] };
-const S = Object.assign({}, DEFAULTS, saved.prefs);
-for (const [k, ok] of Object.entries(CHOICES)) if (!ok.includes(S[k])) S[k] = DEFAULTS[k];
-if (S.map !== 'all' && !Object.hasOwn(mapById, S.map)) S.map = 'border';
-if (typeof S.floor !== 'string') S.floor = null;
-S.others = S.others === true;
-for (const k of Object.keys(stats)) if (!isObj(stats[k])) delete stats[k];
-// Earlier releases filed progress under a callout's name and place in its floor's list.
-// old_keys has every such key, oldest first, with the callout it belongs to: answers
-// filed under several add up, and the newest says whether the callout is mastered.
-const tally = v => Number.isFinite(v) && v > 0 ? v : 0;
-// Progress from before the major update, 1.1.3, which renamed, added and removed many
-// callouts: pre_update has the keys only the releases before it saved under.
-const preUpdate = new Set(Object.entries(DATA.pre_update).flatMap(([where, keys]) => keys.map(k => `${where}|${k}`)));
-const fromBefore = Object.keys(stats).some(k => preUpdate.has(k));
-let carried = false;
-for (const [where, keys] of Object.entries(DATA.old_keys)) for (const [old, id] of Object.entries(keys)) {
-  const from = stats[`${where}|${old}`], to = stats[`${where}|${id}`];
-  if (!from) continue;
-  stats[`${where}|${id}`] = to ? { n: tally(to.n) + tally(from.n), c: tally(to.c) + tally(from.c), last: from.last } : from;
-  delete stats[`${where}|${old}`];
-  carried = true;
-}
-if (carried) save();
-const session = { n: 0, c: 0, streak: 0, best: 0, log: [] };
-let zoom = 1;
-let q = null;              // current question
-let view = null;           // { map, fi } currently drawn
-let recent = [];
-
-const $ = id => document.getElementById(id);
-const fine = matchMedia('(pointer: fine)');
-const grab = node => { if (fine.matches) node.focus({ preventScroll: true }); };
-const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); e.append(...kids); return e; };
-function persistPrefs() { saved.prefs = { map: S.map, floor: S.floor, mode: S.mode, pool: S.pool, view: S.view, others: S.others, answer: S.answer }; save(); renderSummary(); }
-
-// ---------- pool & picking ----------
-function inPool(c) {
-  if (S.map !== 'all' && c.map.id !== S.map) return false;
-  if (S.map !== 'all' && S.floor && c.floor.name !== S.floor) return false;
-  if (S.pool === 'rooms') return c.room;
-  if (S.pool === 'spots') return !c.room;
-  if (S.pool === 'misses') return stats[c.key] && stats[c.key].last === 0;
-  return true;
-}
-function pool() { return ALL.filter(inPool); }
-function pickNext() {
-  const p = pool();
-  if (!p.length) return null;
-  const avoid = p.length > 6 ? recent.slice(-5) : recent.slice(-1);
-  const cand = p.filter(c => !avoid.includes(c.key));
-  const list = cand.length ? cand : p;
-  const w = list.map(c => {
-    const s = stats[c.key];
-    if (!s) return 2;
-    return 1 + (s.n - s.c) * 1.5 + (s.last === 0 ? 4 : 0);
-  });
-  let r = Math.random() * w.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
-  return list[list.length - 1];
-}
-function record(c, ok, hinted, said = '') {
-  const s = stats[c.key] ||= { n: 0, c: 0, last: 0 };
-  s.n++; if (ok) s.c++; s.last = ok ? 1 : 0;
-  save();
-  session.n++; if (ok) session.c++;
-  session.streak = ok && !hinted ? session.streak + 1 : ok ? session.streak : 0;
-  session.best = Math.max(session.best, session.streak);
-  recent.push(c.key);
-  session.log.unshift({ c, ok, note: ok && ok !== 'broad' ? (!c.what && c.full) || '' : said });
-  session.log.length = Math.min(session.log.length, 60);
-  renderStats(); renderMapChips(); renderLog();
-}
-
-// ---------- drawing the plate ----------
-// Each floor has the call-sheet plan (image, w, h; callouts at x/y) and, for most
-// floors, the in-game map (game; callouts at gx/gy).
-const inGame = f => S.view === 'game' && !!f.game;
-const img = f => inGame(f) ? f.game : f;
-const X = c => c.floor ? (inGame(c.floor) ? c.gx : c.x) : c.x;
-const Y = c => c.floor ? (inGame(c.floor) ? c.gy : c.y) : c.y;
-function baseWidth(f) {
-  const stage = $('stage'), v = img(f), cap = getComputedStyle(stage).maxHeight;
-  const maxH = cap === 'none' ? stage.clientHeight : parseFloat(cap) || 700;
-  return Math.min(stage.clientWidth, maxH * v.w / v.h);
-}
-function drawPlate(map, fi) {
-  const f = map.floors[fi];
-  const src = img(f).image;
-  if ($('planImg').getAttribute('src') !== src) {
-    $('planImg').src = src;
-    $('planImg').alt = `${map.name} ${f.name} ${inGame(f) ? 'in-game blueprint' : 'call-sheet floor plan'}`;
-  }
-  view = { map, fi };
-  $('board').classList.toggle('game-view', inGame(f));
-  $('board').classList.toggle('plan-view', !inGame(f));
-  sizePlate();
-  const where = [map.name, el('small', { textContent: f.name })];
-  if (S.view === 'game' && !f.game) where.push(el('em', { textContent: 'call sheet only' }));
-  $('where').replaceChildren(...where);
-  renderFloorTabs();
-}
-// a name with a shorter form for narrow boards
-const label = (long, short) => short ? [el('span', { className: 'long', textContent: long }), el('span', { className: 'short', textContent: short })] : [long];
-function renderFloorTabs() {
-  const tabs = $('floorTabs');
-  if (S.map === 'all' && S.mode !== 'study') return tabs.replaceChildren();
-  const map = view.map, study = S.mode === 'study';
-  const opts = (study ? [] : [[null, 'All']]).concat(map.floors.map((f, i) => [i, f.name]));
-  tabs.replaceChildren(...opts.map(([i, name]) => {
-    const b = el('button', {}, ...label(name, { Basement: 'Bsmt' }[name]));
-    const on = study ? i === view.fi : (i === null ? !S.floor : map.floors[i].name === S.floor);
-    b.setAttribute('aria-pressed', String(on));
-    b.onclick = () => {
-      S.floor = i === null ? null : map.floors[i].name;
-      persistPrefs();
-      if (study) { drawPlate(map, i); renderStudy(); } else nextQuestion();
-    };
-    return b;
-  }));
-}
-function sizePlate() {
-  if (!view) return;
-  const w = Math.floor(baseWidth(view.map.floors[view.fi]) * zoom);
-  $('plate').style.width = w + 'px';
-  document.documentElement.style.setProperty('--fs', Math.max(9, Math.min(18, w * 0.0125)).toFixed(1) + 'px');
-}
-function focusOn(x, y) {
-  const st = $('stage'), pl = $('plate');
-  st.scrollLeft = x * pl.offsetWidth - st.clientWidth / 2;
-  st.scrollTop = y * pl.offsetHeight - st.clientHeight / 2;
-}
-const pos = (node, c) => { node.style.left = (X(c) * 100) + '%'; node.style.top = (Y(c) * 100) + '%'; return node; };
-function tagFor(c, extra = '') {
-  const t = el('span', { className: `tag ${c.room ? 'room' : 'spot'} ${extra}`, textContent: extra.includes('answer') ? c.name : (c.short || c.name) });
-  if (c.rot) t.style.setProperty('--rot', c.rot + 'deg');
-  return pos(t, c);
-}
-
-// ---------- question card ----------
-function card(...kids) { $('qCard').replaceChildren(...kids); }
-function emptyCard(msg) {
-  q = null;
-  $('layer').replaceChildren();
-  card(el('div', { className: 'eyebrow', textContent: 'Nothing to drill' }), el('p', { className: 'empty', textContent: msg }));
-}
-
-function nextQuestion() {
-  if (S.mode === 'study') return startStudy();
-  const c = pickNext();
-  if (!c) {
-    const m = S.pool === 'misses'
-      ? 'You have no misses in this selection. Drill a different pool to find some.'
-      : 'This selection has no callouts. Pick another map, floor or pool.';
-    if (S.map !== 'all') drawPlate(mapById[S.map], Math.max(0, mapById[S.map].floors.findIndex(f => f.name === S.floor)));
-    $('plate').classList.remove('clickable');
-    return emptyCard(m);
-  }
-  q = { c, done: false, hinted: false };
-  paintQuestion();
-  if (S.mode === 'find') return renderFind();
-  S.mode === 'pick' ? renderPick() : renderName();
-}
-function paintQuestion() {
-  const c = q.c;
-  drawPlate(c.map, c.fi);
-  const layer = $('layer');
-  layer.replaceChildren();
-  if (S.others) c.floor.callouts.forEach(o => { if (o !== c) layer.append(tagFor(o)); });
-  $('plate').classList.toggle('clickable', S.mode === 'find');
-  if (S.mode === 'find') return;
-  layer.append(pos(el('div', { className: 'marker', id: 'qMarker' }), c));
-  if (zoom > 1) focusOn(X(c), Y(c));
-}
-
-function header(text) {
-  return [el('div', { className: 'eyebrow', textContent: `${q.c.map.name} · ${q.c.floor.name} · ${q.c.room ? 'Main room' : 'Spot'}` }),
-          el('p', { className: 'prompt', innerHTML: text })];
-}
-const fb = () => el('div', { className: 'feedback', id: 'fb' });
-// What a name means: "Kitch H is short for Kitchen Hallway.", or the note of a callout
-// named after a thing ("Red is the red train cart in Train, not the red stairs.").
-const about = c => c.note || (c.full ? `${c.name} is short for ${c.full}.` : '');
-const fullLine = c => about(c) ? el('span', { className: 'alt', textContent: about(c) }) : '';
-// A callout's name as offered in a list, with what it is when that isn't obvious (Red, train cart).
-const named = o => [o.name, o.what ? el('small', { className: 'what', textContent: o.what }) : ''];
-const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
-
-function renderName() {
-  if (S.answer === 'pool') return renderPool();
-  const input = el('input', { id: 'guess', placeholder: 'Type the callout', autocomplete: 'off', spellcheck: false });
-  input.setAttribute('autocapitalize', 'off');
-  input.setAttribute('aria-label', 'Your callout');
-  const go = el('button', { className: 'btn', textContent: 'Call it', id: 'goBtn' });
-  const hint = el('button', { className: 'btn ghost', textContent: 'Hint', id: 'hintBtn' });
-  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
-  const form = el('form', { className: 'answer-row' }, input, go);
-  form.onsubmit = e => { e.preventDefault(); q.done ? nextQuestion() : submitName(input.value); };
-  hint.onclick = () => {
-    q.hinted = true;
-    const n = q.c.name;
-    $('fb').className = 'feedback';
-    $('fb').textContent = `Starts with “${n[0]}”, ${n.replace(/[^A-Za-z0-9½]/g, '').length} characters`;
-    input.focus();
-  };
-  skip.onclick = () => q.done ? nextQuestion() : finishName(false, '');
-  card(...header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, hint, skip), fb(),
-       el('div', { className: 'hint tips', textContent: 'Enter submits, Enter again goes to the next one. Short or full names count (Kitch H, Kitchen Hallway), and so do small typos and the start of a name (Det for Detention). Close calls get a Did you mean.' }));
-  grab(input);
-}
-// Name it, answered from a bank of every callout on the map (A to Z).
-function poolFor(m) {
-  if (!m._pool) {
-    const seen = new Map();
-    m.floors.forEach(f => f.callouts.forEach(o => { if (!seen.has(compact(o.name))) seen.set(compact(o.name), o); }));
-    m._pool = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-  }
-  return m._pool;
-}
-function renderPool() {
-  const c = q.c, pool = poolFor(c.map);
-  const bank = el('div', { className: 'bank', id: 'bank', role: 'group' }, ...pool.map(o => {
-    const b = el('button', { title: o.note || o.full || '' }, ...named(o));
-    b.dataset.key = compact(o.name);
-    b.onclick = () => pickFromPool(o);
-    return b;
-  }));
-  bank.setAttribute('aria-label', `Every callout on ${c.map.name}`);
-  const go = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
-  go.onclick = nextQuestion;
-  const hint = el('button', { className: 'btn ghost', textContent: 'Hint', id: 'hintBtn' });
-  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
-  hint.onclick = () => {
-    q.hinted = true; hint.disabled = true;
-    const k = compact(c.name)[0];
-    bank.querySelectorAll('button').forEach(b => b.classList.toggle('dim', b.dataset.key[0] !== k));
-    $('fb').className = 'feedback';
-    $('fb').textContent = `Starts with “${c.name[0]}”, ${c.name.replace(/[^A-Za-z0-9½]/g, '').length} characters`;
-  };
-  skip.onclick = () => finishName(false, '');
-  card(...header('Which callout is the <em>marked spot</em>?'),
-       el('div', { className: 'hint', textContent: `All ${pool.length} callouts on ${c.map.name}, A to Z.` }),
-       bank, fb(), el('div', { className: 'actions' }, go, hint, skip));
-}
-// Only exact answers here: the bank holds other floors' near-identical names (Locker, Lockers).
-function pickFromPool(o) {
-  if (q.done) return;
-  const c = q.c, k = compact(o.name);
-  const ok = forms(c).some(([t]) => t === k) ? 'exact' : (c.broad || []).some(t => compact(t) === k) ? 'broad' : false;
-  finishName(ok, o.name);
-}
-function submitName(v) {
-  if (!v.trim()) return;
-  // a possible typo: offer the callouts it could be, once; Enter again keeps it
-  const opts = q.offered === compact(v) ? [] : suggestions(q.c, v);
-  if (!opts.length) return finishName(accepts(q.c, v), v);
-  q.offered = compact(v);
-  const pick = t => { $('guess').value = t; finishName(accepts(q.c, t), t); };
-  const keep = el('button', { className: 'chip ghost', textContent: `Keep “${v.trim()}”` });
-  keep.onclick = () => finishName(accepts(q.c, v), v);
-  $('fb').className = 'feedback';
-  $('fb').replaceChildren(el('div', { className: 'suggest' }, el('span', { textContent: 'Did you mean' }),
-    ...opts.map(o => { const b = el('button', { className: 'chip', title: o.note || o.full || '' }, ...named(o)); b.onclick = () => pick(o.name); return b; }),
-    keep));
-  $('guess').focus({ preventScroll: true });
-}
-function finishName(ok, guess) {
-  q.done = true;
-  record(q.c, ok, q.hinted, !guess.trim() ? 'Revealed' : $('bank') ? `You picked ${guess}` : `You said “${guess.trim()}”`);
-  const c = q.c;
-  $('qMarker').classList.add(ok ? 'good' : 'bad');
-  $('layer').append(tagFor(c, `answer ${ok ? 'good' : 'bad'}`));
-  const box = $('fb');
-  box.className = 'feedback ' + (ok ? 'good' : 'bad');
-  const same = compact(guess) === compact(c.name);
-  // a wrong pick from the bank that is on this floor gets shown too
-  const other = !ok && $('bank') && guess ? c.floor.callouts.find(o => compact(o.name) === compact(guess)) : null;
-  if (other) $('layer').append(pos(el('div', { className: 'marker small bad' }), other), tagFor(other, 'answer other'));
-  box.replaceChildren(ok === 'broad' ? `Accepted. More specific: ${c.name}.`
-    : ok ? (same ? 'Correct.' : `Correct: ${c.name}`) : guess ? `Not quite. It's ${c.name}.` + (other ? ` ${other.name} is the red dot.` : '') : `It's ${c.name}.`);
-  box.append(fullLine(c));
-  const alts = c.aliases.filter(a => !/^\d+$/.test(a));
-  if (alts.length) box.append(el('span', { className: 'alt', textContent: 'Also called ' + alts.join(', ') }));
-  if ($('guess')) $('guess').readOnly = true;
-  const bank = $('bank');
-  if (bank) {
-    const k = compact(c.name), g = compact(guess);
-    let good = null;
-    bank.querySelectorAll('button').forEach(b => {
-      b.disabled = true; b.classList.remove('dim');
-      if (b.dataset.key === k) b.classList.add('good'), good = b;
-      else if (b.dataset.key === g) b.classList.add(ok === 'exact' ? 'good' : ok ? 'near' : 'bad');  // ½ W picked as Half wall
-    });
-    if (good) bank.scrollTop = good.offsetTop - (bank.clientHeight - good.offsetHeight) / 2;
-  }
-  $('goBtn').textContent = 'Next'; $('goBtn').hidden = false;
-  $('hintBtn').disabled = true;
-  $('skipBtn').hidden = true;
-  $('goBtn').focus({ preventScroll: true });
-}
-
-function renderPick() {
-  const c = q.c;
-  const seen = new Set([compact(c.name)]);
-  const same = c.floor.callouts, rest = c.map.floors.flatMap(f => f.callouts);
-  const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-  const opts = [c];
-  for (const o of [...shuffle(same.filter(o => o.room === c.room)), ...shuffle(same), ...shuffle(rest)]) {
-    if (opts.length === 4) break;
-    const k = compact(o.name);
-    if (!seen.has(k) && !covers(c, o) && !covers(o, c)) { seen.add(k); opts.push(o); }
-  }
-  q.opts = shuffle(opts);
-  const box = el('div', { className: 'choices' }, ...q.opts.map((o, i) => {
-    const b = el('button', {}, el('kbd', { textContent: i + 1 }), ...named(o));
-    b.onclick = () => choose(i);
-    return b;
-  }));
-  const next = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
-  next.onclick = nextQuestion;
-  card(...header('Which callout is <em>marked</em>?'), box, fb(), el('div', { className: 'actions' }, next),
-       el('div', { className: 'hint tips', textContent: 'Keys 1 to 4 answer, Enter goes to the next one.' }));
-}
-function choose(i) {
-  if (q.done) return;
-  q.done = true;
-  const picked = q.opts[i], ok = compact(picked.name) === compact(q.c.name);
-  record(q.c, ok, false, `You picked ${picked.name}`);
-  [...document.querySelectorAll('.choices button')].forEach((b, j) => {
-    b.disabled = true;
-    if (q.opts[j] === q.c) b.classList.add('good');
-    else if (j === i) b.classList.add('bad');
-  });
-  $('qMarker').classList.add(ok ? 'good' : 'bad');
-  $('layer').append(tagFor(q.c, `answer ${ok ? 'good' : 'bad'}`));
-  if (!ok) $('layer').append(pos(el('div', { className: 'marker small bad' }), picked.floor === q.c.floor ? picked : q.c));
-  $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
-  $('fb').replaceChildren(ok ? 'Correct.' : `That's ${q.c.name}.` + (picked.floor === q.c.floor ? ` ${picked.name} is the red dot.` : ''), fullLine(q.c));
-  if (!ok && picked.floor === q.c.floor) $('layer').append(tagFor(picked, 'answer other'));
-  $('goBtn').hidden = false; $('goBtn').focus({ preventScroll: true });
-}
-
-function renderFind() {
-  const next = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true });
-  next.onclick = nextQuestion;
-  const skip = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn' });
-  skip.onclick = () => findAt(null);
-  const said = about(q.c);
-  card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said ? said + ' ' : ''}Tap its spot on ${q.c.floor.name}.` }),
-       fb(), el('div', { className: 'actions' }, next, skip));
-}
-// ---------- zones ----------
-// Each callout has a zone (its own area) and each main room a room_zone (the whole room,
-// used in the Main rooms pool): lists of rings in call-sheet coordinates, read with the
-// even-odd rule so a room can have holes where its spots are. The floor's fit maps
-// call-sheet coordinates to the in-game view (gx = ax*x + bx, gy = ay*y + by).
-const zoneOf = c => (S.pool === 'rooms' && c.room && c.room_zone) || c.zone || null;
-function toPlan(f, p) {
-  if (!inGame(f) || !f.fit) return p;
-  const [ax, bx, ay, by] = f.fit;
-  return { x: (p.x - bx) / ax, y: (p.y - by) / ay };
-}
+// Is p inside a zone: a list of rings, read with the even-odd rule so a room can have
+// holes where its spots are.
 function inZone(z, p) {
   let inside = false;
   for (const r of z) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
@@ -1036,431 +636,1246 @@ function inZone(z, p) {
   }
   return inside;
 }
-// how far p is from the zone's edge, as a fraction of the plan's longer side
-function zoneGap(f, z, p) {
-  const s = Math.max(f.w, f.h);
-  let best = Infinity;
-  for (const r of z) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
-    const ax = r[j][0] * f.w, ay = r[j][1] * f.h, bx = r[i][0] * f.w, by = r[i][1] * f.h;
-    const px = p.x * f.w, py = p.y * f.h, dx = bx - ax, dy = by - ay;
-    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
-    best = Math.min(best, Math.hypot(ax + t * dx - px, ay + t * dy - py) / s);
+
+// ---------- the maps ----------
+class Callout {
+  constructor(data, floor) {
+    Object.assign(this, data);
+    this.floor = floor; this.map = floor.map; this.fi = floor.fi;
+    this.key = `${this.map.id}|${floor.name}|${data.id}`;   // progress is filed under the callout's id, which renames keep
+    this.ck = compact(data.name);                           // the name as compared
   }
-  return best;
-}
-function zoneSvg(f, z, cls) {
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
-  const [ax, bx, ay, by] = inGame(f) && f.fit ? f.fit : [1, 0, 1, 0];
-  svg.setAttribute('viewBox', '0 0 1 1');
-  svg.setAttribute('preserveAspectRatio', 'none');
-  svg.setAttribute('class', 'zone ' + cls);
-  path.setAttribute('d', z.map(r => 'M' + r.map(([x, y]) => `${(ax * x + bx).toFixed(4)} ${(ay * y + by).toFixed(4)}`).join('L') + 'Z').join(''));
-  svg.append(path);
-  return svg;
+  // Every accepted way to say it: each word as on the call sheet, written out or
+  // shortened, in any mix ("Kitch H", "Kitchen Hallway", "kitchen h"), plus aliases.
+  get forms() {
+    if (!this._forms) {
+      let out = [''];
+      for (const [w, full = [], short = []] of this.slots || [[this.name]]) {
+        const opts = [w, ...full, ...short];
+        out = out.flatMap(p => opts.map(t => (p ? p + ' ' : '') + t)).slice(0, 500);
+      }
+      this._forms = [...new Set([...out, ...this.aliases])].map(form);
+    }
+    return this._forms;
+  }
+  get exact() { return this._exact ||= new Set(this.forms.map(([t]) => t)); }
+  get broadForms() { return this._broad ||= (this.broad || []).map(form); }
+  isExact(g) { return this.exact.has(g); }
+  isBroad(g) { return this.broadForms.some(([t]) => t === g); }
+  // Its broad answers take in o: Stalls covers Stall 1.
+  covers(o) { return this.isBroad(o.ck); }
+  // The guess is the start of its name: "Det" for Detention, "Piano long" for Piano H
+  // long. Each typed word begins a word of the name, in order, starting with its first
+  // word (3 letters at least), and the numbers match.
+  starts({ words: [first, ...rest], d }) {
+    return this.forms.some(([, , , fd, fw]) => {
+      if (fd !== d || !fw[0].startsWith(first) || (first.length < 3 && first !== fw[0])) return false;
+      let j = 1;
+      return rest.every(w => { while (j < fw.length && !fw[j].startsWith(w)) j++; return j++ < fw.length; });
+    });
+  }
+  // How well a guess fits it, lower is better: its typo count, or ½ when the guess starts
+  // its name. Infinity when it doesn't fit.
+  fit(guess) {
+    let d = Infinity;
+    for (const f of this.forms) d = Math.min(d, typos(guess, f));
+    return d && this.starts(guess) ? Math.min(d, 0.5) : d;
+  }
+  // 'exact' for the callout or an alias, 'typo' for a small misspelling of one, 'partial'
+  // for the start of it, 'broad' for an accepted but less specific answer ("Stalls" for
+  // "Stall 1"), false otherwise. A typo or partial answer counts when whatever it fits
+  // best on the floor is this callout (or one of its broad answers).
+  accepts(text) {
+    const guess = new Guess(text), { g } = guess;
+    if (!g) return false;
+    if (this.isExact(g)) return 'exact';
+    if (this.isBroad(g)) return 'broad';
+    const others = this.floor.unique.filter(o => o.ck !== this.ck);
+    // an exact answer for another callout on this floor is that callout, not a typo
+    if (others.some(o => o.isExact(g) || o.isBroad(g))) return false;
+    // [how well it fits, what that would mean]; Showers is broad for S1
+    const fits = [[this.fit(guess), 'mine'],
+      ...others.map(o => [o.fit(guess), this.covers(o) ? 'broad' : 'other']),
+      ...this.broadForms.map(b => [typos(guess, b), 'broad'])];
+    const best = Math.min(...fits.map(([f]) => f));
+    const means = new Set(fits.filter(([f]) => f === best).map(([, m]) => m));
+    if (best === Infinity || means.size > 1) return false;
+    return means.has('mine') ? (best === 0.5 ? 'partial' : 'typo') : means.has('broad') ? 'broad' : false;
+  }
+  // What its name means: "Kitch H is short for Kitchen Hallway.", or the note of a callout
+  // named after a thing ("Red is the red train cart in Train, not the red stairs.").
+  get about() { return this.note || (this.full ? `${this.name} is short for ${this.full}.` : ''); }
+  // Its outlined area: its own, or in the Main rooms pool a main room's whole room.
+  area(pool) { return (pool === 'rooms' && this.room && this.room_zone) || this.zone || null; }
 }
 
-function findAt(pt) {
-  if (!q || q.done || S.mode !== 'find') return;
-  q.done = true;
-  const c = q.c, f = c.floor;
-  const v = img(f);
-  const d = (a, p) => Math.hypot((X(a) - X(p)) * v.w, (Y(a) - Y(p)) * v.h) / Math.max(v.w, v.h);
-  const targets = f.callouts.filter(o => compact(o.name) === compact(c.name));
-  const options = f.callouts.filter(o => S.pool !== 'rooms' || o.room);
-  const right = o => compact(o.name) === compact(c.name) || covers(o, c);
-  let ok = false, hit = null, nearest = null;
-  if (pt) {
-    // A tap counts when it lands inside the callout's zone, or just outside it in no other zone.
-    const p = toPlan(f, pt);
-    hit = options.find(o => zoneOf(o) && inZone(zoneOf(o), p)) || null;
-    nearest = hit || options.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
-    ok = hit ? right(hit)
-      : targets.some(t => zoneOf(t) ? zoneGap(f, zoneOf(t), p) <= 0.012 : d(t, pt) <= 0.04) || (!zoneOf(nearest) && right(nearest));
+// A floor has the call-sheet plan (image, w, h; callouts at x/y) and, for most floors,
+// the in-game map (game; callouts at gx/gy). Zones are in call-sheet coordinates; fit
+// maps them to the in-game view (gx = ax*x + bx, gy = ay*y + by).
+class Floor {
+  constructor(data, map, fi) {
+    Object.assign(this, data);
+    this.map = map; this.fi = fi;
+    this.callouts = data.callouts.map(c => new Callout(c, this));
+    this.unique = [...new Map(this.callouts.map(o => [o.ck, o])).values()];   // one per name, for matching
   }
-  record(c, ok, false, pt ? (hit ? `You tapped ${hit.name}` : 'You tapped outside it') : 'Revealed');
-  const layer = $('layer');
-  const shown = pt ? targets.reduce((a, t) => d(t, pt) < d(a, pt) ? t : a) : c;
-  if (hit && !ok && zoneOf(hit)) layer.append(zoneSvg(f, zoneOf(hit), 'bad'));
-  for (const t of targets) if (zoneOf(t)) layer.append(zoneSvg(f, zoneOf(t), 'good'));
-  layer.append(pos(el('div', { className: `marker ${ok ? 'good' : 'bad'}` }), shown), tagFor(shown, `answer ${ok ? 'good' : 'bad'}`));
-  if (pt && !ok) {
-    layer.append(pos(el('div', { className: 'marker small bad' }), pt));
-    if (hit) layer.append(tagFor({ name: hit.name, room: hit.room, x: pt.x, y: pt.y }, 'answer other'));
+  // Callouts to offer when a typed answer can't be read as one callout on the floor: it
+  // fits several equally well ("logg": Log or Long; "pian": Piano, Piano H long, ...) or
+  // is one typo past what counts ("shiko": Shaiiko). Depends only on what was typed and
+  // the floor, never on the answer.
+  suggestions(text) {
+    const guess = new Guess(text), { g, r: gr } = guess;
+    if (!g || this.unique.some(o => o.isExact(g) || o.isBroad(g))) return [];
+    const fits = this.unique.map(o => [o, o.fit(guess)]).filter(([, f]) => f < Infinity).sort((a, b) => a[1] - b[1]);
+    if (fits.length) return fits.length > 1 && fits[0][1] === fits[1][1] ? fits.slice(0, 4).map(([o]) => o) : [];
+    const near = (a, b) => { const k = slack(a, b); return Math.abs(a.length - b.length) - k > 1 ? Infinity : lev(a, b) - k; };
+    const miss = ([t, , r, td]) => td !== guess.d || t.length < 3 ? Infinity : Math.min(near(g, t), near(gr, r));
+    return this.unique.map(o => [o, Math.min(...o.forms.map(miss))]).filter(([, d]) => d <= 1)
+      .sort((a, b) => a[1] - b[1]).slice(0, 4).map(([o]) => o);
   }
-  $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
-  $('fb').textContent = ok ? 'Correct.' : pt ? (hit ? `You tapped ${hit.name}. ${c.name} is outlined in green.` : `That's outside ${c.name}, outlined in green.`) : `Here's ${c.name}.`;
-  $('goBtn').hidden = false; $('skipBtn').hidden = true; $('goBtn').focus({ preventScroll: true });
-  if (zoom > 1) focusOn(X(shown), Y(shown));
+  // A point on the in-game view (game) back on the call sheet.
+  toPlan(p, game) {
+    if (!game || !this.fit) return p;
+    const [ax, bx, ay, by] = this.fit;
+    return { x: (p.x - bx) / ax, y: (p.y - by) / ay };
+  }
+  // how far p is from the zone's edge, as a fraction of the plan's longer side
+  gap(z, p) {
+    const { w, h } = this, s = Math.max(w, h), px = p.x * w, py = p.y * h;
+    let best = Infinity;
+    for (const r of z) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const ax = r[j][0] * w, ay = r[j][1] * h, dx = r[i][0] * w - ax, dy = r[i][1] * h - ay;
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
+      best = Math.min(best, Math.hypot(ax + t * dx - px, ay + t * dy - py) / s);
+    }
+    return best;
+  }
+  // the zone drawn over the plate, in the view shown
+  outline(z, cls, game) {
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+    const [ax, bx, ay, by] = game && this.fit ? this.fit : [1, 0, 1, 0];
+    svg.setAttribute('viewBox', '0 0 1 1');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('class', 'zone ' + cls);
+    path.setAttribute('d', z.map(r => 'M' + r.map(([x, y]) => `${(ax * x + bx).toFixed(4)} ${(ay * y + by).toFixed(4)}`).join('L') + 'Z').join(''));
+    svg.append(path);
+    return svg;
+  }
 }
-$('plate').addEventListener('click', e => {
-  if (S.mode !== 'find' || !q || q.done) return;
-  const r = $('planImg').getBoundingClientRect();
-  findAt({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
-});
 
-// ---------- study ----------
-let studyHidden = false;
-function startStudy() {
-  q = null;
-  const map = mapById[S.map === 'all' ? 'border' : S.map];
-  const fi = Math.max(0, map.floors.findIndex(f => f.name === S.floor));
-  $('plate').classList.remove('clickable');
-  drawPlate(map, fi);
-  renderStudy();
+class GameMap {
+  constructor(data) {
+    Object.assign(this, data);
+    this.floors = data.floors.map((f, fi) => new Floor(f, this, fi));
+    this.callouts = this.floors.flatMap(f => f.callouts);
+  }
+  // Name it from the callout pool: one of each callout name on the map, A to Z.
+  get bank() {
+    if (!this._bank) {
+      const seen = new Map();
+      for (const o of this.callouts) if (!seen.has(o.ck)) seen.set(o.ck, o);
+      this._bank = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    }
+    return this._bank;
+  }
 }
-function renderStudy() {
-  const f = view.map.floors[view.fi];
-  const layer = $('layer');
-  layer.replaceChildren(...f.callouts.filter(c => S.pool === 'rooms' ? c.room : S.pool === 'spots' ? !c.room : true).map(c => {
-    const t = tagFor(c, studyHidden ? 'hidden' : '');
-    t.tabIndex = 0; t.setAttribute('role', 'button');
-    if (about(c)) t.title = about(c);
-    const toggle = () => t.classList.toggle('hidden');
-    t.onclick = toggle;
-    t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
-    return t;
-  }));
-  const hideAll = el('button', { className: 'btn', textContent: studyHidden ? 'Show all names' : 'Hide all names' });
-  hideAll.onclick = () => { studyHidden = !studyHidden; renderStudy(); };
-  const n = layer.children.length;
-  card(el('div', { className: 'eyebrow', textContent: `${view.map.name} · ${f.name} · ${n} callouts` }),
-       el('p', { className: 'prompt', textContent: 'Study the floor' }),
-       el('p', { className: 'hint', textContent: 'Hide the names, then tap a dot to check yourself. Tap a name to hide it again. Use the floor tabs to switch floors.' }),
-       el('div', { className: 'actions' }, hideAll));
+const MAPS = DATA.maps.map(m => new GameMap(m));
+const mapById = Object.fromEntries(MAPS.map(m => [m.id, m]));
+const ALL = MAPS.flatMap(m => m.callouts);
+
+// ---------- saved in this browser (a convenience only) ----------
+class Store {
+  static KEY = 'r6-callout-drill-v1';
+  constructor() {
+    let v = null;
+    try { v = JSON.parse(localStorage.getItem(Store.KEY)); } catch {}
+    this.data = isObj(v) ? v : {};
+    if (!isObj(this.data.stats)) this.data.stats = {};
+    if (!isObj(this.data.prefs)) this.data.prefs = {};
+  }
+  save() { try { localStorage.setItem(Store.KEY, JSON.stringify(this.data)); } catch {} }
+}
+
+// ---------- learning stages ----------
+// Each callout goes Unasked, Unlearned, Somewhat learned, Learned (4 right answers in a
+// row) and Mastered (8). Its progress p counts the right answers in a row, up to 8. A
+// miss always takes it below learned, so it comes up more often again, and how far
+// depends on how well it was known: from mastered to 2, from learned to 1, otherwise to
+// 0 (unlearned). Mistaking it for the callout asked (tapping, picking or naming it
+// instead) costs it a step and leaves it 2 at most. A right answer after a hint doesn't
+// move it.
+class Progress {
+  static LEARNED = 4;
+  static MASTERED = 8;
+  static STAGES = ['Unasked', 'Unlearned', 'Somewhat learned', 'Learned', 'Mastered'];
+  static stageOf(s) { return !s || !s.n ? 0 : s.p >= Progress.MASTERED ? 4 : s.p >= Progress.LEARNED ? 3 : s.p > 0 ? 2 : 1; }
+
+  constructor(store) {
+    this.store = store;
+    const saved = store.data, stats = this.stats = saved.stats, before = JSON.stringify(saved);
+    for (const k of Object.keys(stats)) if (!isObj(stats[k])) delete stats[k];
+    // Progress from before the major update, 1.1.3, which renamed, added and removed many
+    // callouts: pre_update has the keys only the releases before it saved under.
+    const preUpdate = new Set(Object.entries(DATA.pre_update).flatMap(([where, keys]) => keys.map(k => `${where}|${k}`)));
+    this.fromBefore = Object.keys(stats).some(k => preUpdate.has(k));
+    // Earlier releases filed progress under a callout's name and place in its floor's
+    // list. old_keys has every such key, oldest first, with the callout it belongs to:
+    // answers filed under several add up, and the newest says how the latest went.
+    for (const [where, keys] of Object.entries(DATA.old_keys)) for (const [old, id] of Object.entries(keys)) {
+      const from = stats[`${where}|${old}`], to = stats[`${where}|${id}`];
+      if (!from) continue;
+      stats[`${where}|${id}`] = to ? { n: count(to.n) + count(from.n), c: count(to.c) + count(from.c), last: from.last } : from;
+      delete stats[`${where}|${old}`];
+    }
+    // Every saved callout is read back as whole numbers that fit: answers n, right
+    // answers c (at most n), p and at, when it was last asked (counting every answer
+    // given, saved.asked). Saves from before the stages have only n, c and last (1 when
+    // the latest answer was right): when every answer was right they were all in a row,
+    // otherwise only the latest one is known to be.
+    saved.asked = count(saved.asked);
+    for (const [k, s] of Object.entries(stats)) {
+      const n = count(s.n), c = Math.min(count(s.c), n);
+      if (!n) { delete stats[k]; continue; }
+      const p = Number.isSafeInteger(s.p) && s.p >= 0 && s.p <= Progress.MASTERED ? s.p
+        : s.last === 0 ? 0 : c === n ? Math.min(n, Progress.MASTERED) : s.last === 1 ? 1 : 0;
+      stats[k] = { n, c, p, last: s.last === 0 || s.last === 1 ? s.last : p ? 1 : 0, at: count(s.at) };
+      saved.asked = Math.max(saved.asked, stats[k].at);
+    }
+    if (JSON.stringify(saved) !== before) store.save();
+  }
+  get asked() { return this.store.data.asked; }
+  of(c) { return this.stats[c.key]; }
+  stage(c) { return Progress.stageOf(this.stats[c.key]); }
+  missed(c) { const s = this.stats[c.key]; return s ? s.n - s.c : 0; }
+  // a callout missed and not learned again: the My misses pool and the report's To work on
+  toLearn(c) { const st = this.stage(c); return (st === 1 || st === 2) && this.missed(c) > 0; }
+  // Files an answer: the callout asked and, when another was mistaken for it, that one
+  // (if it has been asked before). Returns their stages from before, for the feedback.
+  record(c, ok, hinted, mixed = null) {
+    const { LEARNED, MASTERED } = Progress;
+    const s = this.stats[c.key] ||= { n: 0, c: 0, p: 0, last: 0, at: 0 };
+    const was = Progress.stageOf(s);
+    s.n++; if (ok) s.c++; s.last = ok ? 1 : 0;
+    s.p = !ok ? (s.p >= MASTERED ? 2 : s.p >= LEARNED ? 1 : 0) : hinted ? s.p : Math.min(MASTERED, s.p + 1);
+    s.at = ++this.store.data.asked;
+    const m = !ok && mixed && mixed !== c ? this.stats[mixed.key] : null, mixedWas = Progress.stageOf(m);
+    if (m) m.p = Math.max(0, Math.min(m.p - 1, 2));
+    this.store.save();
+    return { was, mixed: m ? mixed : null, mixedWas };
+  }
+  erase() {
+    for (const k of Object.keys(this.stats)) delete this.stats[k];
+    this.store.data.asked = 0;
+    this.store.save();
+  }
+}
+
+// Saved settings count only when they are values the app knows; anything else (an older
+// version's, or edited by hand) falls back to the default.
+class Settings {
+  static DEFAULTS = { map: 'border', floor: null, mode: 'name', pool: 'rooms', view: 'game', others: false, answer: 'type' };
+  static CHOICES = { mode: ['name', 'pick', 'find', 'study'], pool: ['rooms', 'all', 'spots', 'misses'], view: ['game', 'plan'], answer: ['type', 'pool'] };
+  constructor(store) {
+    this.store = store;
+    const prefs = store.data.prefs;
+    for (const [k, v] of Object.entries(Settings.DEFAULTS)) this[k] = Object.hasOwn(prefs, k) ? prefs[k] : v;
+    for (const [k, ok] of Object.entries(Settings.CHOICES)) if (!ok.includes(this[k])) this[k] = Settings.DEFAULTS[k];
+    if (this.map !== 'all' && !Object.hasOwn(mapById, this.map)) this.map = 'border';
+    if (typeof this.floor !== 'string') this.floor = null;
+    this.others = this.others === true;
+  }
+  // the floor chosen on a map, or its first
+  floorOf(map) { return Math.max(0, map.floors.findIndex(f => f.name === this.floor)); }
+  // what decides the pool of callouts asked
+  get selection() { return `${this.map}|${this.map === 'all' ? '' : this.floor}|${this.pool}`; }
+  save() {
+    this.store.data.prefs = Object.fromEntries(Object.keys(Settings.DEFAULTS).map(k => [k, this[k]]));
+    this.store.save();
+  }
+}
+
+// ---------- what comes up next ----------
+// At random by weight. Callouts not learned yet come up the most: a missed one a little
+// more often than one never asked, and less as it gets closer to learned. A learned
+// callout waits until every callout in the pool has been asked and at least three in four
+// of the others since it last came up; a mastered one also until twice the pool's size of
+// answers have gone by. The last few asked never come straight back.
+// The next AHEAD questions are drawn ahead of time, so their floors can be made ready. A
+// plan only ever holds a callout back longer than drawing it later would (a learned one
+// stays due once due, an unasked one stays unasked), and it is dropped when the map,
+// floor or pool changes.
+class Picker {
+  static WEIGHT = { unasked: 3, unlearned: 4.5, learned: 3, mastered: 2 };
+  static AHEAD = 3;
+  constructor(progress, settings) {
+    this.progress = progress; this.settings = settings;
+    this.recent = [];     // keys of the last few asked
+    this.queue = [];      // the plan: the next questions, in order
+    this.planned = '';    // the pool the plan was drawn from
+  }
+  inPool(c) {
+    const S = this.settings;
+    if (S.map !== 'all' && c.map.id !== S.map) return false;
+    if (S.map !== 'all' && S.floor && c.floor.name !== S.floor) return false;
+    if (S.pool === 'rooms') return c.room;
+    if (S.pool === 'spots') return !c.room;
+    if (S.pool === 'misses') return this.progress.toLearn(c);
+    return true;
+  }
+  pool() { return (this.settings.map === 'all' ? ALL : mapById[this.settings.map].callouts).filter(c => this.inPool(c)); }
+  weight(s, since, size) {
+    const st = Progress.stageOf(s), W = Picker.WEIGHT;
+    if (st === 0) return W.unasked;
+    if (st === 1) return W.unlearned;
+    if (st === 2) return (s.n > s.c ? 3.5 : 2.5) - 0.5 * (s.p - 1);
+    if (since < Math.ceil(0.75 * (size - 1))) return 0;
+    return st === 3 ? W.learned : this.progress.asked - s.at >= 2 * (size - 1) ? W.mastered : 0;
+  }
+  // One callout, drawn as if the keys in history were the last asked.
+  draw(history = this.recent) {
+    const p = this.pool();
+    if (!p.length) return null;
+    const avoid = new Set(p.length > 6 ? history.slice(-5) : history.slice(-1));
+    const cand = p.filter(c => !avoid.has(c.key)), list = cand.length ? cand : p;
+    const stats = this.progress.stats, when = c => stats[c.key] ? stats[c.key].at : -1;
+    // how many of the pool's callouts were asked after this one (none while any is unasked)
+    const times = p.map(when).sort((a, b) => b - a), unasked = times[times.length - 1] < 0;
+    const since = c => {
+      if (unasked) return 0;
+      let lo = 0, hi = times.length;
+      while (lo < hi) { const mid = (lo + hi) >> 1; if (times[mid] > when(c)) lo = mid + 1; else hi = mid; }
+      return lo;
+    };
+    const w = list.map(c => { const s = stats[c.key]; return this.weight(s, Progress.stageOf(s) >= 3 ? since(c) : 0, p.length); });
+    if (!w.some(v => v > 0)) {          // all learned and none due yet: one of those waiting longest
+      const old = [...list].sort((a, b) => when(a) - when(b)).slice(0, Math.max(1, Math.floor(list.length / 4)));
+      return old[Math.floor(Math.random() * old.length)];
+    }
+    let r = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < list.length; i++) { r -= w[i]; if (r <= 0) return list[i]; }
+    return list[list.length - 1];
+  }
+  // Keeps the plan to the pool chosen now: all of it goes if the pool changed, and a
+  // callout that left the pool (a miss learned again) goes.
+  check() {
+    if (this.planned !== this.settings.selection) { this.queue = []; this.planned = this.settings.selection; }
+    else this.queue = this.queue.filter(c => this.inPool(c));
+  }
+  // Tops the plan up to n questions; each is drawn as if the ones before it were asked.
+  plan(n = Picker.AHEAD) {
+    this.check();
+    while (this.queue.length < n) {
+      const c = this.draw([...this.recent, ...this.queue.map(o => o.key)]);
+      if (!c) break;
+      this.queue.push(c);
+    }
+    return this.queue;
+  }
+  // The next question, which counts as asked from now on, answered or not.
+  next() {
+    const c = this.plan(1).shift() || null;
+    if (c) { this.recent.push(c.key); if (this.recent.length > 5) this.recent.shift(); }
+    return c;
+  }
+  reset() { this.recent = []; this.queue = []; }
+}
+
+// ---------- this session ----------
+class Session {
+  constructor() { this.n = 0; this.c = 0; this.streak = 0; this.best = 0; this.log = []; }
+  add(c, ok, hinted, note) {
+    this.n++; if (ok) this.c++;
+    this.streak = ok && !hinted ? this.streak + 1 : ok ? this.streak : 0;
+    this.best = Math.max(this.best, this.streak);
+    const entry = { c, ok, note };
+    this.log.unshift(entry);
+    if (this.log.length > Session.LOG) this.log.pop();
+    return entry;
+  }
+  static LOG = 60;
+}
+
+// ---------- the floor plan ----------
+// One <img> per floor picture, kept decoded once it has been shown or made ready, so a
+// floor comes up at once. Up to KEEP of them.
+class Plate {
+  static KEEP = 6;
+  constructor(settings) {
+    this.settings = settings;
+    this.zoom = 1;
+    this.view = null;              // { map, fi } drawn now
+    this.img = $('planImg'); this.want = this.img;
+    this.imgs = new Map();         // picture -> <img>, least recently used first
+    this.box = $('plate'); this.layer = $('layer'); this.stage = $('stage');
+    this.onDraw = () => {};
+    let size = '';
+    new ResizeObserver(() => {
+      const now = `${this.stage.clientWidth}x${this.stage.clientHeight}`;
+      if (now !== size) { size = now; requestAnimationFrame(() => this.size()); }
+    }).observe(this.stage);
+    this.box.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse' || !this.box.classList.contains('clickable')) return;
+      const r = this.box.getBoundingClientRect();
+      this.box.style.setProperty('--hx', (e.clientX - r.left) + 'px');
+      this.box.style.setProperty('--hy', (e.clientY - r.top) + 'px');
+      this.box.classList.add('aiming');
+    });
+    this.box.addEventListener('pointerleave', () => this.box.classList.remove('aiming'));
+  }
+  inGame(f) { return this.settings.view === 'game' && !!f.game; }
+  look(f) { return this.inGame(f) ? f.game : f; }        // the picture shown for a floor
+  x(c) { return c.floor && this.inGame(c.floor) ? c.gx : c.x; }
+  y(c) { return c.floor && this.inGame(c.floor) ? c.gy : c.y; }
+  picture(src) {
+    let im = this.imgs.get(src);
+    if (im) this.imgs.delete(src);
+    else {
+      im = new Image();
+      im.decoding = 'async';
+      im.src = src;
+      im.addEventListener('load', () => { if (im === this.img) this.size(); });
+    }
+    this.imgs.set(src, im);
+    for (const [k, v] of this.imgs) {
+      if (this.imgs.size <= Plate.KEEP) break;
+      if (v !== this.img && v !== this.want) this.imgs.delete(k);
+    }
+    return im;
+  }
+  // Decodes the floors' pictures, for questions coming up. (The one shown first is left
+  // to load as usual: decoding it up front would hold up the first paint.)
+  prepare(floors) {
+    for (const f of new Set(floors)) {
+      const im = this.picture(this.look(f).image);
+      if (!im.complete) im.decode().catch(() => {});
+    }
+  }
+  ready(f) { const im = this.imgs.get(this.look(f).image); return !!im && im.complete && im.naturalWidth > 0; }
+  // Puts the picture on the plate: at once when it's ready, else once it is, with the old
+  // one shown until then.
+  showPicture(im) {
+    this.want = im;
+    const swap = () => {
+      if (this.want !== im || this.img === im) return;
+      im.id = 'planImg';
+      this.img.removeAttribute('id');
+      this.img.replaceWith(im);
+      this.img = im;
+      this.size();
+    };
+    if (im.complete || !this.img.getAttribute('src')) swap(); else im.decode().then(swap, swap);
+  }
+  draw(map, fi) {
+    const f = map.floors[fi], game = this.inGame(f), im = this.picture(this.look(f).image);
+    im.alt = `${map.name} ${f.name} ${game ? 'in-game blueprint' : 'call-sheet floor plan'}`;
+    this.showPicture(im);
+    this.view = { map, fi };
+    $('board').classList.toggle('game-view', game);
+    $('board').classList.toggle('plan-view', !game);
+    this.size();
+    const where = [map.name, el('small', { textContent: f.name })];
+    if (this.settings.view === 'game' && !f.game) where.push(el('em', { textContent: 'call sheet only' }));
+    $('where').replaceChildren(...where);
+    this.onDraw(map, fi);
+  }
+  size() {
+    if (!this.view) return;
+    const v = this.look(this.view.map.floors[this.view.fi]), cap = getComputedStyle(this.stage).maxHeight;
+    const maxH = cap === 'none' ? this.stage.clientHeight : parseFloat(cap) || 700;
+    const w = Math.floor(Math.min(this.stage.clientWidth, maxH * v.w / v.h) * this.zoom);
+    this.box.style.width = w + 'px';
+    document.documentElement.style.setProperty('--fs', Math.max(9, Math.min(18, w * 0.0125)).toFixed(1) + 'px');
+  }
+  focusOn(x, y) {
+    this.stage.scrollLeft = x * this.box.offsetWidth - this.stage.clientWidth / 2;
+    this.stage.scrollTop = y * this.box.offsetHeight - this.stage.clientHeight / 2;
+  }
+  // Zooms, keeping the callout c (or else the middle of the view) in the middle.
+  setZoom(z, c = null) {
+    const st = this.stage, pl = this.box;
+    const cx = (st.scrollLeft + st.clientWidth / 2) / pl.offsetWidth, cy = (st.scrollTop + st.clientHeight / 2) / pl.offsetHeight;
+    this.zoom = Math.max(1, Math.min(4, z));
+    this.size();
+    if (c) this.focusOn(this.x(c), this.y(c)); else this.focusOn(cx, cy);
+  }
+  // where a click landed, as a fraction of the picture
+  pointAt(e) { const r = this.img.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; }
+  pos(node, c) { node.style.left = (this.x(c) * 100) + '%'; node.style.top = (this.y(c) * 100) + '%'; return node; }
+  tag(c, extra = '') {
+    const t = el('span', { className: `tag ${c.room ? 'room' : 'spot'} ${extra}`, textContent: extra.includes('answer') ? c.name : (c.short || c.name) });
+    if (c.rot) t.style.setProperty('--rot', c.rot + 'deg');
+    return this.pos(t, c);
+  }
+  marker(c, cls = '') { return this.pos(el('div', { className: `marker ${cls}`.trim() }), c); }
+  show(...nodes) { this.layer.replaceChildren(...nodes); }
+  add(...nodes) { this.layer.append(...nodes); }
+}
+
+// ---------- questions ----------
+// One callout asked in the mode chosen. Each kind lays out its card and grades its
+// answer; this base draws the plate, files the answer and shows what it did.
+class Question {
+  constructor(drill, c) {
+    this.drill = drill; this.c = c; this.done = false; this.hinted = false;
+    this.fb = el('div', { className: 'feedback', id: 'fb' });
+    this.nextBtn = el('button', { className: 'btn', textContent: 'Next', id: 'goBtn', hidden: true, onclick: () => drill.next() });
+  }
+  get plate() { return this.drill.plate; }
+  get tappable() { return false; }
+  paint() {
+    const { c, plate } = this;
+    plate.draw(c.map, c.fi);
+    plate.show(...(this.drill.settings.others ? c.floor.callouts.filter(o => o !== c).map(o => plate.tag(o)) : []));
+    plate.box.classList.toggle('clickable', this.tappable);
+    this.mark();
+  }
+  // the dot on the spot asked
+  mark() {
+    const { c, plate } = this;
+    this.dot = plate.marker(c);
+    this.dot.id = 'qMarker';
+    plate.add(this.dot);
+    if (plate.zoom > 1) plate.focusOn(plate.x(c), plate.y(c));
+  }
+  header(html) {
+    const c = this.c;
+    return [el('div', { className: 'eyebrow', textContent: `${c.map.name} · ${c.floor.name} · ${c.room ? 'Main room' : 'Spot'}` }),
+            el('p', { className: 'prompt', innerHTML: html })];
+  }
+  // the Hint (when the kind has one) and Reveal buttons
+  aids(onReveal, onHint) {
+    this.skipBtn = el('button', { className: 'btn ghost', textContent: 'Reveal', id: 'skipBtn', onclick: onReveal });
+    if (!onHint) return [this.skipBtn];
+    this.hintBtn = el('button', { className: 'btn ghost', textContent: 'Hint', id: 'hintBtn', onclick: onHint });
+    return [this.hintBtn, this.skipBtn];
+  }
+  hint() {
+    this.hinted = true;
+    const n = this.c.name;
+    this.fb.className = 'feedback';
+    this.fb.textContent = `Starts with “${n[0]}”, ${n.replace(/[^A-Za-z0-9½]/g, '').length} characters`;
+  }
+  // Files the answer (with the callout mistaken for this one, if any), then shows it: the
+  // kind's own marks and words (reveal), the stage line and Next.
+  answer(ok, said, mixed, detail) {
+    if (this.done) return;
+    this.done = true;
+    const res = this.drill.file(this.c, ok, this.hinted, said, mixed);
+    this.fb.className = 'feedback ' + (ok ? 'good' : 'bad');
+    if (this.dot) this.dot.classList.add(ok ? 'good' : 'bad');
+    this.reveal(ok, detail);
+    this.fb.after(this.stageLine(ok, res));
+    this.nextBtn.textContent = 'Next'; this.nextBtn.hidden = false;
+    if (this.hintBtn) this.hintBtn.disabled = true;
+    if (this.skipBtn) this.skipBtn.hidden = true;
+    this.nextBtn.focus({ preventScroll: true });
+  }
+  // What the answer did, under the feedback: "Somewhat learned: 2 of 4 right in a row to learned."
+  stageLine(ok, { was, mixed, mixedWas }) {
+    const { LEARNED, MASTERED, STAGES } = Progress, progress = this.drill.progress;
+    const s = progress.of(this.c), st = Progress.stageOf(s);
+    const [head, rest] = st === 4 ? ['Mastered', was < 4 ? `${MASTERED} right in a row.` : 'it comes up the least.']
+      : st === 3 ? ['Learned', was < 3 ? `${LEARNED} right in a row, so it comes up less now.` : `${s.p} of ${MASTERED} right in a row to mastered.`]
+      : st === 2 ? was > 2 ? ['Back to somewhat learned', 'it comes up more often again.'] : ['Somewhat learned', `${s.p} of ${LEARNED} right in a row to learned.`]
+      : was > 1 ? ['Back to unlearned', 'it comes up more often again.'] : ['Unlearned', 'it comes up more often until it’s learned.'];
+    const now = mixed ? progress.stage(mixed) : 0;
+    return el('p', { className: `stage-note ${ok && st > was ? 'up' : ok ? '' : 'down'}`, id: 'stageNote' }, el('b', { textContent: head }), `: ${rest}`,
+      ok && this.hinted ? ' A hinted answer doesn’t count toward it.' : '',
+      mixed && now < mixedWas ? ` ${mixed.name}, which you mixed it up with, is ${STAGES[now].toLowerCase()} now.` : '');
+  }
+  key() { return false; }    // a key the question takes (Pick it's 1 to 4)
+  tap() {}                   // a tap on the plate (Find it)
+}
+
+// Name it: what the marked spot is called, typed (TypedQuestion) or picked from the
+// callout pool (BankQuestion).
+class NameQuestion extends Question {
+  // guess '' is a reveal
+  finish(ok, guess) { this.answer(ok, guess.trim() ? this.said(guess) : 'Revealed', ok ? null : this.instead(guess), guess); }
+  reveal(ok, guess) {
+    const { c, plate } = this;
+    plate.add(plate.tag(c, `answer ${ok ? 'good' : 'bad'}`));
+    const other = ok ? null : this.dotted(guess);
+    if (other) plate.add(plate.marker(other, 'small bad'), plate.tag(other, 'answer other'));
+    this.fb.replaceChildren(ok === 'broad' ? `Accepted. More specific: ${c.name}.`
+      : ok ? (compact(guess) === c.ck ? 'Correct.' : `Correct: ${c.name}`)
+      : guess ? `Not quite. It's ${c.name}.` + (other ? ` ${other.name} is the red dot.` : '') : `It's ${c.name}.`, fullLine(c));
+    const alts = c.aliases.filter(a => !/^\d+$/.test(a));
+    if (alts.length) this.fb.append(el('span', { className: 'alt', textContent: 'Also called ' + alts.join(', ') }));
+  }
+  dotted() { return null; }   // a wrong answer to show on the plate too
+}
+
+class TypedQuestion extends NameQuestion {
+  render() {
+    const input = this.input = el('input', { id: 'guess', placeholder: 'Type the callout', autocomplete: 'off', spellcheck: false });
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('aria-label', 'Your callout');
+    this.nextBtn = el('button', { className: 'btn', textContent: 'Call it', id: 'goBtn' });
+    const form = el('form', { className: 'answer-row' }, input, this.nextBtn);
+    form.onsubmit = e => { e.preventDefault(); this.done ? this.drill.next() : this.submit(input.value); };
+    const aids = this.aids(() => this.done ? this.drill.next() : this.finish(false, ''), () => { this.hint(); input.focus(); });
+    card(...this.header('What do you call the <em>marked spot</em>?'), form, el('div', { className: 'actions' }, ...aids), this.fb,
+         el('div', { className: 'hint tips', textContent: 'Enter submits, Enter again goes to the next one. Short or full names count (Kitch H, Kitchen Hallway), and so do small typos and the start of a name (Det for Detention). Close calls get a Did you mean.' }));
+    grab(input);
+  }
+  submit(v) {
+    if (!v.trim()) return;
+    // a possible typo: offer the callouts it could be, once; Enter again keeps it
+    const opts = this.offered === compact(v) ? [] : this.c.floor.suggestions(v);
+    if (!opts.length) return this.finish(this.c.accepts(v), v);
+    this.offered = compact(v);
+    const pick = t => { this.input.value = t; this.finish(this.c.accepts(t), t); };
+    this.fb.className = 'feedback';
+    this.fb.replaceChildren(el('div', { className: 'suggest' }, el('span', { textContent: 'Did you mean' }),
+      ...opts.map(o => el('button', { className: 'chip', title: o.note || o.full || '', onclick: () => pick(o.name) }, ...named(o))),
+      el('button', { className: 'chip ghost', textContent: `Keep “${v.trim()}”`, onclick: () => this.finish(this.c.accepts(v), v) })));
+    this.input.focus({ preventScroll: true });
+  }
+  said(guess) { return `You said “${guess.trim()}”`; }
+  // the callout on this floor typed as it's called, or near enough
+  instead(guess) {
+    const c = this.c;
+    if (!compact(guess) || compact(guess) === c.ck) return null;
+    return c.floor.callouts.find(o => o.ck !== c.ck && ['exact', 'typo', 'partial'].includes(o.accepts(guess))) || null;
+  }
+  reveal(ok, guess) { super.reveal(ok, guess); this.input.readOnly = true; }
+}
+
+// The callout pool: a chip for every callout name on the map, A to Z. Each map's is built
+// once and reset for each question.
+class Bank {
+  constructor(map, onPick) {
+    this.map = map;
+    this.buttons = map.bank.map((o, i) => {
+      const b = el('button', { title: o.note || o.full || '' }, ...named(o));
+      b.dataset.key = o.ck; b.dataset.i = i;
+      return b;
+    });
+    this.box = el('div', { className: 'bank', id: 'bank', role: 'group' }, ...this.buttons);
+    this.box.setAttribute('aria-label', `Every callout on ${map.name}`);
+    this.box.onclick = e => { const b = e.target.closest('button'); if (b) onPick(map.bank[b.dataset.i]); };
+  }
+  reset() { for (const b of this.buttons) { b.disabled = false; b.className = ''; } return this.box; }
+}
+
+class BankQuestion extends NameQuestion {
+  render() {
+    const c = this.c;
+    this.bank = this.drill.bankFor(c.map);
+    const aids = this.aids(() => this.finish(false, ''), () => this.hint());
+    card(...this.header('Which callout is the <em>marked spot</em>?'),
+         el('div', { className: 'hint', textContent: `All ${c.map.bank.length} callouts on ${c.map.name}, A to Z.` }),
+         this.bank.reset(), this.fb, el('div', { className: 'actions' }, this.nextBtn, ...aids));
+    this.bank.box.scrollTop = 0;
+  }
+  hint() {
+    super.hint();
+    this.hintBtn.disabled = true;
+    const k = this.c.ck[0];
+    for (const b of this.bank.buttons) b.classList.toggle('dim', b.dataset.key[0] !== k);
+  }
+  // Only exact answers here: the bank holds other floors' near-identical names (Locker, Lockers).
+  pick(o) {
+    if (this.done) return;
+    this.finish(this.c.isExact(o.ck) ? 'exact' : this.c.isBroad(o.ck) ? 'broad' : false, o.name);
+  }
+  said(guess) { return `You picked ${guess}`; }
+  // the chip picked: this floor's callout by that name if it has one
+  instead(guess) {
+    const c = this.c, g = compact(guess), same = o => o.ck === g;
+    if (!g || g === c.ck) return null;
+    return c.floor.callouts.find(same) || c.map.callouts.find(same) || null;
+  }
+  // a wrong pick that is on this floor
+  dotted(guess) { return guess ? this.c.floor.callouts.find(o => o.ck === compact(guess)) || null : null; }
+  reveal(ok, guess) {
+    super.reveal(ok, guess);
+    const k = this.c.ck, g = compact(guess);
+    let good = null;
+    for (const b of this.bank.buttons) {
+      b.disabled = true; b.classList.remove('dim');
+      if (b.dataset.key === k) b.classList.add('good'), good = b;
+      else if (b.dataset.key === g) b.classList.add(ok === 'exact' ? 'good' : ok ? 'near' : 'bad');  // ½ W picked as Half wall
+    }
+    const box = this.bank.box;
+    if (good) box.scrollTop = good.offsetTop - (box.clientHeight - good.offsetHeight) / 2;
+  }
+}
+
+class PickQuestion extends Question {
+  render() {
+    const c = this.c, seen = new Set([c.ck]), opts = [c];
+    for (const o of [...shuffle(c.floor.callouts.filter(o => o.room === c.room)), ...shuffle(c.floor.callouts), ...shuffle(c.map.callouts)]) {
+      if (opts.length === 4) break;
+      if (!seen.has(o.ck) && !c.covers(o) && !o.covers(c)) { seen.add(o.ck); opts.push(o); }
+    }
+    this.opts = shuffle(opts);
+    this.buttons = this.opts.map((o, i) => el('button', { onclick: () => this.choose(i) }, el('kbd', { textContent: i + 1 }), ...named(o)));
+    card(...this.header('Which callout is <em>marked</em>?'), el('div', { className: 'choices' }, ...this.buttons), this.fb,
+         el('div', { className: 'actions' }, this.nextBtn), el('div', { className: 'hint tips', textContent: 'Keys 1 to 4 answer, Enter goes to the next one.' }));
+  }
+  choose(i) {
+    const picked = this.opts[i];
+    if (picked) this.answer(picked.ck === this.c.ck, `You picked ${picked.name}`, picked, i);
+  }
+  reveal(ok, i) {
+    const { c, plate } = this, picked = this.opts[i], here = picked.floor === c.floor;
+    this.buttons.forEach((b, j) => {
+      b.disabled = true;
+      if (this.opts[j] === c) b.classList.add('good'); else if (j === i) b.classList.add('bad');
+    });
+    plate.add(plate.tag(c, `answer ${ok ? 'good' : 'bad'}`));
+    if (!ok) plate.add(plate.marker(here ? picked : c, 'small bad'));
+    this.fb.replaceChildren(ok ? 'Correct.' : `That's ${c.name}.` + (here ? ` ${picked.name} is the red dot.` : ''), fullLine(c));
+    if (!ok && here) plate.add(plate.tag(picked, 'answer other'));
+  }
+  key(e) {
+    if (this.done || !/^[1-4]$/.test(e.key)) return false;
+    this.choose(+e.key - 1);
+    return true;
+  }
+}
+
+// Find it grades a tap by the callout's outlined area.
+class FindQuestion extends Question {
+  get tappable() { return true; }
+  mark() {}       // nothing marked: finding it is the question
+  render() {
+    const c = this.c, said = c.about;
+    card(...this.header(`Where is <em>${esc(c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said ? said + ' ' : ''}Tap its spot on ${c.floor.name}.` }),
+         this.fb, el('div', { className: 'actions' }, this.nextBtn, ...this.aids(() => this.tap(null))));
+  }
+  // pt null is a reveal
+  tap(pt) {
+    if (this.done) return;
+    const { c, plate } = this, f = c.floor, v = plate.look(f), pool = this.drill.settings.pool, area = o => o.area(pool);
+    const d = (a, p) => Math.hypot((plate.x(a) - plate.x(p)) * v.w, (plate.y(a) - plate.y(p)) * v.h) / Math.max(v.w, v.h);
+    const targets = f.callouts.filter(o => o.ck === c.ck);
+    const right = o => o.ck === c.ck || o.covers(c);
+    let ok = false, hit = null;
+    if (pt) {
+      // A tap counts when it lands inside the callout's zone, or just outside it in no other zone.
+      const p = f.toPlan(pt, plate.inGame(f)), options = f.callouts.filter(o => pool !== 'rooms' || o.room);
+      hit = options.find(o => area(o) && inZone(area(o), p)) || null;
+      const nearest = hit || options.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
+      ok = hit ? right(hit)
+        : targets.some(t => area(t) ? f.gap(area(t), p) <= 0.012 : d(t, pt) <= 0.04) || (!area(nearest) && right(nearest));
+    }
+    const shown = pt ? targets.reduce((a, t) => d(t, pt) < d(a, pt) ? t : a) : c;
+    this.answer(ok, pt ? (hit ? `You tapped ${hit.name}` : 'You tapped outside it') : 'Revealed', hit, { pt, hit, shown });
+  }
+  reveal(ok, { pt, hit, shown }) {
+    const { c, plate } = this, f = c.floor, game = plate.inGame(f), pool = this.drill.settings.pool;
+    if (hit && !ok && hit.area(pool)) plate.add(f.outline(hit.area(pool), 'bad', game));
+    for (const t of f.callouts) if (t.ck === c.ck && t.area(pool)) plate.add(f.outline(t.area(pool), 'good', game));
+    plate.add(plate.marker(shown, ok ? 'good' : 'bad'), plate.tag(shown, `answer ${ok ? 'good' : 'bad'}`));
+    if (pt && !ok) {
+      plate.add(plate.marker(pt, 'small bad'));
+      if (hit) plate.add(plate.tag({ name: hit.name, room: hit.room, x: pt.x, y: pt.y }, 'answer other'));
+    }
+    this.fb.textContent = ok ? 'Correct.' : pt ? (hit ? `You tapped ${hit.name}. ${c.name} is outlined in green.` : `That's outside ${c.name}, outlined in green.`) : `Here's ${c.name}.`;
+    if (plate.zoom > 1) plate.focusOn(plate.x(shown), plate.y(shown));
+  }
+}
+
+// Study: a floor with every name on it, to hide and check one by one.
+class Study {
+  constructor(drill) { this.drill = drill; this.hidden = false; }
+  start() {
+    const { drill } = this, S = drill.settings, map = mapById[S.map === 'all' ? 'border' : S.map];
+    drill.q = null;
+    drill.plate.box.classList.remove('clickable');
+    drill.plate.draw(map, S.floorOf(map));
+    this.render();
+  }
+  render() {
+    const { plate, settings: S } = this.drill, { map, fi } = plate.view, f = map.floors[fi];
+    plate.show(...f.callouts.filter(c => S.pool === 'rooms' ? c.room : S.pool === 'spots' ? !c.room : true).map(c => {
+      const t = plate.tag(c, this.hidden ? 'hidden' : ''), toggle = () => t.classList.toggle('hidden');
+      t.tabIndex = 0; t.setAttribute('role', 'button');
+      if (c.about) t.title = c.about;
+      t.onclick = toggle;
+      t.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } };
+      return t;
+    }));
+    card(el('div', { className: 'eyebrow', textContent: `${map.name} · ${f.name} · ${plate.layer.children.length} callouts` }),
+         el('p', { className: 'prompt', textContent: 'Study the floor' }),
+         el('p', { className: 'hint', textContent: 'Hide the names, then tap a dot to check yourself. Tap a name to hide it again. Use the floor tabs to switch floors.' }),
+         el('div', { className: 'actions' }, el('button', { className: 'btn', textContent: this.hidden ? 'Show all names' : 'Hide all names',
+           onclick: () => { this.hidden = !this.hidden; this.render(); } })));
+  }
+}
+
+// ---------- the drill ----------
+class Drill {
+  static KINDS = { pick: PickQuestion, find: FindQuestion };
+  constructor({ progress, settings, session, plate, sidebar }) {
+    Object.assign(this, { progress, settings, session, plate, sidebar });
+    this.picker = new Picker(progress, settings);
+    this.study = new Study(this);
+    this.banks = new Map();
+    this.q = null;            // the question asked now
+    this.planning = false;
+  }
+  next() {
+    const S = this.settings;
+    if (S.mode === 'study') return this.study.start();
+    const c = this.picker.next();
+    if (!c) return this.empty(S.pool === 'misses' ? 'You have no misses in this selection. Drill a different pool to find some.'
+      : 'This selection has no callouts. Pick another map, floor or pool.');
+    this.ask(c);
+    this.ahead();
+  }
+  // Asks c in the mode and answer style chosen now.
+  ask(c, hinted = false) {
+    const S = this.settings, Kind = Drill.KINDS[S.mode] || (S.answer === 'pool' ? BankQuestion : TypedQuestion);
+    this.q = new Kind(this, c);
+    this.q.hinted = hinted;
+    this.q.paint();
+    this.q.render();
+  }
+  empty(msg) {
+    const S = this.settings;
+    if (S.map !== 'all') this.plate.draw(mapById[S.map], S.floorOf(mapById[S.map]));
+    this.plate.box.classList.remove('clickable');
+    this.q = null;
+    this.plate.show();
+    card(el('div', { className: 'eyebrow', textContent: 'Nothing to drill' }), el('p', { className: 'empty', textContent: msg }));
+  }
+  // Files an answer everywhere it counts: the callout's stage, this session and the sidebar.
+  file(c, ok, hinted, said, mixed = null) {
+    const res = this.progress.record(c, ok, hinted, mixed);
+    const entry = this.session.add(c, ok, hinted, ok && ok !== 'broad' ? (!c.what && c.full) || '' : said);
+    this.sidebar.answered(entry);
+    this.ahead();
+    return res;
+  }
+  // Once the page has painted: plans the next questions and decodes their floors, so Next
+  // has nothing to wait for.
+  ahead() {
+    if (this.planning) return;
+    this.planning = true;
+    requestAnimationFrame(() => setTimeout(() => {
+      this.planning = false;
+      if (this.settings.mode !== 'study') this.plate.prepare(this.picker.plan().map(c => c.floor));
+    }));
+  }
+  bankFor(map) {
+    if (!this.banks.has(map)) this.banks.set(map, new Bank(map, o => this.q instanceof BankQuestion && this.q.pick(o)));
+    return this.banks.get(map);
+  }
+  erase() {
+    this.progress.erase();
+    this.picker.reset();
+    this.sidebar.maps();
+    if (this.settings.pool === 'misses') this.next();
+  }
 }
 
 // ---------- sidebar ----------
-function renderStats() {
-  $('sScore').textContent = `${session.c}/${session.n}`;
-  $('sAcc').textContent = session.n ? Math.round(100 * session.c / session.n) + '%' : '–';
-  $('sStreak').textContent = session.streak;
-  $('sBest').textContent = session.best;
-}
-function renderLog() {
-  $('logCount').textContent = session.log.length ? `${session.log.length} answered` : '';
-  $('logList').replaceChildren(...session.log.map(({ c, ok, note }) => el('li', { className: ok === 'broad' ? 'near' : ok ? 'good' : 'bad' },
-    el('b', {}, ...named(c)), el('span', { textContent: `${c.map.name} ${c.floor.name}` }),
-    note ? el('small', { textContent: note }) : '')));
-  $('logList').scrollTop = 0;
-}
-// what the menu button says on phones and tablets: map / mode / pool
-function renderSummary() {
-  const label = (box, attr) => box.querySelector(`[data-${attr}="${S[attr]}"]`).textContent;
-  $('menuSum').textContent = [S.map === 'all' ? 'All maps' : mapById[S.map].name, label($('modeTabs'), 'mode'), label($('poolChips'), 'pool')].join(' / ');
-}
-function renderMapChips() {
-  const count = ms => {
-    const cs = ms.flatMap(m => m.floors.flatMap(f => f.callouts));
-    return [cs.filter(c => stats[c.key] && stats[c.key].last === 1).length, cs.length];
-  };
-  $('mapChips').replaceChildren(...[['all', 'All maps', DATA.maps], ...DATA.maps.map(m => [m.id, m.name, [m]])].map(([id, name, ms]) => {
-    const [done, total] = count(ms);
-    const b = el('button', {}, el('span', { className: 'name', textContent: name }),
-      el('span', { className: 'num', textContent: `${done}/${total}` }), el('i'));
-    b.style.setProperty('--p', (100 * done / total).toFixed(1) + '%');
-    b.setAttribute('aria-pressed', String(S.map === id));
-    b.onclick = () => { S.map = id; S.floor = null; persistPrefs(); renderMapChips(); nextQuestion(); };
-    return b;
-  }));
-}
-function pressed(container, attr, val) {
-  container.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === val)));
+class Sidebar {
+  constructor({ progress, settings, session, onMap }) {
+    Object.assign(this, { progress, settings, session });
+    this.chips = [['all', 'All maps', ALL], ...MAPS.map(m => [m.id, m.name, m.callouts])].map(([id, name, cs]) => {
+      const num = el('span', { className: 'num' });
+      const b = el('button', { onclick: () => onMap(id) }, el('span', { className: 'name', textContent: name }), num, el('i'));
+      return { id, total: cs.length, b, num };
+    });
+    $('mapChips').replaceChildren(...this.chips.map(x => x.b));
+  }
+  // what changed with an answer
+  answered(entry) {
+    this.score();
+    this.maps();
+    const list = $('logList');
+    list.prepend(this.row(entry));
+    while (list.children.length > Session.LOG) list.lastChild.remove();
+    this.logCount();
+    list.scrollTop = 0;
+  }
+  score() {
+    const s = this.session;
+    $('sScore').textContent = `${s.c}/${s.n}`;
+    $('sAcc').textContent = s.n ? pct(s.c, s.n) + '%' : '–';
+    $('sStreak').textContent = s.streak;
+    $('sBest').textContent = s.best;
+  }
+  row({ c, ok, note }) {
+    return el('li', { className: ok === 'broad' ? 'near' : ok ? 'good' : 'bad' }, el('b', {}, ...named(c)),
+      el('span', { textContent: `${c.map.name} ${c.floor.name}` }), note ? el('small', { textContent: note }) : '');
+  }
+  logCount() { $('logCount').textContent = this.session.log.length ? `${this.session.log.length} answered` : ''; }
+  // each map's chip: callouts learned of all, and which is picked
+  maps() {
+    const learned = new Map();
+    for (const c of ALL) if (this.progress.stage(c) >= 3) learned.set(c.map.id, (learned.get(c.map.id) || 0) + 1);
+    for (const { id, total, b, num } of this.chips) {
+      const done = id === 'all' ? [...learned.values()].reduce((a, v) => a + v, 0) : learned.get(id) || 0;
+      num.textContent = `${done}/${total}`;
+      b.style.setProperty('--p', (100 * done / total).toFixed(1) + '%');
+      b.setAttribute('aria-pressed', String(this.settings.map === id));
+    }
+  }
+  // what the menu button says on phones and tablets: map / mode / pool
+  summary() {
+    const S = this.settings, name = (box, attr) => box.querySelector(`[data-${attr}="${S[attr]}"]`).textContent;
+    $('menuSum').textContent = [S.map === 'all' ? 'All maps' : mapById[S.map].name, name($('modeTabs'), 'mode'), name($('poolChips'), 'pool')].join(' / ');
+  }
 }
 
 // ---------- update note ----------
-// Players with progress from before the major update (fromBefore, above) are asked once
+// Players with progress from before the major update (Progress.fromBefore) are asked once
 // whether to start over. Nobody else ever sees it, and later releases don't bring it
 // back: only a release the app's owner calls a major update gets a note, of its own.
-const UPDATE = 1;
-const noted = () => Number.isInteger(saved.update) && saved.update >= UPDATE;
-// Until the note is answered, update is 0: by the next visit that progress has moved to
-// the callout ids and can't be told apart any more.
-if (!noted() && saved.update !== 0) { saved.update = fromBefore ? 0 : UPDATE; save(); }
-function showNote() {
-  if (!noted() && !$('updateNote').open) { $('updateNote').showModal(); $('keepProgress').focus(); }
+class UpdateNote {
+  static UPDATE = 1;
+  constructor(store, fromBefore, onStartOver) {
+    this.store = store;
+    // Until the note is answered, update is 0: by the next visit that progress has moved
+    // to the callout ids and can't be told apart any more.
+    if (!this.noted && store.data.update !== 0) { store.data.update = fromBefore ? 0 : UpdateNote.UPDATE; store.save(); }
+    $('updateNote').addEventListener('close', () => { store.data.update = UpdateNote.UPDATE; store.save(); });
+    $('keepProgress').onclick = () => $('updateNote').close();
+    $('startOver').onclick = () => { onStartOver(); $('updateNote').close(); };
+  }
+  get noted() { const u = this.store.data.update; return Number.isInteger(u) && u >= UpdateNote.UPDATE; }
+  show() { if (!this.noted && !$('updateNote').open) { $('updateNote').showModal(); $('keepProgress').focus(); } }
 }
-$('updateNote').addEventListener('close', () => { saved.update = UPDATE; save(); });
-$('keepProgress').onclick = () => $('updateNote').close();
-$('startOver').onclick = () => { eraseProgress(); $('updateNote').close(); };
 
 // ---------- progress report ----------
-// The report adds up, per map, answers and right answers, and per floor its callouts (t),
-// main rooms (r), callouts mastered (m), main rooms mastered (rm) and callouts tried (s).
-// A shared link carries just those numbers, the date and an optional name.
-const SITE = 'https://atrejo26.github.io/r6-callout-drill/';
-const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
-const cleanName = s => [...s.replace(/[\p{Cc}\u202a-\u202e\u2066-\u2069]/gu, '').replace(/\s+/g, ' ').trim()].slice(0, 24).join('').trim();
-if (typeof saved.name === 'string' && cleanName(saved.name)) saved.name = cleanName(saved.name); else delete saved.name;
-function summary() {
-  const d = new Date();
-  return { date: [d.getFullYear(), d.getMonth() + 1, d.getDate()], name: saved.name || '', maps: DATA.maps.map(m => {
-    let n = 0, c = 0;
-    const floors = m.floors.map(f => {
-      const fl = { name: f.name, t: 0, r: 0, m: 0, rm: 0, s: 0 };
-      for (const o of f.callouts) {
-        const st = stats[o.key], won = !!st && st.last === 1;
-        fl.t++; fl.r += o.room ? 1 : 0; fl.m += won ? 1 : 0; fl.rm += won && o.room ? 1 : 0; fl.s += st ? 1 : 0;
-        if (st) { n += tally(st.n); c += Math.min(tally(st.c), tally(st.n)); }
-      }
-      return fl;
-    });
-    return { id: m.id, name: m.name, n, c, floors };
-  }) };
-}
-const totals = maps => maps.reduce((a, m) => {
-  a.n += m.n; a.c += m.c;
-  for (const f of m.floors) for (const k of ['t', 'r', 'm', 'rm', 's']) a[k] += f[k];
-  return a;
-}, { n: 0, c: 0, t: 0, r: 0, m: 0, rm: 0, s: 0 });
-const fmtDate = ([y, mo, d]) => new Date(y, mo - 1, d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-const accuracy = t => t.n ? `${pct(t.c, t.n)}% right` : 'no answers yet';
-
-function reportBody(sum, own) {
-  const all = totals(sum.maps);
-  const stat = (label, value) => el('div', { className: 'stat' }, el('span', { textContent: label }), el('b', { textContent: value }));
-  const bar = el('i', { className: 'bar' });
-  bar.style.setProperty('--p', (100 * all.m / all.t).toFixed(1) + '%');
-  const out = [
-    el('p', { className: 'hero' }, el('b', { textContent: `${all.m}/${all.t}` }), el('span', { textContent: 'callouts mastered' }), el('em', { textContent: `${pct(all.m, all.t)}%` })),
-    bar,
-    el('div', { className: 'stats' }, stat('Main rooms', `${all.rm}/${all.r}`), stat('Spots', `${all.m - all.rm}/${all.t - all.r}`),
-      stat('Answers', all.n.toLocaleString()), stat('Right', all.n ? `${pct(all.c, all.n)}%` : '–')),
-    el('p', { className: 'hint', textContent: `${all.s} of ${all.t} callouts tried. A callout is mastered once the latest answer for it was right.` }),
-    el('h3', { className: 'label', textContent: 'By map' }),
-    el('ul', { className: 'maps rep' }, ...sum.maps.map(m => {
-      const t = totals([m]);
-      const li = el('li', {}, el('span', { className: 'name', textContent: m.name }), el('span', { className: 'num', textContent: `${t.m}/${t.t}` }), el('i'),
-        el('small', { textContent: [...m.floors.map(f => `${f.name} ${f.m}/${f.t}`), accuracy(t)].join(' · ') }));
-      li.style.setProperty('--p', (100 * t.m / t.t).toFixed(1) + '%');
-      return li;
-    })),
-  ];
-  if (!own) return out;
-  // Callouts whose latest answer was wrong, the most missed first.
-  const missed = c => tally(stats[c.key].n) - Math.min(tally(stats[c.key].c), tally(stats[c.key].n));
-  const misses = ALL.filter(c => stats[c.key] && stats[c.key].last === 0)
-    .sort((a, b) => missed(b) - missed(a) || a.name.localeCompare(b.name));
-  out.push(el('section', { className: 'log' },
-    el('div', { className: 'log-head' }, el('h3', { className: 'label', textContent: 'To work on' }),
-      el('span', { className: 'label', textContent: misses.length ? `${misses.length} missed last time` : '' })),
-    misses.length
-      ? el('ol', {}, ...misses.slice(0, 8).map(c => el('li', { className: 'bad' }, el('b', {}, ...named(c)),
-        el('span', { textContent: `${c.map.name} ${c.floor.name}` }), el('small', { textContent: `Missed ${missed(c)} of ${tally(stats[c.key].n)}` }))))
-      : el('p', { className: 'empty', textContent: all.s ? 'Nothing: your latest answer was right for every callout you have tried.' : 'Callouts you miss show up here.' }),
-    misses.length ? el('div', { className: 'actions' }, el('button', { className: 'btn ghost', textContent: 'Practice my misses', onclick: practiceMisses })) : ''));
-  return out;
-}
-function practiceMisses() {
-  S.map = 'all'; S.floor = null; S.pool = 'misses';
-  if (S.mode === 'study') { S.mode = 'name'; pressed($('modeTabs'), 'mode', S.mode); applyAnswer(); }
-  pressed($('poolChips'), 'pool', S.pool); persistPrefs(); renderMapChips();
-  $('report').close(); setMenu(false); nextQuestion();
-}
-function reportText(sum) {
-  const all = totals(sum.maps);
-  return [`R6 Callout Drill progress${sum.name ? `: ${sum.name}` : ''}, ${fmtDate(sum.date)}`,
-    `Mastered ${all.m} of ${all.t} callouts (${pct(all.m, all.t)}%): main rooms ${all.rm}/${all.r}, spots ${all.m - all.rm}/${all.t - all.r}`,
-    all.n ? `${all.n.toLocaleString()} answers, ${pct(all.c, all.n)}% right` : 'No answers yet',
-    sum.maps.map(m => { const t = totals([m]); return `${m.name} ${t.m}/${t.t}`; }).join(' · ')].join('\n');
-}
-
-// The link: 1~date~name~map~map..., each map id_answers_right_floor_floor..., each
-// floor name.t.r.m.rm.s; numbers in base 36, the name as URL-safe base64 of its UTF-8.
-const b64url = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const unb64url = s => new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)));
-const b36 = v => v.toString(36);
-const code = sum => ['1', sum.date.map((v, i) => String(v).padStart(i ? 2 : 4, '0')).join(''), sum.name ? b64url(sum.name) : '',
-  ...sum.maps.map(m => [m.id, b36(m.n), b36(m.c), ...m.floors.map(f => [f.name, ...[f.t, f.r, f.m, f.rm, f.s].map(b36)].join('.'))].join('_'))].join('~');
-const link = sum => SITE + '#report=' + code(sum);
-// Anyone can make a link say anything, so it counts only if every part is well formed
-// and the numbers add up; it is shown as plain text and never touches saved progress.
-function readReport(text) {
-  try {
-    const [v, date, name, ...maps] = text.split('~');
-    const dm = /^(\d{4})(\d{2})(\d{2})$/.exec(date);
-    if (text.length > 4000 || v !== '1' || !dm || !maps.length || maps.length > 30 || name.length > 200) return null;
-    const [y, mo, d] = dm.slice(1).map(Number), day = new Date(y, mo - 1, d);
-    if (y < 2000 || day.getFullYear() !== y || day.getMonth() !== mo - 1 || day.getDate() !== d) return null;
-    const num = s => /^[0-9a-z]{1,6}$/.test(s) ? parseInt(s, 36) : NaN;
-    const sum = { date: [y, mo, d], name: name ? cleanName(unb64url(name)) : '', maps: [] };
-    for (const part of maps) {
-      const [id, n, c, ...fs] = part.split('_');
-      const m = { id, name: Object.hasOwn(mapById, id) ? mapById[id].name : id, n: num(n), c: num(c), floors: [] };
-      if (!/^[a-z0-9-]{1,24}$/.test(id) || sum.maps.some(o => o.id === id) || !fs.length || fs.length > 8 || !(m.c <= m.n)) return null;
-      for (const fpart of fs) {
-        const [fname, ...vals] = fpart.split('.'), [t, r, mm, rm, s] = vals.map(num);
-        if (!/^[A-Za-z0-9]{1,12}$/.test(fname) || m.floors.some(f => f.name === fname) || vals.length !== 5
-          || !(t > 0 && r <= t && mm <= s && s <= t && rm <= mm && rm <= r && mm - rm <= t - r)) return null;
-        m.floors.push({ name: fname, t, r, m: mm, rm, s });
-      }
-      sum.maps.push(m);
+// A report adds up, per map, answers and right answers, and per floor its callouts (t),
+// main rooms (r), callouts tried (s), somewhat learned (a), learned (l), mastered (m) and
+// main rooms learned or mastered (rl). A shared link carries just those numbers, the date
+// and an optional name.
+class Summary {
+  static SITE = 'https://atrejo26.github.io/r6-callout-drill/';
+  static FLOOR = ['t', 'r', 's', 'a', 'l', 'm', 'rl'];
+  static STAGE_NAMES = { mastered: 'Mastered', learned: 'Learned', somewhat: 'Somewhat learned', unlearned: 'Unlearned', unasked: 'Unasked' };
+  static cleanName(s) { return [...s.replace(/[\p{Cc}‪-‮⁦-⁩]/gu, '').replace(/\s+/g, ' ').trim()].slice(0, 24).join('').trim(); }
+  constructor(date, name, maps, old = false) {
+    Object.assign(this, { date, name, maps, old });
+    this.all = Summary.add(maps);
+  }
+  // yours, from your progress
+  static of(progress, name = '') {
+    const d = new Date();
+    return new Summary([d.getFullYear(), d.getMonth() + 1, d.getDate()], name, MAPS.map(m => {
+      let n = 0, c = 0;
+      const floors = m.floors.map(f => {
+        const fl = { name: f.name, t: 0, r: 0, s: 0, a: 0, l: 0, m: 0, rl: 0 };
+        for (const o of f.callouts) {
+          const st = progress.of(o), g = Progress.stageOf(st);
+          fl.t++; fl.r += o.room ? 1 : 0; fl.s += g ? 1 : 0;
+          fl.a += g === 2 ? 1 : 0; fl.l += g === 3 ? 1 : 0; fl.m += g === 4 ? 1 : 0; fl.rl += g >= 3 && o.room ? 1 : 0;
+          if (st) { n += st.n; c += st.c; }
+        }
+        return fl;
+      });
+      return { id: m.id, name: m.name, n, c, floors };
+    }));
+  }
+  static add(maps) {
+    return maps.reduce((a, m) => {
+      a.n += m.n; a.c += m.c;
+      for (const f of m.floors) for (const k of Summary.FLOOR) a[k] += f[k];
+      return a;
+    }, { n: 0, c: 0, t: 0, r: 0, s: 0, a: 0, l: 0, m: 0, rl: 0 });
+  }
+  static learned(t) { return t.l + t.m; }
+  // how many callouts are at each stage, from mastered down to unasked
+  static byStage(t) { return [['mastered', t.m], ['learned', t.l], ['somewhat', t.a], ['unlearned', t.s - t.a - t.l - t.m], ['unasked', t.t - t.s]]; }
+  static date([y, mo, d]) { return new Date(y, mo - 1, d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+  get stages() { return Summary.byStage(this.all).map(([k, v]) => `${Summary.STAGE_NAMES[k]} ${v}`); }
+  get text() {
+    const all = this.all, won = Summary.learned(all);
+    return [`R6 Callout Drill progress${this.name ? `: ${this.name}` : ''}, ${Summary.date(this.date)}`,
+      `Learned ${won} of ${all.t} callouts (${pct(won, all.t)}%): main rooms ${all.rl}/${all.r}, spots ${won - all.rl}/${all.t - all.r}`,
+      this.stages.join(' · '),
+      all.n ? `${all.n.toLocaleString()} answers, ${pct(all.c, all.n)}% right` : 'No answers yet',
+      this.maps.map(m => { const t = Summary.add([m]); return `${m.name} ${Summary.learned(t)}/${t.t}`; }).join(' · ')].join('\n');
+  }
+  // The link: 2~date~name~map~map..., each map id_answers_right_floor_floor..., each floor
+  // name.t.r.s.a.l.m.rl without the zeros at the end; numbers in base 36, the name as
+  // URL-safe base64 of its UTF-8.
+  // Links from before the stages start with 1 and have name.t.r.m.rm.s for a floor, m
+  // being the callouts whose latest answer was right: they show as somewhat learned.
+  get code() {
+    const b36 = v => v.toString(36), b64url = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return ['2', this.date.map((v, i) => String(v).padStart(i ? 2 : 4, '0')).join(''), this.name ? b64url(this.name) : '',
+      ...this.maps.map(m => [m.id, b36(m.n), b36(m.c), ...m.floors.map(f => [f.name, ...Summary.FLOOR.map(k => b36(f[k]))].join('.').replace(/(\.0)+$/, ''))].join('_'))].join('~');
+  }
+  get link() { return Summary.SITE + '#report=' + this.code; }
+  // Anyone can make a link say anything, so it counts only if every part is well formed
+  // and the numbers add up; it is shown as plain text and never touches saved progress.
+  static readFloor(v, vals, num) {
+    if (v === '1') {
+      const [t, r, mm, rm, s] = vals.map(num);
+      if (vals.length !== 5 || !(t > 0 && r <= t && mm <= s && s <= t && rm <= mm && rm <= r && mm - rm <= t - r)) return null;
+      return { t, r, s, a: mm, l: 0, m: 0, rl: 0 };
     }
-    return sum;
-  } catch { return null; }
-}
-// undefined: no report in the address; null: one that doesn't read
-function sharedReport() {
-  const m = /^#report=(.*)$/s.exec(location.hash);
-  if (!m) return;
-  try { return readReport(decodeURIComponent(m[1])); } catch { return null; }
-}
-
-let reportMode = null;     // 'own', 'shared' or 'preview' (your own, as others see it)
-function openReport(mode, sum) {
-  reportMode = mode;
-  const own = mode === 'own';
-  $('reportTitle').textContent = own ? 'Progress report' : 'Shared progress';
-  $('reportWho').textContent = sum ? [sum.name, fmtDate(sum.date)].filter(Boolean).join(' · ') : '';
-  $('reportNote').hidden = own;
-  $('reportNote').textContent = mode === 'preview' ? 'This is what people see when they open your link.'
-    : sum ? "Someone shared their progress with you. Yours isn't changed; close this to start drilling."
-    : 'This progress link is damaged or incomplete, so there is nothing to show.';
-  $('reportBody').replaceChildren(...(sum ? reportBody(sum, own) : []));
-  $('reportShare').hidden = !own;
-  $('reportClose').textContent = mode === 'preview' ? 'Back' : 'Close';
-  if (own) {
-    $('shareName').value = saved.name || '';
-    $('shareBtn').hidden = typeof navigator.share !== 'function';
-    $('copyReport').classList.toggle('ghost', !$('shareBtn').hidden);
-    $('shareText').hidden = true; $('shareMsg').textContent = '';
+    const [t, r = 0, s = 0, a = 0, l = 0, m = 0, rl = 0] = vals.map(num);
+    if (vals.length < 1 || vals.length > 7 || !(t > 0 && r <= t && s <= t && a + l + m <= s && rl <= r && rl <= l + m && l + m - rl <= t - r)) return null;
+    return { t, r, s, a, l, m, rl };
   }
-  if (!$('report').open) $('report').showModal();
-  $('report').scrollTop = 0;
-  $('reportClose').focus();
-}
-function dropHash() { try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch {} }
-$('reportBtn').onclick = () => openReport('own', summary());
-$('reportClose').onclick = () => reportMode === 'preview' ? openReport('own', summary()) : $('report').close();
-$('previewBtn').onclick = () => openReport('preview', readReport(code(summary())));
-$('report').addEventListener('click', e => { if (e.target === $('report')) $('report').close(); });   // the dimmed outside
-$('report').addEventListener('close', () => { if (reportMode === 'shared') dropHash(); reportMode = null; showNote(); });
-$('shareName').oninput = e => {
-  const v = cleanName(e.target.value);
-  if (v) saved.name = v; else delete saved.name;
-  save();
-  $('reportWho').textContent = [v, fmtDate(summary().date)].filter(Boolean).join(' · ');
-  $('shareText').hidden = true; $('shareMsg').textContent = '';
-};
-const say = t => { $('shareMsg').textContent = t; };
-async function copy(text, what) {
-  try {
-    await navigator.clipboard.writeText(text);
-    $('shareText').hidden = true; say(`${what} copied.`);
-  } catch {      // no clipboard here: leave it selected to copy by hand
-    const t = $('shareText');
-    t.value = text; t.hidden = false; t.focus(); t.select();
-    say("Your browser didn't let the app copy it. It's selected above: copy it from there.");
+  static read(text) {
+    try {
+      const [v, date, name, ...parts] = text.split('~');
+      const dm = /^(\d{4})(\d{2})(\d{2})$/.exec(date);
+      if (text.length > 4000 || (v !== '1' && v !== '2') || !dm || !parts.length || parts.length > 30 || name.length > 200) return null;
+      const [y, mo, d] = dm.slice(1).map(Number), day = new Date(y, mo - 1, d);
+      if (y < 2000 || day.getFullYear() !== y || day.getMonth() !== mo - 1 || day.getDate() !== d) return null;
+      const num = s => /^[0-9a-z]{1,6}$/.test(s) ? parseInt(s, 36) : NaN;
+      const unb64url = s => new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)));
+      const maps = [];
+      for (const part of parts) {
+        const [id, n, c, ...fs] = part.split('_');
+        const m = { id, name: Object.hasOwn(mapById, id) ? mapById[id].name : id, n: num(n), c: num(c), floors: [] };
+        if (!/^[a-z0-9-]{1,24}$/.test(id) || maps.some(o => o.id === id) || !fs.length || fs.length > 8 || !(m.c <= m.n)) return null;
+        for (const fpart of fs) {
+          const [fname, ...vals] = fpart.split('.'), fl = Summary.readFloor(v, vals, num);
+          if (!/^[A-Za-z0-9]{1,12}$/.test(fname) || m.floors.some(f => f.name === fname) || !fl) return null;
+          m.floors.push({ name: fname, ...fl });
+        }
+        maps.push(m);
+      }
+      return new Summary([y, mo, d], name ? Summary.cleanName(unb64url(name)) : '', maps, v === '1');
+    } catch { return null; }
+  }
+  // undefined: no report in the address; null: one that doesn't read
+  static fromHash() {
+    const m = /^#report=(.*)$/s.exec(location.hash);
+    if (!m) return;
+    try { return Summary.read(decodeURIComponent(m[1])); } catch { return null; }
   }
 }
-$('copyReport').onclick = () => { const sum = summary(); copy(reportText(sum) + '\n' + link(sum), 'Report'); };
-$('copyLink').onclick = () => copy(link(summary()), 'Link');
-$('shareBtn').onclick = async () => {
-  const sum = summary();
-  try { await navigator.share({ title: 'R6 Callout Drill progress', text: reportText(sum), url: link(sum) }); say(''); }
-  catch (e) { if (e.name !== 'AbortError') copy(reportText(sum) + '\n' + link(sum), 'Report'); }
-};
-addEventListener('hashchange', () => { const r = sharedReport(); if (r !== undefined) openReport('shared', r); });
 
-// ---------- wiring ----------
-$('modeTabs').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  S.mode = b.dataset.mode; pressed($('modeTabs'), 'mode', S.mode); persistPrefs(); applyAnswer(); nextQuestion();
-};
-$('answerChips').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  S.answer = b.dataset.answer; persistPrefs(); applyAnswer();
-  if (!q) return nextQuestion();
-  if (q.done) return nextQuestion();
-  paintQuestion(); renderName();  // same spot, answered the other way
-};
-function applyAnswer() {
-  pressed($('answerChips'), 'answer', S.answer);
-  $('answerRow').hidden = S.mode !== 'name';
-  $('main').classList.toggle('pool-answers', S.mode === 'name' && S.answer === 'pool');
+// The report pop-up: yours, a shared one, or yours as others see it (a preview).
+class Report {
+  constructor({ progress, store, note, onPractice }) {
+    Object.assign(this, { progress, store, note });
+    this.mode = null;     // 'own', 'shared' or 'preview'
+    const name = store.data.name;
+    if (typeof name === 'string' && Summary.cleanName(name)) store.data.name = Summary.cleanName(name); else delete store.data.name;
+    this.onPractice = onPractice;
+    $('reportBtn').onclick = () => this.open('own', this.mine());
+    $('reportClose').onclick = () => this.mode === 'preview' ? this.open('own', this.mine()) : $('report').close();
+    $('previewBtn').onclick = () => this.open('preview', Summary.read(this.mine().code));
+    $('report').addEventListener('click', e => { if (e.target === $('report')) $('report').close(); });   // the dimmed outside
+    $('report').addEventListener('close', () => {
+      if (this.mode === 'shared') try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch {}
+      this.mode = null;
+      note.show();
+    });
+    $('shareName').oninput = e => {
+      const v = Summary.cleanName(e.target.value);
+      if (v) store.data.name = v; else delete store.data.name;
+      store.save();
+      $('reportWho').textContent = [v, Summary.date(this.mine().date)].filter(Boolean).join(' · ');
+      $('shareText').hidden = true; this.say('');
+    };
+    $('copyReport').onclick = () => { const sum = this.mine(); this.copy(sum.text + '\n' + sum.link, 'Report'); };
+    $('copyLink').onclick = () => this.copy(this.mine().link, 'Link');
+    $('shareBtn').onclick = async () => {
+      const sum = this.mine();
+      try { await navigator.share({ title: 'R6 Callout Drill progress', text: sum.text, url: sum.link }); this.say(''); }
+      catch (e) { if (e.name !== 'AbortError') this.copy(sum.text + '\n' + sum.link, 'Report'); }
+    };
+    addEventListener('hashchange', () => { const r = Summary.fromHash(); if (r !== undefined) this.open('shared', r); });
+  }
+  mine() { return Summary.of(this.progress, this.store.data.name || ''); }
+  // A shared report opens over the app; the update note waits until it's closed.
+  start() { const shared = Summary.fromHash(); if (shared !== undefined) this.open('shared', shared); else this.note.show(); }
+  open(mode, sum) {
+    this.mode = mode;
+    const own = mode === 'own';
+    $('reportTitle').textContent = own ? 'Progress report' : 'Shared progress';
+    $('reportWho').textContent = sum ? [sum.name, Summary.date(sum.date)].filter(Boolean).join(' · ') : '';
+    $('reportNote').hidden = own;
+    $('reportNote').textContent = mode === 'preview' ? 'This is what people see when they open your link.'
+      : sum ? "Someone shared their progress with you. Yours isn't changed; close this to start drilling."
+        + (sum.old ? ' The link is from before callouts had stages, so the ones they last got right show as somewhat learned.' : '')
+      : 'This progress link is damaged or incomplete, so there is nothing to show.';
+    $('reportBody').replaceChildren(...(sum ? this.body(sum, own) : []));
+    $('reportShare').hidden = !own;
+    $('reportClose').textContent = mode === 'preview' ? 'Back' : 'Close';
+    if (own) {
+      $('shareName').value = this.store.data.name || '';
+      $('shareBtn').hidden = typeof navigator.share !== 'function';
+      $('copyReport').classList.toggle('ghost', !$('shareBtn').hidden);
+      $('shareText').hidden = true; this.say('');
+    }
+    if (!$('report').open) $('report').showModal();
+    $('report').scrollTop = 0;
+    $('reportClose').focus();
+  }
+  body(sum, own) {
+    const { LEARNED, MASTERED, STAGES } = Progress, all = sum.all, won = Summary.learned(all), stages = Summary.byStage(all);
+    const stat = (label, value) => el('div', { className: 'stat' }, el('span', { textContent: label }), el('b', { textContent: value }));
+    const bar = el('div', { className: 'stage-bar', role: 'img' }, ...stages.slice(0, 4).map(([k, v]) => {
+      const i = el('i', { className: k }); i.style.width = (100 * v / all.t).toFixed(2) + '%'; return i;
+    }));
+    bar.setAttribute('aria-label', sum.stages.join(', '));
+    const out = [
+      el('p', { className: 'hero' }, el('b', { textContent: `${won}/${all.t}` }), el('span', { textContent: 'callouts learned' }), el('em', { textContent: `${pct(won, all.t)}%` })),
+      bar,
+      el('ul', { className: 'legend' }, ...stages.map(([k, v]) => el('li', {}, el('i', { className: k }), Summary.STAGE_NAMES[k], el('b', { textContent: v })))),
+      el('div', { className: 'stats' }, stat('Main rooms', `${all.rl}/${all.r}`), stat('Spots', `${won - all.rl}/${all.t - all.r}`),
+        stat('Answers', all.n.toLocaleString()), stat('Right', all.n ? `${pct(all.c, all.n)}%` : '–')),
+      el('p', { className: 'hint', textContent: `${all.s} of ${all.t} callouts tried. A callout is learned after ${LEARNED} right answers in a row and mastered after ${MASTERED}; a miss, or mixing it up with another callout, sets it back below learned.` }),
+      el('h3', { className: 'label', textContent: 'By map' }),
+      el('ul', { className: 'maps rep' }, ...sum.maps.map(m => {
+        const t = Summary.add([m]), done = Summary.learned(t);
+        const li = el('li', {}, el('span', { className: 'name', textContent: m.name }), el('span', { className: 'num', textContent: `${done}/${t.t}` }), el('i'),
+          el('small', { textContent: [...m.floors.map(f => `${f.name} ${Summary.learned(f)}/${f.t}`), t.n ? `${pct(t.c, t.n)}% right` : 'no answers yet'].join(' · ') }));
+        li.style.setProperty('--p', (100 * done / t.t).toFixed(1) + '%');
+        return li;
+      })),
+    ];
+    if (!own) return out;
+    // Callouts missed and not learned again: unlearned first, then the most missed.
+    const p = this.progress, work = ALL.filter(c => p.toLearn(c)).sort((a, b) => p.stage(a) - p.stage(b) || p.missed(b) - p.missed(a) || a.name.localeCompare(b.name));
+    out.push(el('section', { className: 'log' },
+      el('div', { className: 'log-head' }, el('h3', { className: 'label', textContent: 'To work on' }),
+        el('span', { className: 'label', textContent: work.length ? `${work.length} missed, not learned yet` : '' })),
+      work.length
+        ? el('ol', {}, ...work.slice(0, 8).map(c => el('li', { className: p.stage(c) === 1 ? 'bad' : 'near' }, el('b', {}, ...named(c)),
+          el('span', { textContent: `${c.map.name} ${c.floor.name}` }), el('small', { textContent: `${STAGES[p.stage(c)]} · missed ${p.missed(c)} of ${p.of(c).n}` }))))
+        : el('p', { className: 'empty', textContent: all.s ? 'Nothing: every callout you have missed is learned again.' : 'Callouts you miss show up here until they’re learned.' }),
+      work.length ? el('div', { className: 'actions' }, el('button', { className: 'btn ghost', textContent: 'Practice my misses', onclick: () => this.onPractice() })) : ''));
+    return out;
+  }
+  say(t) { $('shareMsg').textContent = t; }
+  async copy(text, what) {
+    try {
+      await navigator.clipboard.writeText(text);
+      $('shareText').hidden = true; this.say(`${what} copied.`);
+    } catch {      // no clipboard here: leave it selected to copy by hand
+      const t = $('shareText');
+      t.value = text; t.hidden = false; t.focus(); t.select();
+      this.say("Your browser didn't let the app copy it. It's selected above: copy it from there.");
+    }
+  }
 }
-$('poolChips').onclick = e => {
-  const b = e.target.closest('button'); if (!b) return;
-  S.pool = b.dataset.pool; pressed($('poolChips'), 'pool', S.pool); persistPrefs(); nextQuestion();
-};
-$('zoomIn').onclick = () => setZoom(zoom * 1.5);
-$('zoomOut').onclick = () => setZoom(zoom / 1.5);
-function setZoom(z) {
-  const st = $('stage'), pl = $('plate');
-  const cx = (st.scrollLeft + st.clientWidth / 2) / pl.offsetWidth, cy = (st.scrollTop + st.clientHeight / 2) / pl.offsetHeight;
-  zoom = Math.max(1, Math.min(4, z));
-  sizePlate();
-  const target = q && !q.done && S.mode !== 'find' ? q.c : { x: cx, y: cy };
-  focusOn(X(target), Y(target));
-}
-$('viewBtn').onclick = () => {
-  S.view = S.view === 'game' ? 'plan' : 'game';
-  applyView(); persistPrefs();
-  if (S.mode === 'study') { drawPlate(view.map, view.fi); renderStudy(); }
-  else if (q && !q.done) paintQuestion();
-  else nextQuestion();
-};
-function applyView() {
-  $('viewBtn').replaceChildren(...(S.view === 'game' ? ['In-game'] : label('Call sheet', 'Sheet')));
-  $('viewBtn').setAttribute('aria-pressed', String(S.view === 'game'));
-}
-$('optOthers').onchange = e => { S.others = e.target.checked; persistPrefs(); if (S.mode !== 'study') nextQuestion(); };
-function eraseProgress() {
-  for (const k of Object.keys(stats)) delete stats[k];
-  save(); renderMapChips();
-  if (S.pool === 'misses') nextQuestion();
-}
-let armed = false;
-$('resetBtn').onclick = () => {
-  if (!armed) { armed = true; $('resetBtn').textContent = 'Tap again to erase all saved progress'; setTimeout(() => { armed = false; $('resetBtn').textContent = 'Reset my progress'; }, 4000); return; }
-  eraseProgress(); armed = false; $('resetBtn').textContent = 'Progress erased';
-};
-// Settings drawer (everything but the desktop layout)
-const wide = matchMedia('(min-width: 1181px) and (orientation: landscape)');
-const menuOpen = () => document.body.classList.contains('menu-open');
-function setMenu(open) {
-  open = open && !wide.matches;
-  document.body.classList.toggle('menu-open', open);
-  $('menuBtn').setAttribute('aria-expanded', String(open));
-  $('scrim').hidden = !open;
-  $('board').inert = $('panel').inert = $('menuBtn').inert = open;
-  if (open) $('closeMenu').focus();
-}
-$('menuBtn').onclick = () => setMenu(true);
-$('closeMenu').onclick = () => { setMenu(false); $('menuBtn').focus(); };
-$('scrim').onclick = () => setMenu(false);
-wide.addEventListener('change', () => setMenu(false));
-document.addEventListener('keydown', e => {
-  if (document.querySelector('dialog[open]')) return;   // keys there belong to the pop-up
-  if (menuOpen()) { if (e.key === 'Escape') { setMenu(false); $('menuBtn').focus(); } return; }
-  if (!q) return;
-  if (S.mode === 'pick' && !q.done && /^[1-4]$/.test(e.key)) choose(+e.key - 1);
-  else if (q.done && e.key === 'Enter' && document.activeElement?.id !== 'guess' && document.activeElement?.id !== 'goBtn') { e.preventDefault(); nextQuestion(); }
-});
-let stageSize = '';
-new ResizeObserver(() => {
-  const st = $('stage'), now = `${st.clientWidth}x${st.clientHeight}`;
-  if (now !== stageSize) { stageSize = now; requestAnimationFrame(sizePlate); }
-}).observe($('stage'));
-$('plate').addEventListener('pointermove', e => {
-  const pl = $('plate');
-  if (e.pointerType !== 'mouse' || !pl.classList.contains('clickable')) return;
-  const r = pl.getBoundingClientRect();
-  pl.style.setProperty('--hx', (e.clientX - r.left) + 'px');
-  pl.style.setProperty('--hy', (e.clientY - r.top) + 'px');
-  pl.classList.add('aiming');
-});
-$('plate').addEventListener('pointerleave', () => $('plate').classList.remove('aiming'));
 
-pressed($('modeTabs'), 'mode', S.mode);
-pressed($('poolChips'), 'pool', S.pool);
-applyAnswer();
-$('optOthers').checked = S.others;
-applyView(); renderStats(); renderMapChips(); renderSummary(); renderLog();
-$('planImg').addEventListener('load', () => sizePlate());
-nextQuestion();
-// A shared report opens over the app; the update note waits until it's closed.
-const shared = sharedReport();
-if (shared !== undefined) openReport('shared', shared); else showNote();
+// ---------- settings drawer (everything but the desktop layout) ----------
+class Menu {
+  constructor() {
+    this.wide = matchMedia('(min-width: 1181px) and (orientation: landscape)');
+    $('menuBtn').onclick = () => this.set(true);
+    $('closeMenu').onclick = () => { this.set(false); $('menuBtn').focus(); };
+    $('scrim').onclick = () => this.set(false);
+    this.wide.addEventListener('change', () => this.set(false));
+  }
+  get open() { return document.body.classList.contains('menu-open'); }
+  set(open) {
+    open = open && !this.wide.matches;
+    document.body.classList.toggle('menu-open', open);
+    $('menuBtn').setAttribute('aria-expanded', String(open));
+    $('scrim').hidden = !open;
+    $('board').inert = $('panel').inert = $('menuBtn').inert = open;
+    if (open) $('closeMenu').focus();
+  }
+}
+
+// ---------- controls ----------
+// Every setting goes through set(), which saves it and brings the page in line with it.
+class Controls {
+  constructor({ settings, drill, plate, sidebar, menu }) {
+    Object.assign(this, { settings, drill, plate, sidebar, menu });
+    this.tabs = '';
+    plate.onDraw = (map, fi) => this.floorTabs(map, fi);
+    const on = (id, attr, fn) => { $(id).onclick = e => { const b = e.target.closest('button'); if (b) fn(b.dataset[attr]); }; };
+    on('modeTabs', 'mode', mode => { this.set({ mode }); drill.next(); });
+    on('poolChips', 'pool', pool => { this.set({ pool }); drill.next(); });
+    on('answerChips', 'answer', answer => {
+      this.set({ answer });
+      const q = drill.q;
+      if (!q || q.done) drill.next(); else drill.ask(q.c, q.hinted);   // same spot, answered the other way
+    });
+    $('viewBtn').onclick = () => {
+      this.set({ view: this.settings.view === 'game' ? 'plan' : 'game' });
+      const q = drill.q;
+      if (this.settings.mode === 'study') { plate.draw(plate.view.map, plate.view.fi); drill.study.render(); }
+      else if (q && !q.done) { q.paint(); drill.ahead(); }
+      else drill.next();
+    };
+    $('optOthers').onchange = e => { this.set({ others: e.target.checked }); if (this.settings.mode !== 'study') drill.next(); };
+    $('zoomIn').onclick = () => this.zoom(1.5);
+    $('zoomOut').onclick = () => this.zoom(1 / 1.5);
+    let armed = false;
+    $('resetBtn').onclick = () => {
+      if (!armed) { armed = true; $('resetBtn').textContent = 'Tap again to erase all saved progress'; setTimeout(() => { armed = false; $('resetBtn').textContent = 'Reset my progress'; }, 4000); return; }
+      drill.erase(); armed = false; $('resetBtn').textContent = 'Progress erased';
+    };
+    plate.box.addEventListener('click', e => { if (drill.q?.tappable && !drill.q.done) drill.q.tap(plate.pointAt(e)); });
+    document.addEventListener('keydown', e => {
+      if (document.querySelector('dialog[open]')) return;   // keys there belong to the pop-up
+      if (menu.open) { if (e.key === 'Escape') { menu.set(false); $('menuBtn').focus(); } return; }
+      const q = drill.q;
+      if (!q || q.key(e)) return;
+      if (q.done && e.key === 'Enter' && document.activeElement?.id !== 'guess' && document.activeElement?.id !== 'goBtn') { e.preventDefault(); drill.next(); }
+    });
+  }
+  set(changes) {
+    Object.assign(this.settings, changes);
+    this.settings.save();
+    this.show();
+  }
+  // the controls as the settings are now
+  show() {
+    const S = this.settings;
+    pressed($('modeTabs'), 'mode', S.mode);
+    pressed($('poolChips'), 'pool', S.pool);
+    pressed($('answerChips'), 'answer', S.answer);
+    $('answerRow').hidden = S.mode !== 'name';
+    $('main').classList.toggle('pool-answers', S.mode === 'name' && S.answer === 'pool');
+    $('viewBtn').replaceChildren(...(S.view === 'game' ? ['In-game'] : label('Call sheet', 'Sheet')));
+    $('viewBtn').setAttribute('aria-pressed', String(S.view === 'game'));
+    $('optOthers').checked = S.others;
+    this.sidebar.maps();
+    this.sidebar.summary();
+  }
+  map(id) { this.set({ map: id, floor: null }); this.drill.next(); }
+  zoom(by) { const q = this.drill.q; this.plate.setZoom(this.plate.zoom * by, q && !q.done && !q.tappable ? q.c : null); }
+  floorTabs(map, fi) {
+    const S = this.settings, study = S.mode === 'study', tabs = $('floorTabs');
+    const now = S.map === 'all' && !study ? 'all' : [S.mode, S.floor, map.id, study ? fi : ''].join('|');
+    if (now === this.tabs) return;
+    this.tabs = now;
+    if (S.map === 'all' && !study) return tabs.replaceChildren();
+    const opts = (study ? [] : [[null, 'All']]).concat(map.floors.map((f, i) => [i, f.name]));
+    tabs.replaceChildren(...opts.map(([i, name]) => {
+      const floor = i === null ? null : map.floors[i].name;
+      const b = el('button', { onclick: () => {
+        this.set({ floor });
+        if (study) { this.plate.draw(map, i); this.drill.study.render(); } else this.drill.next();
+      } }, ...label(name, { Basement: 'Bsmt' }[name]));
+      b.setAttribute('aria-pressed', String(study ? i === fi : floor === S.floor));
+      return b;
+    }));
+  }
+  practice() {
+    this.set({ map: 'all', floor: null, pool: 'misses', mode: this.settings.mode === 'study' ? 'name' : this.settings.mode });
+    $('report').close(); this.menu.set(false); this.drill.next();
+  }
+}
+
+// ---------- start ----------
+const store = new Store();
+const progress = new Progress(store);
+const settings = new Settings(store);
+const session = new Session();
+const plate = new Plate(settings);
+const sidebar = new Sidebar({ progress, settings, session, onMap: id => controls.map(id) });
+const drill = new Drill({ progress, settings, session, plate, sidebar });
+const menu = new Menu();
+const note = new UpdateNote(store, progress.fromBefore, () => drill.erase());
+const report = new Report({ progress, store, note, onPractice: () => controls.practice() });
+const controls = new Controls({ settings, drill, plate, sidebar, menu });
+controls.show(); sidebar.score(); sidebar.logCount();
+drill.next();
+report.start();
 }/*SCOPE*/
 </script>

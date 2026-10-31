@@ -10,11 +10,11 @@ const SAME_WORDS = ['chalet:Half wall -> ½ W|Half wall', 'chalet:½ W -> ½ W|H
 run(async browser => {
   const page = await open(browser, TEST_PAGE);
   const text = async sel => (await page.textContent(sel)).trim();
-  const ask = name => page.evaluate(n => { q = { c: ALL.find(c => c.name === n && c.map.id === 'border'), done: false, hinted: false }; paintQuestion(); renderName(); }, name);
+  const ask = name => page.evaluate(n => drill.ask(ALL.find(c => c.name === n && c.map.id === 'border')), name);
 
   check('the answer row shows in Name it', await page.isVisible('#answerRow'));
   await page.click('[data-answer=pool]');
-  const chips = await page.$$eval('#bank button', bs => bs.length), names = await page.evaluate(() => poolFor(q.c.map).length);
+  const chips = await page.$$eval('#bank button', bs => bs.length), names = await page.evaluate(() => drill.q.c.map.bank.length);
   check('a chip for every callout name on the map', chips > 20 && chips === names, `${chips} chips, ${names} names`);
 
   await ask('Stall 1');
@@ -37,13 +37,13 @@ run(async browser => {
   await page.click('#skipBtn');
   check('reveal', await text('#fb') === "It's Tellers hall.", await text('#fb'));
   await page.keyboard.press('Enter');
-  check('Enter goes on to the next question', await page.evaluate(() => !q.done));
+  check('Enter goes on to the next question', await page.evaluate(() => !drill.q.done));
 
   const odd = await page.evaluate(() => {
     const out = [];
     for (const c of ALL) {
-      const hits = poolFor(c.map).filter(o => { const k = compact(o.name); return forms(c).some(([t]) => t === k) || (c.broad || []).some(t => compact(t) === k); });
-      if (!hits.some(o => compact(o.name) === compact(c.name)) || hits.length > 1 + (c.broad || []).length) out.push(c.map.id + ':' + c.name + ' -> ' + hits.map(o => o.name).join('|'));
+      const hits = c.map.bank.filter(o => c.isExact(o.ck) || c.isBroad(o.ck));
+      if (!hits.some(o => o.ck === c.ck) || hits.length > 1 + (c.broad || []).length) out.push(c.map.id + ':' + c.name + ' -> ' + hits.map(o => o.name).join('|'));
     }
     return out;
   });
