@@ -12,8 +12,8 @@ annotate() adds to each callout:
          the name wherever it is asked for or offered
   note   a sentence saying what the callout is, shown with it in place of "short for"
 
-The abbreviations come from the team. Names that aren't short for anything (Emo,
-Dias and Achieved are pro players, K9, AK, PRO, R6 on Lair, CC on Border, J desk and L desk) stay
+The abbreviations come from the team. Names that aren't short for anything (Emo
+and Achieved are pro players, K9, AK, R6 on Lair, CC on Border, J desk and L desk) stay
 exactly as written on the call sheet.
 """
 import re
@@ -33,7 +33,6 @@ WORDS = {
     'logi': ['Logistics'],
     'ops': ['Operations', 'Operation'],
     'e-box': ['Electrical box', 'Electric box'],
-    'dmz': ['Dead Man Zone'],
     '½': ['Half'],
 }
 
@@ -52,7 +51,6 @@ MAP_WORDS = {
     'villa': {'w': ['Wall']},  # Triple w
     'nighthaven': {'con': ['Connector'], 'cc': ['Command Center']},
     'bank': {'cc': ['CCTV']},
-    'lair': {'gen': ['Generator'], 'b2': BATHROOM_2F},
 }
 
 # Letter + number on one map: "K2" -> "Kitchen 2".
@@ -87,7 +85,6 @@ THINGS = {
         '1F Inner': ('bar', ['Inner bar', 'Inside bar'], 'Inner is Inner bar, the inside of the bar in Bar.'),
     },
     'bank': {
-        '1F Quad': ('wall', ['Quad wall'], 'Quad is Quad wall, four wall segments.'),
         '1F Light': ('elevator', [], 'Light is a spot of the elevator.'),
         '1F Dark': ('elevator', [], 'Dark is a spot of the elevator.'),
     },

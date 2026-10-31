@@ -6,8 +6,8 @@ Clubhouse, Villa, Nighthaven Labs, Fortress, Bank, Kafe Dostoyevsky and Lair.
 **Play it in your browser: https://atrejo26.github.io/r6-callout-drill/** (no download).
 It updates whenever `index.html` changes on main.
 
-Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), 594 callouts
-across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels,
+Callout names and positions come from Paltry's R6 Map Call Sheets (FireBirds), with some
+renamed, added or removed by hand: 563 callouts across 25 floors. Each floor shows the in-game map from [R6Calls](https://www.r6calls.com) (labels,
 line-of-sight walls and line-of-sight floors off) with the call sheet's callouts
 aligned onto it. Use the **In-game / Call sheet** button to switch to the call-sheet line plan.
 
@@ -15,14 +15,17 @@ aligned onto it. Use the **In-game / Call sheet** button to switch to the call-s
 
 - **Name it**: a spot is marked; type its callout. The call sheet's short form and the full
   name both count, in any mix (`Kitch H`, `Kitchen Hallway`, `kitchen h`, `Kitch` for
-  `Kitchen`). So do small typos (`Kitchn H`, `Dais` for `Dias`) and the start of a name
+  `Kitchen`). So do small typos (`Kitchn H`, `Achived` for `Achieved`) and the start of a name
   (`Det` for `Detention`, `Piano long` for `Piano H long`), as long as they point at one
   callout on the floor. When an answer could be several callouts (`logg`: Log or Long) or
   is just past what counts, you get **Did you mean** with the closest ones to pick from,
   or keep your answer as typed. Set **Answer** to **Callout pool** to pick the name from a
   bank of every callout on the map (A to Z) instead of typing it.
 - **Pick it**: a spot is marked; choose from four callouts on the same map (keys 1 to 4).
-- **Find it**: you get a callout; tap where it is on the floor.
+- **Find it**: you get a callout; tap where it is on the floor. A tap anywhere in the
+  callout's outlined area counts, and the answer shows that area. With **Main rooms** as
+  the pool each room's area is the whole room; when spots are in the pool, a main room's
+  area is what's left around its label once its spots are taken out.
 - **Study**: every callout on a floor. Hide the names and tap dots to test yourself.
 
 When an answer is revealed, an abbreviated callout also shows its full name.
@@ -48,18 +51,18 @@ tap the answer box.
 | B desk | Break desk | Border 2F |
 | Sol, P ½ W | Solar, Piano Half Wall | Chalet |
 | J Box, Con | Juke Box, Construction | Clubhouse |
-| B2 | Bathroom 2nd floor | Clubhouse, Lair (also `B2 hall`) |
+| B2 | Bathroom 2nd floor | Clubhouse |
 | R | Rafters | Clubhouse (`R long`, `R90`) |
 | Triple w | Triple Wall | Villa |
 | S1, S2 | Storage 1, Storage 2 | Nighthaven 1F (`Storage` also counts) |
-| R1-R3, Con, CC | Rafters 1-3, Connector, Command Center | Nighthaven (`Rafters` also counts for R1-R3) |
+| R1-R3, CC | Rafters 1-3, Command Center | Nighthaven (`Rafters` also counts for R1-R3) |
 | E1-E3, CC | Elevator 1-3, CCTV | Bank |
 | C, F, P, K, R, B | Cocktail, Freezer, Pillar, Kitchen, Red, Box | Kafe (`C1`, `F2`, `P1`, `K3`, `R90`, `B1`; `Cocktail` also counts for C1-C3) |
-| L1-L3, Gen | Lab 1-3, Generator | Lair (`Lab` also counts for L1-L3) |
-| Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E box, ½ W, DMZ | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall, Dead Man Zone | where they appear |
+| L1-L3 | Lab 1-3 | Lair (`Lab` also counts for L1-L3) |
+| Kitch, Sqr, Caf, Mez, Recep, balc, Logi, Ops, E-box, ½ W | Kitchen, Square, Cafeteria, Mezzanine, Reception, Balcony, Logistics, Operations, Electrical box, Half wall | where they appear |
 
 Some names aren't short for anything and stay as written: `L desk` and `J desk` (the
-desk's shape), `CC` on Border, `K9`, `AK`, `PRO`, `R6` on Lair, and `Emo`, `Dias` and `Achieved` (named
+desk's shape), `CC` on Border, `K9`, `AK`, `R6` on Lair, and `Emo` and `Achieved` (named
 after pro players). `½ W` was shortened to fit the call sheet; the usual answer is `Half wall`,
 and either one counts, typed or picked.
 
@@ -153,6 +156,24 @@ python3 tools/build.py                         # expand abbreviations, inline ev
   drawn a little differently from the game (the north end of Lair 1F). A nudge is kept
   only when it clearly improves the local match and two or more nearby callouts agree.
   A few spots it can't settle are corrected by hand in `MANUAL` in the same script.
+
+### Callout areas
+
+Each callout's outlined area (`zone`, and `room_zone` for a main room's whole room) and
+the hand-made renames, moves, additions and deletions come from the area editor, not from
+the deck: re-running `extract.py` would lose them.
+
+```sh
+pip install shapely
+python3 -I tools/area_tool.py src tools/area_tool.html areas.html   # the editor page
+python3 -I tools/apply_areas.py <saved floors dir> src/callouts.json
+```
+
+The editor saves one document per floor (`<map>.<floor>.json`). `apply_areas.py`
+writes them into `callouts.json`. Where outlines overlap, an outline mostly inside
+another one (a spot in its room) keeps its shape and is cut out of the bigger one;
+other overlaps are split halfway between the two labels. A label left outside its own
+area moves into it.
 
 In-game floor maps are R6Calls' work (https://www.r6calls.com), built on Ubisoft's maps. This is an
 unofficial fan tool.

@@ -25,6 +25,8 @@ for m in d['maps']:
         gx, gy = np.array([c['gx'] for c in cs]), np.array([c['gy'] for c in cs])
         ax, bx = np.polyfit(x, gx, 1)
         ay, by = np.polyfit(y, gy, 1)
+        if 'fit' in f:      # set by apply_areas.py: keep drawing through the same fit
+            ax, bx, ay, by = f['fit']
         g = f.get('game')
         floors.append({
             'name': f['name'],

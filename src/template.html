@@ -150,6 +150,10 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .plate.clickable.aiming::after { top: 0; bottom: 0; left: var(--hx); width: 1px; }
 .layer { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
 .layer > * { pointer-events: auto; }
+.layer > svg.zone { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.zone path { fill: currentColor; fill-opacity: .16; fill-rule: evenodd; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.zone.good { color: var(--good); }
+.zone.bad { color: var(--bad); }
 
 /* The marked spot: a reticle that locks on once */
 .marker {
@@ -920,6 +924,49 @@ function renderFind() {
   card(...header(`Where is <em>${esc(q.c.name)}</em>?`), el('div', { className: 'hint', textContent: `${said ? said + ' ' : ''}Tap its spot on ${q.c.floor.name}.` }),
        fb(), el('div', { className: 'actions' }, next, skip));
 }
+// ---------- zones ----------
+// Each callout has a zone (its own area) and each main room a room_zone (the whole room,
+// used in the Main rooms pool): lists of rings in call-sheet coordinates, read with the
+// even-odd rule so a room can have holes where its spots are. The floor's fit maps
+// call-sheet coordinates to the in-game view (gx = ax*x + bx, gy = ay*y + by).
+const zoneOf = c => (S.pool === 'rooms' && c.room && c.room_zone) || c.zone || null;
+function toPlan(f, p) {
+  if (!inGame(f) || !f.fit) return p;
+  const [ax, bx, ay, by] = f.fit;
+  return { x: (p.x - bx) / ax, y: (p.y - by) / ay };
+}
+function inZone(z, p) {
+  let inside = false;
+  for (const r of z) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > p.y) !== (yj > p.y) && p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+// how far p is from the zone's edge, as a fraction of the plan's longer side
+function zoneGap(f, z, p) {
+  const s = Math.max(f.w, f.h);
+  let best = Infinity;
+  for (const r of z) for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const ax = r[j][0] * f.w, ay = r[j][1] * f.h, bx = r[i][0] * f.w, by = r[i][1] * f.h;
+    const px = p.x * f.w, py = p.y * f.h, dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
+    best = Math.min(best, Math.hypot(ax + t * dx - px, ay + t * dy - py) / s);
+  }
+  return best;
+}
+function zoneSvg(f, z, cls) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg'), path = document.createElementNS(NS, 'path');
+  const [ax, bx, ay, by] = inGame(f) && f.fit ? f.fit : [1, 0, 1, 0];
+  svg.setAttribute('viewBox', '0 0 1 1');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('class', 'zone ' + cls);
+  path.setAttribute('d', z.map(r => 'M' + r.map(([x, y]) => `${(ax * x + bx).toFixed(4)} ${(ay * y + by).toFixed(4)}`).join('L') + 'Z').join(''));
+  svg.append(path);
+  return svg;
+}
+
 function findAt(pt) {
   if (!q || q.done || S.mode !== 'find') return;
   q.done = true;
@@ -927,21 +974,29 @@ function findAt(pt) {
   const v = img(f);
   const d = (a, p) => Math.hypot((X(a) - X(p)) * v.w, (Y(a) - Y(p)) * v.h) / Math.max(v.w, v.h);
   const targets = f.callouts.filter(o => compact(o.name) === compact(c.name));
-  let ok = false, nearest = null;
+  const options = f.callouts.filter(o => S.pool !== 'rooms' || o.room);
+  const right = o => compact(o.name) === compact(c.name) || covers(o, c);
+  let ok = false, hit = null, nearest = null;
   if (pt) {
-    nearest = f.callouts.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
-    ok = compact(nearest.name) === compact(c.name) || covers(nearest, c) || targets.some(t => d(t, pt) <= 0.04);
+    // A tap counts when it lands inside the callout's zone, or just outside it in no other zone.
+    const p = toPlan(f, pt);
+    hit = options.find(o => zoneOf(o) && inZone(zoneOf(o), p)) || null;
+    nearest = hit || options.reduce((a, o) => d(o, pt) < d(a, pt) ? o : a);
+    ok = hit ? right(hit)
+      : targets.some(t => zoneOf(t) ? zoneGap(f, zoneOf(t), p) <= 0.012 : d(t, pt) <= 0.04) || (!zoneOf(nearest) && right(nearest));
   }
-  record(c, ok, false, pt ? `You tapped ${nearest.name}` : 'Revealed');
+  record(c, ok, false, pt ? (hit ? `You tapped ${hit.name}` : 'You tapped outside it') : 'Revealed');
   const layer = $('layer');
   const shown = pt ? targets.reduce((a, t) => d(t, pt) < d(a, pt) ? t : a) : c;
+  if (hit && !ok && zoneOf(hit)) layer.append(zoneSvg(f, zoneOf(hit), 'bad'));
+  for (const t of targets) if (zoneOf(t)) layer.append(zoneSvg(f, zoneOf(t), 'good'));
   layer.append(pos(el('div', { className: `marker ${ok ? 'good' : 'bad'}` }), shown), tagFor(shown, `answer ${ok ? 'good' : 'bad'}`));
   if (pt && !ok) {
     layer.append(pos(el('div', { className: 'marker small bad' }), pt));
-    layer.append(tagFor({ name: nearest.name, room: nearest.room, x: pt.x, y: pt.y }, 'answer other'));
+    if (hit) layer.append(tagFor({ name: hit.name, room: hit.room, x: pt.x, y: pt.y }, 'answer other'));
   }
   $('fb').className = 'feedback ' + (ok ? 'good' : 'bad');
-  $('fb').textContent = ok ? 'Correct.' : pt ? `You tapped ${nearest.name}.` : `Here's ${c.name}.`;
+  $('fb').textContent = ok ? 'Correct.' : pt ? (hit ? `You tapped ${hit.name}. ${c.name} is outlined in green.` : `That's outside ${c.name}, outlined in green.`) : `Here's ${c.name}.`;
   $('goBtn').hidden = false; $('skipBtn').hidden = true; $('goBtn').focus({ preventScroll: true });
   if (zoom > 1) focusOn(X(shown), Y(shown));
 }
