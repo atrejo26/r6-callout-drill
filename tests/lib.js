@@ -18,11 +18,21 @@ function check(name, ok, extra = '') { if (!ok) failed.push(name); console.log(o
 const ready = page => page.waitForFunction(() => document.fonts.status === 'loaded' && [...document.images].every(i => i.complete) && document.getElementById('qCard').textContent.trim() !== '');
 const until = (page, fn, arg) => page.waitForFunction(fn, arg, { timeout: 5000 }).then(() => true, () => false);
 const settle = page => page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
-const shot = (page, name, opts = {}) => page.screenshot({ path: path.join(SHOTS, name + '.png'), ...opts });
-
 // Not every engine logs a Content Security Policy refusal to the console, so each page
 // reports them itself, and they count as page errors like any other.
 const VIOLATION = 'Content Security Policy violation: ';
+
+// In WebKit, Playwright's screenshots put <style>body {}</style> in the page for a moment (to
+// line up animations), and the page's policy refuses it: WebKit logs that, and the page reports
+// it. Those two errors are the screenshot's, so they are taken back; anything else stays.
+const SHOT_STYLE = [/^Refused to apply a stylesheet because/, new RegExp(`^${VIOLATION}style-src-elem inline$`)];
+async function shot(page, name, opts = {}) {
+  const from = errors.length;
+  await page.screenshot({ path: path.join(SHOTS, name + '.png'), ...opts });
+  if (BROWSER !== 'webkit') return;
+  await settle(page);   // the page's report comes a moment after the refusal
+  for (const re of SHOT_STYLE) { const i = errors.findIndex((e, j) => j >= from && re.test(e)); if (i >= 0) errors.splice(i, 1); }
+}
 const reportViolations = prefix => document.addEventListener('securitypolicyviolation', e => console.error(prefix + (e.effectiveDirective || e.violatedDirective) + ' ' + e.blockedURI));
 
 // `allow`: console errors that are expected. `onConsole`: sees every console message,
