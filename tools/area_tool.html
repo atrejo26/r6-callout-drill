@@ -266,7 +266,17 @@ function undoLast() {
   render(true);
 }
 
+// Leaving a main room in pass 1 copies its whole-room outline into pass 2 when it
+// has none there yet, as a starting shape to shrink.
+function leave() {
+  const c = cur();
+  if (S.layer !== 'whole' || !c || !c.room || !c.whole || c.area) return;
+  c.area = c.whole.map(p => [p[0], p[1]]);
+  changed();
+}
+
 function select(id) {
+  if (id !== S.sel) leave();
   S.sel = id;
   if (S.mode === 'draw') { S.mode = 'select'; S.draft = []; }
   renderSide(); renderMap();
@@ -401,12 +411,12 @@ function renderSide() {
   statusEl = el('div', { className: 'status' });
 
   const mapSel = el('select', { id: 'mapsel', ariaLabel: 'Map' }, ...DATA.maps.map(x => el('option', { value: x.id, textContent: x.name, selected: x.id === S.map })));
-  mapSel.onchange = () => { S.map = mapSel.value; S.floor = DATA.maps.find(x => x.id === S.map).floors[0].name; goFloor(); };
+  mapSel.onchange = () => { leave(); S.map = mapSel.value; S.floor = DATA.maps.find(x => x.id === S.map).floors[0].name; goFloor(); };
 
   const floorBtns = el('div', { className: 'seg' }, ...m.floors.map(x => {
     const done = floors[`${m.id}.${x.name}`].callouts.filter(shown);
     const b = el('button', { className: x.name === S.floor ? 'on' : '', textContent: `${x.name} ${done.filter(c => c[A()]).length}/${done.length}` });
-    b.onclick = () => { S.floor = x.name; goFloor(); };
+    b.onclick = () => { leave(); S.floor = x.name; goFloor(); };
     return b;
   }));
 
@@ -418,7 +428,7 @@ function renderSide() {
 
   const layerBtns = el('div', { className: 'seg' }, ...[['whole', '1. Whole rooms'], ['detail', '2. Rooms + spots']].map(([v, t]) => {
     const b = el('button', { className: S.layer === v ? 'on' : '', textContent: t });
-    b.onclick = () => { S.layer = v; S.mode = 'select'; S.draft = []; rememberUi(); render(); };
+    b.onclick = () => { leave(); S.layer = v; S.mode = 'select'; S.draft = []; rememberUi(); render(); };
     return b;
   }));
   const layerHint = el('p', { className: 'hint', textContent: S.layer === 'whole'
@@ -477,7 +487,7 @@ function renderSide() {
         : 'No area yet. Outline it, then drag corners to adjust. Drag the dot to move the callout.' }),
       del);
   } else {
-    panel = el('div', { className: 'box' }, el('p', { className: 'hint', textContent: 'Pick a callout from the list or click its dot on the map. Dots with a dashed ring have no area yet.' }));
+    panel = el('div', { className: 'box' }, el('p', { className: 'hint', textContent: S.layer === 'whole' ? 'Pick a main room from the list or click its dot. Dots with a dashed ring have no whole-room area yet. When you move on from a room, its outline is copied to Rooms + spots if it has none there.' : 'Pick a callout from the list or click its dot on the map. Dots with a dashed ring have no area yet.' }));
   }
 
   const add = el('button', { textContent: S.mode === 'place' ? 'Cancel adding' : '+ Add callout', className: S.mode === 'place' ? 'on' : '' });
@@ -619,7 +629,7 @@ function endDrag(e) {
   const d = drag;
   drag = null;
   svg.classList.remove('panning');
-  if (d.type === 'pan' && !d.moved && d.pick) select(d.pick);
+  if (d.type === 'pan' && !d.moved && e.button === 0 && !spaceDown) select(d.pick || null);
   if (d.type === 'draw') {
     if (d.rect) {
       const [x0, y0] = d.start, [x1, y1] = d.rect;
@@ -693,6 +703,12 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('keyup', e => { if (e.key === ' ') spaceDown = false; });
 window.addEventListener('resize', () => renderMap());
+// Closing or hiding the page counts as leaving the selected room; save right away.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'hidden') return;
+  leave();
+  for (const k of [...dirty]) { clearTimeout(timers[k]); save(k); }
+});
 
 render();
 connect();
