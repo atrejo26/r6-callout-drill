@@ -27,6 +27,9 @@ def data_uri(path, mime):
 data = json.load(open(os.path.join(src, 'callouts.json')))
 # Progress keys earlier releases saved under, and the callout ids they now belong to.
 data['old_keys'] = json.load(open(os.path.join(src, 'old_keys.json')))
+# The keys only releases before 1.1.3, the major update, saved under (worked out from each
+# release's callouts.json): progress filed under one of them is from before it.
+data['pre_update'] = json.load(open(os.path.join(src, 'pre_update_keys.json')))
 for m in data['maps']:
     for f in m['floors']:
         for c in f['callouts']:

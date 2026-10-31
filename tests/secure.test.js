@@ -53,13 +53,14 @@ run(async browser => {
 
   for (const bad of ['5', '"x"', '[]', 'not json', '{"stats":"x","prefs":[1]}',
     '{"prefs":{"mode":"<img src=x onerror=alert(1)>","pool":"]","map":"__proto__","view":7,"floor":{}},"stats":{"a":5}}',
-    '{"stats":{"border|1F|o0":{"n":"2","c":-1,"last":"1"},"__proto__":{"n":1}},"update":"x","name":["<b>"]}']) {
+    '{"stats":{"border|1F|o0":{"n":"2","c":-1,"last":"1"},"border|1F|2|38":{"n":"x","c":null},"__proto__":{"n":1}},"update":"x","name":["<b>"]}']) {
     await page.evaluate(v => localStorage.setItem('r6-callout-drill-v1', v), bad);
     const e0 = errors.length;
     await page.reload(); await ready(page);
     check(`bad save ${bad.slice(0, 50)}`, errors.length === e0 && (await page.textContent('#qCard')).length > 10, errors.slice(e0).join(' | '));
   }
-  // The last one has progress in it, so the update note is up: close it, then the report.
+  // The last one has progress from before 1.1.3 in it, so the update note is up: close it,
+  // then the report.
   check('bad save with progress: the update note shows', await page.evaluate(() => document.getElementById('updateNote').open));
   await page.keyboard.press('Escape');
   await page.click('#reportBtn');

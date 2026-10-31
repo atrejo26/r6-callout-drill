@@ -56,7 +56,25 @@ run(async browser => {
   check('new player: note marked seen', (await stored(page)).update === 1);
   await page.context().close();
 
-  // 2. Progress under old keys moves to the callout ids.
+  // Only progress from before the major update (1.1.3) brings the note up: not 1.1.3's
+  // own, nor anything saved since. Once found, it waits for an answer.
+  page = await start({ stats: { 'border|1F|Stall 2|35': { n: 2, c: 2, last: 1 }, 'lair|2F|Boost|19': { n: 1, c: 0, last: 0 } } });
+  const v113 = await stored(page);
+  check('1.1.3 progress: no note, marked seen', !(await isOpen(page, 'updateNote')) && v113.update === 1);
+  check('1.1.3 progress: carried to the ids', isDeepStrictEqual(v113.stats, { 'border|1F|o38': { n: 2, c: 2, last: 1 }, 'lair|2F|o21': { n: 1, c: 0, last: 0 } }), JSON.stringify(v113.stats));
+  await page.context().close();
+  page = await start({ stats: { 'kafe|1F|o19': { n: 1, c: 1, last: 1 } } });
+  check('progress saved since, the note never answered: no note', !(await isOpen(page, 'updateNote')) && (await stored(page)).update === 1);
+  await page.context().close();
+  page = await start({ stats: { 'kafe|1F|R1|18': { n: 1, c: 1, last: 1 } } });
+  check('progress from before: the note shows', await isOpen(page, 'updateNote'));
+  await page.reload(); await ready(page);
+  const pending = await stored(page);
+  check('...and again until answered, after the progress moved to the ids', await isOpen(page, 'updateNote') && pending.update === 0 && isDeepStrictEqual(pending.stats, { 'kafe|1F|o19': { n: 1, c: 1, last: 1 } }), JSON.stringify(pending));
+  await page.context().close();
+
+  // 2. Progress under old keys moves to the callout ids, and the note shows: some of it is
+  // from before 1.1.3.
   const old = {
     'border|1F|2|38': { n: 2, c: 1, last: 0 }, 'border|1F|Stall 2|38': { n: 3, c: 3, last: 1 }, 'border|1F|Stall 2|35': { n: 1, c: 0, last: 0 },
     'kafe|1F|R1|18': { n: 1, c: 1, last: 1 }, 'kafe|1F|R1|19': { n: 2, c: 1, last: 1 },
@@ -166,7 +184,7 @@ run(async browser => {
 
   // 4. Opening a shared link: their numbers, read-only, and nothing of yours changes.
   const yours = { 'border|1F|o0': { n: 1, c: 0, last: 0 } };
-  page = await start({ stats: yours }, { hash: '#' + link.split('#')[1] });
+  page = await start({ stats: yours, update: 0 }, { hash: '#' + link.split('#')[1] });   // the update note not answered yet
   check('shared: opens on its own', await isOpen(page, 'report') && (await page.textContent('#reportTitle')) === 'Shared progress');
   check('shared: their numbers and name', (await page.textContent('#reportBody .hero')).includes(`${e.m}/${e.t}`) && (await page.textContent('#reportWho')).startsWith('Ace <img'));
   check('shared: no misses list or share box', !(await page.$('#reportBody .log')) && !(await page.isVisible('#reportShare')));

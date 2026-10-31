@@ -33,8 +33,11 @@ When an answer is revealed, an abbreviated callout also shows its full name.
 The map list shows how many callouts you have mastered on each map (your latest answer
 for it was right). Progress stays in your browser, filed under each callout's id, so it
 stays with a callout that is renamed or moved; `src/old_keys.json` carries progress saved
-by earlier releases over to the ids. **This session** lists every answer, newest first,
-with what you said when you missed.
+by earlier releases over to the ids. Progress from before 1.1.3, the update that renamed,
+added and removed many callouts, gets a one-time note suggesting a fresh start
+(`src/pre_update_keys.json` lists the keys only those releases saved under); nobody else
+sees it. **This session** lists every answer, newest first, with what you said when you
+missed.
 
 **Full report**, next to the map list, shows your progress on every map: callouts
 mastered, main rooms and spots, answers and how many were right, and the callouts you
@@ -143,8 +146,8 @@ name picks that browser, anything else picks the test files whose names include 
 - `zones`: in Find it, a tap on every callout's label counts, and a wrong tap names what
   you tapped
 - `layout`: the desktop and phone layouts, the menu, zooming, nothing scrolling sideways
-- `progress`: old progress carried over, the update note, the report and sharing it, and
-  shared links, well formed or damaged
+- `progress`: old progress carried over, the update note (for progress from before 1.1.3
+  only), the report and sharing it, and shared links, well formed or damaged
 - `secure`: the app code out of the console's reach, the Content Security Policy, the
   answer kept out of the page, damaged saves, no network requests
 

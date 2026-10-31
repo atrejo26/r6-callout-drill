@@ -677,7 +677,10 @@ for (const k of Object.keys(stats)) if (!isObj(stats[k])) delete stats[k];
 // old_keys has every such key, oldest first, with the callout it belongs to: answers
 // filed under several add up, and the newest says whether the callout is mastered.
 const tally = v => Number.isFinite(v) && v > 0 ? v : 0;
-const hadProgress = Object.keys(stats).length > 0;
+// Progress from before the major update, 1.1.3, which renamed, added and removed many
+// callouts: pre_update has the keys only the releases before it saved under.
+const preUpdate = new Set(Object.entries(DATA.pre_update).flatMap(([where, keys]) => keys.map(k => `${where}|${k}`)));
+const fromBefore = Object.keys(stats).some(k => preUpdate.has(k));
 let carried = false;
 for (const [where, keys] of Object.entries(DATA.old_keys)) for (const [old, id] of Object.entries(keys)) {
   const from = stats[`${where}|${old}`], to = stats[`${where}|${id}`];
@@ -1166,11 +1169,14 @@ function pressed(container, attr, val) {
 }
 
 // ---------- update note ----------
-// Raised when a release changes the callouts enough that earlier progress means less:
-// anyone with progress from before is asked once whether to start over.
+// Players with progress from before the major update (fromBefore, above) are asked once
+// whether to start over. Nobody else ever sees it, and later releases don't bring it
+// back: only a release the app's owner calls a major update gets a note, of its own.
 const UPDATE = 1;
 const noted = () => Number.isInteger(saved.update) && saved.update >= UPDATE;
-if (!hadProgress && !noted()) { saved.update = UPDATE; save(); }
+// Until the note is answered, update is 0: by the next visit that progress has moved to
+// the callout ids and can't be told apart any more.
+if (!noted() && saved.update !== 0) { saved.update = fromBefore ? 0 : UPDATE; save(); }
 function showNote() {
   if (!noted() && !$('updateNote').open) { $('updateNote').showModal(); $('keepProgress').focus(); }
 }
