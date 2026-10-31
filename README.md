@@ -123,12 +123,17 @@ without the release.
 
 ```sh
 npm install
-npx playwright install chromium   # once
-npm test                          # or: npm test -- answers progress
+npx playwright install chromium firefox webkit   # once
+npm test                       # or: npm test -- webkit, npm test -- answers progress
 ```
 
 `npm test` rebuilds the pages and fails if `index.html` was out of date with `src/`, then
-runs each `tests/*.test.js` in Chromium (it needs Python 3 for the build):
+runs each `tests/*.test.js` in Chromium, Firefox and WebKit, Safari's engine (it needs
+Python 3 for the build). Chromium opens the page from the file, as the desktop app does;
+Firefox and WebKit get it over HTTP from a server on 127.0.0.1, as from the website, and a
+page asking that server for anything but itself fails the run. A browser that isn't
+installed fails too, rather than being skipped. Words after `--` narrow the run: a browser
+name picks that browser, anything else picks the test files whose names include it.
 
 - `answers`: hundreds of typed answers (short and full forms, typos, the start of a
   name), Did you mean offers, no two callouts on a floor sharing an answer, and thousands
@@ -143,10 +148,10 @@ runs each `tests/*.test.js` in Chromium (it needs Python 3 for the build):
 - `secure`: the app code out of the console's reach, the Content Security Policy, the
   answer kept out of the page, damaged saves, no network requests
 
-Screenshots go to `test-results/`. GitHub Actions runs the tests on every push to a
-branch other than main (*Tests*), before publishing the web app (*Publish web app*) and
-before building the exes (*Build Windows app*): if any test fails, nothing is published
-or built.
+Screenshots go to `test-results/<browser>/`. GitHub Actions runs the tests, one job per
+browser, on every push to a branch other than main (*Tests*), before publishing the web
+app (*Publish web app*) and before building the exes (*Build Windows app*): if any test
+fails in any of the three, nothing is published or built.
 
 ## Security
 

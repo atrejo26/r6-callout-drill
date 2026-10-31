@@ -14,8 +14,14 @@ permissions:
 
 jobs:
   test:
-    # Pinned: Playwright 1.56.1 installs Chromium on Ubuntu up to 24.04, and ubuntu-latest
-    # has moved past it.
+    # One job per browser engine: Chromium (Chrome, Edge and the desktop app), Firefox and
+    # WebKit (Safari's engine). Publishing waits for all three.
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    # Pinned: Playwright 1.56.1 installs its browsers on Ubuntu up to 24.04, and
+    # ubuntu-latest has moved past it.
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -29,13 +35,13 @@ jobs:
           python-version: '3.12'
       - run: npm ci
         env:
-          ELECTRON_SKIP_BINARY_DOWNLOAD: 1   # the tests drive the page in Chromium, not Electron
-      - run: npx playwright install --with-deps chromium
-      - run: npm test
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1   # the tests drive the page in the browsers, not Electron
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npm test -- ${{ matrix.browser }}
       - name: Keep the screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-screenshots
-          path: test-results/*.png
+          name: test-screenshots-${{ matrix.browser }}
+          path: test-results/**/*.png
           if-no-files-found: ignore
