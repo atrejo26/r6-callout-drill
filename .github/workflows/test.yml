@@ -14,7 +14,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.56.1 installs Chromium on Ubuntu up to 24.04, and ubuntu-latest
+    # has moved past it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
