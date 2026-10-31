@@ -154,6 +154,8 @@ def annotate(map_id, c, floor=None):
     slots, shown, changed = [], [], False
     for i, w in enumerate(words):
         full, short = word_forms(map_id, words, i)
+        if 0 < i == len(words) - 1 and floor and w.lower() == floor.lower():
+            short = short + ['']   # "Red Hall 1F" on 1F is also just "Red Hall": the floor is known
         slots.append([w, full, short])
         shown.append(full[0] if full else w)
         changed |= bool(full)

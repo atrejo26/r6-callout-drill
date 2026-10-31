@@ -12,6 +12,7 @@
      "h": 1196,
      "callouts": [
       {
+       "id": "o0",
        "name": "Vent",
        "aliases": [],
        "room": true,
@@ -28,6 +29,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Detention",
        "aliases": [
         "Jail"
@@ -46,6 +48,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Supply",
        "aliases": [],
        "room": true,
@@ -62,6 +65,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Glass",
        "aliases": [],
        "room": true,
@@ -78,6 +82,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Main",
        "aliases": [],
        "room": true,
@@ -94,6 +99,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Medic",
        "aliases": [],
        "room": false,
@@ -107,6 +113,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Customs",
        "aliases": [],
        "room": true,
@@ -126,6 +133,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Boost",
        "aliases": [],
        "room": false,
@@ -139,6 +147,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Belt",
        "aliases": [],
        "room": false,
@@ -152,6 +161,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Small",
        "aliases": [],
        "room": true,
@@ -168,6 +178,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Metal",
        "aliases": [],
        "room": true,
@@ -184,6 +195,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Passport",
        "aliases": [],
        "room": true,
@@ -200,6 +212,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Luggage",
        "aliases": [],
        "room": false,
@@ -213,6 +226,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Blue Lobby",
        "aliases": [],
        "room": true,
@@ -229,6 +243,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Courtyard",
        "aliases": [],
        "room": true,
@@ -245,6 +260,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Workshop",
        "aliases": [],
        "room": true,
@@ -268,6 +284,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Cage",
        "aliases": [],
        "room": false,
@@ -281,6 +298,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Pillar",
        "aliases": [],
        "room": false,
@@ -294,6 +312,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Wires",
        "aliases": [],
        "room": false,
@@ -307,6 +326,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "L desk",
        "aliases": [],
        "room": false,
@@ -320,6 +340,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Tool box",
        "aliases": [],
        "room": false,
@@ -333,6 +354,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Grinder",
        "aliases": [],
        "room": false,
@@ -346,6 +368,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Blue desk",
        "aliases": [],
        "room": false,
@@ -359,6 +382,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Stacks",
        "aliases": [],
        "room": false,
@@ -372,6 +396,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Mattress",
        "aliases": [],
        "room": false,
@@ -385,6 +410,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "Tellers",
        "aliases": [],
        "room": true,
@@ -402,6 +428,7 @@
        ]
       },
       {
+       "id": "o28",
        "name": "Bathroom",
        "aliases": [],
        "room": true,
@@ -418,6 +445,7 @@
        ]
       },
       {
+       "id": "o29",
        "name": "Glow",
        "aliases": [],
        "room": false,
@@ -431,6 +459,7 @@
        ]
       },
       {
+       "id": "o30",
        "name": "Stalls",
        "aliases": [],
        "room": false,
@@ -447,6 +476,7 @@
        ]
       },
       {
+       "id": "o31",
        "name": "Light",
        "aliases": [],
        "room": false,
@@ -460,6 +490,7 @@
        ]
       },
       {
+       "id": "o32",
        "name": "Dark",
        "aliases": [],
        "room": false,
@@ -473,6 +504,7 @@
        ]
       },
       {
+       "id": "o33",
        "name": "Showers",
        "aliases": [],
        "room": false,
@@ -488,6 +520,7 @@
        ]
       },
       {
+       "id": "o34",
        "name": "Tellers hall",
        "aliases": [],
        "room": false,
@@ -501,6 +534,7 @@
        ]
       },
       {
+       "id": "o36",
        "name": "Stall 1",
        "aliases": [
         "1"
@@ -520,6 +554,7 @@
        ]
       },
       {
+       "id": "o37",
        "name": "Stall 3",
        "aliases": [
         "3"
@@ -539,6 +574,7 @@
        ]
       },
       {
+       "id": "o38",
        "name": "Stall 2",
        "aliases": [
         "2"
@@ -558,6 +594,7 @@
        ]
       },
       {
+       "id": "o39",
        "name": "S1",
        "aliases": [],
        "room": false,
@@ -571,6 +608,7 @@
        ]
       },
       {
+       "id": "o40",
        "name": "S2",
        "aliases": [],
        "room": false,
@@ -584,6 +622,7 @@
        ]
       },
       {
+       "id": "nmvvf3u0psl2n",
        "name": "East Stairs",
        "aliases": [],
        "room": true,
@@ -625,6 +664,7 @@
      "h": 1323,
      "callouts": [
       {
+       "id": "o0",
        "name": "Half Wall",
        "aliases": [],
        "room": false,
@@ -638,6 +678,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Sandwich",
        "aliases": [],
        "room": false,
@@ -651,6 +692,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Armory Wall",
        "aliases": [],
        "room": false,
@@ -664,6 +706,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Small Box",
        "aliases": [],
        "room": true,
@@ -680,6 +723,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Africa",
        "aliases": [],
        "room": false,
@@ -693,6 +737,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Cone",
        "aliases": [],
        "room": false,
@@ -706,6 +751,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Archives",
        "aliases": [],
        "room": true,
@@ -722,6 +768,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Concrete",
        "aliases": [],
        "room": false,
@@ -735,6 +782,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Hyper",
        "aliases": [],
        "room": false,
@@ -748,6 +796,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Radio",
        "aliases": [],
        "room": true,
@@ -764,6 +813,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Canadian",
        "aliases": [],
        "room": false,
@@ -777,6 +827,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Office",
        "aliases": [],
        "room": true,
@@ -793,6 +844,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Beepers",
        "aliases": [],
        "room": false,
@@ -806,6 +858,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Fountain",
        "aliases": [],
        "room": true,
@@ -822,6 +875,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Printer",
        "aliases": [],
        "room": false,
@@ -835,6 +889,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Triple",
        "aliases": [],
        "room": false,
@@ -848,6 +903,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Red Door",
        "aliases": [],
        "room": false,
@@ -861,6 +917,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Suicide",
        "aliases": [],
        "room": false,
@@ -874,6 +931,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Books Door",
        "aliases": [],
        "room": false,
@@ -887,6 +945,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Box",
        "aliases": [],
        "room": true,
@@ -903,6 +962,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Banana",
        "aliases": [],
        "room": false,
@@ -917,6 +977,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "CC",
        "aliases": [],
        "room": true,
@@ -933,6 +994,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Boost",
        "aliases": [],
        "room": false,
@@ -946,6 +1008,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Break",
        "aliases": [],
        "room": true,
@@ -962,6 +1025,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Vending",
        "aliases": [],
        "room": false,
@@ -975,6 +1039,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Fridge",
        "aliases": [],
        "room": false,
@@ -988,6 +1053,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "90",
        "aliases": [],
        "room": true,
@@ -1004,6 +1070,7 @@
        ]
       },
       {
+       "id": "o27",
        "name": "Cat",
        "aliases": [],
        "room": true,
@@ -1020,6 +1087,7 @@
        ]
       },
       {
+       "id": "o28",
        "name": "East",
        "aliases": [],
        "room": true,
@@ -1036,6 +1104,7 @@
        ]
       },
       {
+       "id": "o29",
        "name": "Wave",
        "aliases": [],
        "room": false,
@@ -1049,6 +1118,7 @@
        ]
       },
       {
+       "id": "o30",
        "name": "B desk",
        "aliases": [],
        "room": false,
@@ -1062,6 +1132,7 @@
        ]
       },
       {
+       "id": "o31",
        "name": "Tuck",
        "aliases": [],
        "room": false,
@@ -1075,6 +1146,7 @@
        ]
       },
       {
+       "id": "nmvvfa4tb6q3c",
        "name": "Armory",
        "aliases": [],
        "room": true,
@@ -1122,6 +1194,7 @@
      "h": 1251,
      "callouts": [
       {
+       "id": "o0",
        "name": "Car garage",
        "aliases": [],
        "room": true,
@@ -1138,6 +1211,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Fridge",
        "aliases": [],
        "room": false,
@@ -1151,6 +1225,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Trench",
        "aliases": [],
        "room": true,
@@ -1167,6 +1242,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Boiler",
        "aliases": [],
        "room": true,
@@ -1183,6 +1259,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Wine",
        "aliases": [],
        "room": true,
@@ -1199,6 +1276,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Blue",
        "aliases": [],
        "room": true,
@@ -1215,6 +1293,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Storage",
        "aliases": [],
        "room": true,
@@ -1231,6 +1310,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Trash",
        "aliases": [],
        "room": false,
@@ -1244,6 +1324,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Snow",
        "aliases": [],
        "room": true,
@@ -1260,6 +1341,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Pillar",
        "aliases": [],
        "room": false,
@@ -1273,6 +1355,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Shelf",
        "aliases": [],
        "room": false,
@@ -1286,6 +1369,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Barrels",
        "aliases": [],
        "room": false,
@@ -1299,6 +1383,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Boost",
        "aliases": [],
        "room": false,
@@ -1312,6 +1397,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Metal",
        "aliases": [],
        "room": false,
@@ -1325,6 +1411,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "West-main stairs",
        "aliases": [],
        "room": true,
@@ -1341,6 +1428,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Short",
        "aliases": [],
        "room": false,
@@ -1354,6 +1442,7 @@
        ]
       },
       {
+       "id": "nmvvodwugueo9",
        "name": "Laundry Hall",
        "aliases": [],
        "room": true,
@@ -1370,6 +1459,7 @@
        ]
       },
       {
+       "id": "nmvvoh54459cu",
        "name": "Car Entrance",
        "aliases": [],
        "room": true,
@@ -1411,6 +1501,7 @@
      "h": 1272,
      "callouts": [
       {
+       "id": "o0",
        "name": "Stock",
        "aliases": [],
        "room": true,
@@ -1427,6 +1518,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Games",
        "aliases": [],
        "room": true,
@@ -1443,6 +1535,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Inner",
        "aliases": [],
        "room": false,
@@ -1456,6 +1549,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Bar",
        "aliases": [],
        "room": true,
@@ -1472,6 +1566,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Half wall",
        "aliases": [],
        "room": false,
@@ -1485,6 +1580,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Hell",
        "aliases": [],
        "room": false,
@@ -1498,6 +1594,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Lobby",
        "aliases": [],
        "room": true,
@@ -1514,6 +1611,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Mud",
        "aliases": [],
        "room": true,
@@ -1530,6 +1628,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Pickle",
        "aliases": [],
        "room": false,
@@ -1543,6 +1642,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Couches",
        "aliases": [],
        "room": false,
@@ -1556,6 +1656,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Jukebox",
        "aliases": [],
        "room": false,
@@ -1569,6 +1670,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Long",
        "aliases": [],
        "room": false,
@@ -1582,6 +1684,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Short",
        "aliases": [],
        "room": false,
@@ -1595,6 +1698,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Dining",
        "aliases": [],
        "room": true,
@@ -1611,6 +1715,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Grass",
        "aliases": [],
        "room": false,
@@ -1624,6 +1729,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -1640,6 +1746,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Bunker",
        "aliases": [],
        "room": false,
@@ -1653,6 +1760,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Red",
        "aliases": [],
        "room": true,
@@ -1669,6 +1777,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Books",
        "aliases": [],
        "room": false,
@@ -1682,6 +1791,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "West",
        "aliases": [],
        "room": true,
@@ -1698,6 +1808,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Coffee",
        "aliases": [],
        "room": false,
@@ -1711,6 +1822,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Log",
        "aliases": [],
        "room": false,
@@ -1724,6 +1836,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Trophy",
        "aliases": [],
        "room": true,
@@ -1740,6 +1853,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "HP",
        "aliases": [],
        "room": false,
@@ -1753,6 +1867,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Snow Stairs",
        "aliases": [],
        "room": true,
@@ -1769,6 +1884,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Ranked",
        "aliases": [],
        "room": false,
@@ -1782,6 +1898,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "45",
        "aliases": [],
        "room": true,
@@ -1798,6 +1915,7 @@
        ]
       },
       {
+       "id": "nmvvoa1wbhvkf",
        "name": "Main Stairs",
        "aliases": [],
        "room": true,
@@ -1814,6 +1932,7 @@
        ]
       },
       {
+       "id": "nmvvobfnoll64",
        "name": "Blue Stairs",
        "aliases": [],
        "room": true,
@@ -1855,6 +1974,7 @@
      "h": 1297,
      "callouts": [
       {
+       "id": "o0",
        "name": "Top fire",
        "aliases": [],
        "room": true,
@@ -1871,6 +1991,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "K9",
        "aliases": [],
        "room": true,
@@ -1887,6 +2008,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Double",
        "aliases": [],
        "room": false,
@@ -1900,6 +2022,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Single",
        "aliases": [],
        "room": false,
@@ -1913,6 +2036,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Box",
        "aliases": [],
        "room": true,
@@ -1929,6 +2053,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Library",
        "aliases": [],
        "room": true,
@@ -1945,6 +2070,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Ivy Hall",
        "aliases": [],
        "room": true,
@@ -1961,6 +2087,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Piano",
        "aliases": [],
        "room": true,
@@ -1977,6 +2104,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Office",
        "aliases": [],
        "room": true,
@@ -1993,6 +2121,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Highway",
        "aliases": [],
        "room": true,
@@ -2009,6 +2138,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Glow",
        "aliases": [],
        "room": false,
@@ -2022,6 +2152,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Slant",
        "aliases": [],
        "room": false,
@@ -2035,6 +2166,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Top Blue stairs",
        "aliases": [],
        "room": true,
@@ -2051,6 +2183,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Owl",
        "aliases": [],
        "room": false,
@@ -2064,6 +2197,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Tub",
        "aliases": [],
        "room": false,
@@ -2077,6 +2211,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Bathroom",
        "aliases": [],
        "room": true,
@@ -2093,6 +2228,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Master",
        "aliases": [],
        "room": true,
@@ -2109,6 +2245,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Closet",
        "aliases": [],
        "room": true,
@@ -2125,6 +2262,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "P \u00bd W",
        "aliases": [],
        "room": false,
@@ -2138,6 +2276,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Loaf",
        "aliases": [],
        "room": false,
@@ -2151,6 +2290,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Solar",
        "aliases": [],
        "room": true,
@@ -2167,6 +2307,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Square",
        "aliases": [],
        "room": false,
@@ -2180,6 +2321,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Sol stairs",
        "aliases": [],
        "room": true,
@@ -2196,6 +2338,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Mez",
        "aliases": [],
        "room": true,
@@ -2212,6 +2355,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Suicide",
        "aliases": [],
        "room": false,
@@ -2225,6 +2369,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Main stairs",
        "aliases": [],
        "room": true,
@@ -2241,6 +2386,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "\u00bd W",
        "aliases": [],
        "room": false,
@@ -2254,6 +2400,7 @@
        ]
       },
       {
+       "id": "nmvvp54ejtbbp",
        "name": "Library desk",
        "aliases": [],
        "room": false,
@@ -2298,6 +2445,7 @@
      "h": 1027,
      "callouts": [
       {
+       "id": "o0",
        "name": "Dirt",
        "aliases": [],
        "room": true,
@@ -2314,6 +2462,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Dark",
        "aliases": [],
        "room": false,
@@ -2327,23 +2476,8 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Oil",
-       "aliases": [],
-       "room": true,
-       "rot": 0,
-       "x": 0.6284,
-       "y": 0.4901,
-       "gx": 0.7041,
-       "gy": 0.462,
-       "room_zone": [
-        [[0.5094, 0.6112], [0.7119, 0.6112], [0.7119, 0.4077], [0.5094, 0.4077]]
-       ],
-       "zone": [
-        [[0.5981, 0.5346], [0.7096, 0.5349], [0.7119, 0.4077], [0.5971, 0.4075]]
-       ]
-      },
-      {
-       "name": "Blue",
        "aliases": [],
        "room": true,
        "rot": 0,
@@ -2359,6 +2493,24 @@
        ]
       },
       {
+       "id": "o3",
+       "name": "Blue",
+       "aliases": [],
+       "room": true,
+       "rot": 0,
+       "x": 0.6284,
+       "y": 0.4901,
+       "gx": 0.7041,
+       "gy": 0.462,
+       "room_zone": [
+        [[0.5094, 0.6112], [0.7119, 0.6112], [0.7119, 0.4077], [0.5094, 0.4077]]
+       ],
+       "zone": [
+        [[0.5981, 0.5346], [0.7096, 0.5349], [0.7119, 0.4077], [0.5971, 0.4075]]
+       ]
+      },
+      {
+       "id": "o4",
        "name": "Church",
        "aliases": [],
        "room": true,
@@ -2375,6 +2527,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Moto",
        "aliases": [],
        "room": true,
@@ -2391,6 +2544,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Short",
        "aliases": [],
        "room": false,
@@ -2404,6 +2558,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Long",
        "aliases": [],
        "room": false,
@@ -2417,6 +2572,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Locker",
        "aliases": [],
        "room": false,
@@ -2430,6 +2586,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Box 1",
        "aliases": [],
        "room": false,
@@ -2443,6 +2600,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "AK",
        "aliases": [],
        "room": false,
@@ -2456,6 +2614,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Soda",
        "aliases": [],
        "room": false,
@@ -2469,6 +2628,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Armory",
        "aliases": [],
        "room": true,
@@ -2485,6 +2645,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Box 2",
        "aliases": [],
        "room": false,
@@ -2498,6 +2659,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Box 3",
        "aliases": [],
        "room": false,
@@ -2511,6 +2673,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Bottom Central",
        "aliases": [],
        "room": true,
@@ -2527,6 +2690,7 @@
        ]
       },
       {
+       "id": "nmvvpoopg0oy4",
        "name": "Generator",
        "aliases": [],
        "room": false,
@@ -2565,6 +2729,7 @@
      "h": 1342,
      "callouts": [
       {
+       "id": "o0",
        "name": "Lockers",
        "aliases": [],
        "room": true,
@@ -2581,6 +2746,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Strip",
        "aliases": [],
        "room": true,
@@ -2597,6 +2763,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Pool",
        "aliases": [],
        "room": true,
@@ -2613,6 +2780,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Bar",
        "aliases": [],
        "room": true,
@@ -2629,6 +2797,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -2645,6 +2814,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Freezer",
        "aliases": [],
        "room": true,
@@ -2661,6 +2831,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Stock",
        "aliases": [],
        "room": true,
@@ -2677,6 +2848,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Pipes",
        "aliases": [],
        "room": false,
@@ -2690,6 +2862,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Central Stairs",
        "aliases": [],
        "room": true,
@@ -2706,6 +2879,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Toilets",
        "aliases": [],
        "room": true,
@@ -2722,6 +2896,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Fridge",
        "aliases": [],
        "room": false,
@@ -2735,6 +2910,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Darts",
        "aliases": [],
        "room": false,
@@ -2748,6 +2924,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Skull",
        "aliases": [],
        "room": false,
@@ -2761,6 +2938,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Stage",
        "aliases": [],
        "room": true,
@@ -2777,6 +2955,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "J Box",
        "aliases": [],
        "room": false,
@@ -2790,6 +2969,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Wolf",
        "aliases": [
         "Wolf door"
@@ -2808,6 +2988,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Lounge",
        "aliases": [],
        "room": true,
@@ -2824,6 +3005,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Secret",
        "aliases": [],
        "room": true,
@@ -2840,6 +3022,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Baby steps",
        "aliases": [],
        "room": false,
@@ -2853,6 +3036,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Mini",
        "aliases": [],
        "room": false,
@@ -2866,6 +3050,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Garage",
        "aliases": [],
        "room": true,
@@ -2882,6 +3067,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Grinder",
        "aliases": [],
        "room": false,
@@ -2895,6 +3081,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Bikes",
        "aliases": [],
        "room": false,
@@ -2908,6 +3095,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "HP",
        "aliases": [],
        "room": false,
@@ -2921,6 +3109,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Kitch H",
        "aliases": [],
        "room": false,
@@ -2959,6 +3148,7 @@
      "h": 1358,
      "callouts": [
       {
+       "id": "o0",
        "name": "R long",
        "aliases": [],
        "room": true,
@@ -2975,6 +3165,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "R short",
        "aliases": [],
        "room": true,
@@ -2991,6 +3182,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "R90",
        "aliases": [],
        "room": true,
@@ -3007,6 +3199,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Red",
        "aliases": [],
        "room": true,
@@ -3023,6 +3216,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Green box",
        "aliases": [],
        "room": false,
@@ -3036,6 +3230,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Cash",
        "aliases": [],
        "room": true,
@@ -3052,6 +3247,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Sheet",
        "aliases": [],
        "room": false,
@@ -3065,6 +3261,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Con",
        "aliases": [],
        "room": true,
@@ -3081,6 +3278,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Logi",
        "aliases": [],
        "room": true,
@@ -3098,6 +3296,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Rat",
        "aliases": [],
        "room": false,
@@ -3111,6 +3310,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Goddess",
        "aliases": [],
        "room": false,
@@ -3124,6 +3324,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Gold",
        "aliases": [],
        "room": false,
@@ -3137,6 +3338,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Long",
        "aliases": [],
        "room": false,
@@ -3150,6 +3352,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "B2",
        "aliases": [],
        "room": true,
@@ -3166,6 +3369,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Den",
        "aliases": [],
        "room": false,
@@ -3179,6 +3383,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Gym",
        "aliases": [],
        "room": true,
@@ -3195,6 +3400,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Short",
        "aliases": [],
        "room": false,
@@ -3208,6 +3414,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Master",
        "aliases": [],
        "room": true,
@@ -3224,6 +3431,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Servers",
        "aliases": [],
        "room": true,
@@ -3240,6 +3448,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Highway",
        "aliases": [],
        "room": true,
@@ -3256,6 +3465,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Top Central",
        "aliases": [],
        "room": true,
@@ -3272,6 +3482,7 @@
        ]
       },
       {
+       "id": "nmvvr5vj60op2",
        "name": "Jacuzzi",
        "aliases": [],
        "room": true,
@@ -3319,6 +3530,7 @@
      "h": 1529,
      "callouts": [
       {
+       "id": "o0",
        "name": "Wine",
        "aliases": [],
        "room": true,
@@ -3335,6 +3547,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Art",
        "aliases": [],
        "room": true,
@@ -3351,6 +3564,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Office",
        "aliases": [],
        "room": true,
@@ -3367,6 +3581,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Garage",
        "aliases": [],
        "room": true,
@@ -3383,6 +3598,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Tasting",
        "aliases": [],
        "room": true,
@@ -3399,6 +3615,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Tunnel",
        "aliases": [],
        "room": true,
@@ -3415,6 +3632,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Arch",
        "aliases": [],
        "room": true,
@@ -3431,6 +3649,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Back S",
        "aliases": [],
        "room": true,
@@ -3447,6 +3666,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Pantry S",
        "aliases": [],
        "room": true,
@@ -3463,6 +3683,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Cellar",
        "aliases": [],
        "room": true,
@@ -3479,6 +3700,7 @@
        ]
       },
       {
+       "id": "nmvvv4h9fgmxr",
        "name": "Red Stairs",
        "aliases": [],
        "room": true,
@@ -3520,6 +3742,7 @@
      "h": 1536,
      "callouts": [
       {
+       "id": "o0",
        "name": "Red",
        "aliases": [],
        "room": true,
@@ -3536,6 +3759,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Main S",
        "aliases": [],
        "room": true,
@@ -3552,6 +3776,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Astro S",
        "aliases": [],
        "room": true,
@@ -3568,6 +3793,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "China",
        "aliases": [],
        "room": true,
@@ -3584,6 +3810,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Mud",
        "aliases": [],
        "room": true,
@@ -3600,6 +3827,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Toilet",
        "aliases": [],
        "room": true,
@@ -3616,6 +3844,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Piano",
        "aliases": [],
        "room": true,
@@ -3632,6 +3861,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Piano H short",
        "aliases": [],
        "room": true,
@@ -3648,6 +3878,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Piano H long",
        "aliases": [],
        "room": true,
@@ -3664,6 +3895,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Paint",
        "aliases": [],
        "room": true,
@@ -3680,6 +3912,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Main",
        "aliases": [],
        "room": true,
@@ -3696,6 +3929,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Greenhouse",
        "aliases": [],
        "room": true,
@@ -3712,6 +3946,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Library",
        "aliases": [],
        "room": true,
@@ -3728,6 +3963,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Living",
        "aliases": [],
        "room": true,
@@ -3744,6 +3980,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Gallery",
        "aliases": [],
        "room": true,
@@ -3760,6 +3997,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Living H",
        "aliases": [],
        "room": true,
@@ -3776,6 +4014,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -3792,6 +4031,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Dining",
        "aliases": [],
        "room": true,
@@ -3808,6 +4048,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Memorial",
        "aliases": [],
        "room": true,
@@ -3824,6 +4065,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Bike",
        "aliases": [],
        "room": true,
@@ -3840,6 +4082,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Laundry",
        "aliases": [],
        "room": true,
@@ -3856,6 +4099,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Pantry",
        "aliases": [],
        "room": true,
@@ -3872,6 +4116,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Pantry S",
        "aliases": [],
        "room": true,
@@ -3888,6 +4133,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Back S",
        "aliases": [],
        "room": true,
@@ -3904,6 +4150,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Back h",
        "aliases": [],
        "room": true,
@@ -3945,6 +4192,7 @@
      "h": 1536,
      "callouts": [
       {
+       "id": "o0",
        "name": "Red S",
        "aliases": [],
        "room": true,
@@ -3961,6 +4209,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Skull",
        "aliases": [],
        "room": true,
@@ -3977,6 +4226,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Map",
        "aliases": [],
        "room": true,
@@ -3993,6 +4243,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Study",
        "aliases": [],
        "room": true,
@@ -4009,6 +4260,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Bar",
        "aliases": [],
        "room": true,
@@ -4025,6 +4277,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "90",
        "aliases": [],
        "room": true,
@@ -4041,6 +4294,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Vault",
        "aliases": [],
        "room": true,
@@ -4057,6 +4311,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Gaming",
        "aliases": [],
        "room": true,
@@ -4073,6 +4328,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Main S",
        "aliases": [],
        "room": true,
@@ -4089,6 +4345,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Landing",
        "aliases": [],
        "room": true,
@@ -4105,6 +4362,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Bench",
        "aliases": [],
        "room": true,
@@ -4121,6 +4379,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Bohr",
        "aliases": [],
        "room": true,
@@ -4137,6 +4396,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Short",
        "aliases": [],
        "room": true,
@@ -4153,6 +4413,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Long",
        "aliases": [],
        "room": true,
@@ -4169,6 +4430,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Bricks",
        "aliases": [],
        "room": true,
@@ -4185,6 +4447,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Trophy",
        "aliases": [],
        "room": true,
@@ -4201,6 +4464,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Astro",
        "aliases": [],
        "room": true,
@@ -4217,6 +4481,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Astro S",
        "aliases": [],
        "room": true,
@@ -4233,6 +4498,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Closet",
        "aliases": [],
        "room": true,
@@ -4249,6 +4515,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Master",
        "aliases": [],
        "room": true,
@@ -4265,6 +4532,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Bathroom",
        "aliases": [],
        "room": true,
@@ -4281,6 +4549,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Statue",
        "aliases": [],
        "room": true,
@@ -4297,6 +4566,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Triple w",
        "aliases": [],
        "room": true,
@@ -4344,6 +4614,7 @@
      "h": 969,
      "callouts": [
       {
+       "id": "o0",
        "name": "Exo",
        "aliases": [],
        "room": true,
@@ -4360,6 +4631,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Cargo",
        "aliases": [],
        "room": true,
@@ -4376,6 +4648,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Nano",
        "aliases": [],
        "room": true,
@@ -4392,6 +4665,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Exo pillar",
        "aliases": [],
        "room": true,
@@ -4408,6 +4682,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Assembly",
        "aliases": [],
        "room": true,
@@ -4424,6 +4699,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Boost",
        "aliases": [],
        "room": false,
@@ -4437,6 +4713,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Half wall",
        "aliases": [],
        "room": false,
@@ -4450,6 +4727,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Stone",
        "aliases": [],
        "room": false,
@@ -4463,6 +4741,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Nano hall",
        "aliases": [],
        "room": true,
@@ -4479,6 +4758,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Pillar",
        "aliases": [],
        "room": false,
@@ -4492,6 +4772,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Corner",
        "aliases": [],
        "room": false,
@@ -4505,6 +4786,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Single",
        "aliases": [],
        "room": false,
@@ -4518,6 +4800,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Tank",
        "aliases": [],
        "room": true,
@@ -4534,6 +4817,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Exo tuck",
        "aliases": [],
        "room": true,
@@ -4550,6 +4834,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Animus",
        "aliases": [],
        "room": true,
@@ -4591,6 +4876,7 @@
      "h": 1335,
      "callouts": [
       {
+       "id": "o0",
        "name": "Lobby",
        "aliases": [],
        "room": true,
@@ -4607,6 +4893,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "HP",
        "aliases": [],
        "room": false,
@@ -4620,6 +4907,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Cereal",
        "aliases": [],
        "room": false,
@@ -4633,6 +4921,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -4649,6 +4938,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Pantry",
        "aliases": [],
        "room": true,
@@ -4665,6 +4955,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Vending",
        "aliases": [],
        "room": true,
@@ -4681,6 +4972,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Long",
        "aliases": [],
        "room": true,
@@ -4697,6 +4989,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Short",
        "aliases": [],
        "room": true,
@@ -4713,6 +5006,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "TV",
        "aliases": [],
        "room": false,
@@ -4726,6 +5020,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Barrels",
        "aliases": [],
        "room": true,
@@ -4742,6 +5037,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Control",
        "aliases": [],
        "room": true,
@@ -4758,6 +5054,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Fork",
        "aliases": [],
        "room": true,
@@ -4774,6 +5071,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Loaf",
        "aliases": [],
        "room": false,
@@ -4787,6 +5085,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Mud",
        "aliases": [],
        "room": true,
@@ -4803,6 +5102,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Storage",
        "aliases": [],
        "room": true,
@@ -4821,6 +5121,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Garage",
        "aliases": [],
        "room": true,
@@ -4837,6 +5138,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "90",
        "aliases": [],
        "room": true,
@@ -4853,6 +5155,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Games",
        "aliases": [],
        "room": true,
@@ -4871,6 +5174,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Pool",
        "aliases": [],
        "room": false,
@@ -4884,6 +5188,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "S1",
        "aliases": [],
        "room": false,
@@ -4897,6 +5202,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "S2",
        "aliases": [],
        "room": false,
@@ -4910,6 +5216,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "Map",
        "aliases": [],
        "room": false,
@@ -4923,6 +5230,7 @@
        ]
       },
       {
+       "id": "o27",
        "name": "Cafe",
        "aliases": [],
        "room": true,
@@ -4964,6 +5272,7 @@
      "h": 1115,
      "callouts": [
       {
+       "id": "o0",
        "name": "Meeting",
        "aliases": [],
        "room": true,
@@ -4980,6 +5289,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Mez",
        "aliases": [],
        "room": true,
@@ -4996,6 +5306,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "E-Box",
        "aliases": [],
        "room": true,
@@ -5012,6 +5323,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Server",
        "aliases": [],
        "room": true,
@@ -5028,6 +5340,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Pillar",
        "aliases": [],
        "room": false,
@@ -5041,6 +5354,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Connector",
        "aliases": [],
        "room": true,
@@ -5057,6 +5371,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "IT",
        "aliases": [],
        "room": true,
@@ -5073,6 +5388,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "CC",
        "aliases": [],
        "room": true,
@@ -5089,6 +5405,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Water",
        "aliases": [],
        "room": true,
@@ -5105,6 +5422,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Water stairs",
        "aliases": [],
        "room": true,
@@ -5121,6 +5439,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Monitors",
        "aliases": [],
        "room": false,
@@ -5134,6 +5453,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Blue Hall",
        "aliases": [],
        "room": true,
@@ -5150,6 +5470,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "R3",
        "aliases": [],
        "room": true,
@@ -5166,6 +5487,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "R2",
        "aliases": [],
        "room": true,
@@ -5182,6 +5504,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "R1",
        "aliases": [],
        "room": true,
@@ -5198,6 +5521,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Lobby stairs",
        "aliases": [],
        "room": true,
@@ -5214,6 +5538,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Tools",
        "aliases": [],
        "room": false,
@@ -5227,6 +5552,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Fern",
        "aliases": [],
        "room": false,
@@ -5240,6 +5566,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Mid Desk",
        "aliases": [],
        "room": false,
@@ -5253,6 +5580,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Couch",
        "aliases": [],
        "room": false,
@@ -5266,6 +5594,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Wires",
        "aliases": [],
        "room": false,
@@ -5279,6 +5608,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Tools table",
        "aliases": [
         "Table"
@@ -5325,6 +5655,7 @@
      "h": 635,
      "callouts": [
       {
+       "id": "o0",
        "name": "Lobby stairs",
        "aliases": [],
        "room": true,
@@ -5341,6 +5672,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Lobby",
        "aliases": [],
        "room": true,
@@ -5357,6 +5689,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Music",
        "aliases": [],
        "room": true,
@@ -5373,6 +5706,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Sitting",
        "aliases": [],
        "room": true,
@@ -5389,6 +5723,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Changing",
        "aliases": [],
        "room": true,
@@ -5405,6 +5740,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Hammam",
        "aliases": [],
        "room": true,
@@ -5421,6 +5757,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Showers",
        "aliases": [],
        "room": true,
@@ -5437,6 +5774,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Main H",
        "aliases": [],
        "room": true,
@@ -5453,6 +5791,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Central Stairs",
        "aliases": [],
        "room": true,
@@ -5469,6 +5808,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Kitch H",
        "aliases": [],
        "room": true,
@@ -5485,6 +5825,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Dining",
        "aliases": [],
        "room": true,
@@ -5501,6 +5842,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Office H",
        "aliases": [],
        "room": true,
@@ -5517,6 +5859,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Office",
        "aliases": [],
        "room": true,
@@ -5533,6 +5876,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Fountain",
        "aliases": [],
        "room": true,
@@ -5549,6 +5893,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Fountain S H",
        "aliases": [],
        "room": true,
@@ -5565,6 +5910,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Fountain L H",
        "aliases": [],
        "room": true,
@@ -5581,6 +5927,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -5597,6 +5944,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Caf",
        "aliases": [],
        "room": true,
@@ -5613,6 +5961,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Waiting",
        "aliases": [],
        "room": true,
@@ -5629,6 +5978,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Infirmary",
        "aliases": [],
        "room": true,
@@ -5645,6 +5995,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Old Stairs",
        "aliases": [],
        "room": true,
@@ -5661,6 +6012,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Caf H",
        "aliases": [],
        "room": true,
@@ -5677,6 +6029,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Laundry",
        "aliases": [],
        "room": true,
@@ -5693,6 +6046,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Gun Room",
        "aliases": [],
        "room": true,
@@ -5709,6 +6063,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Gun Room H",
        "aliases": [],
        "room": true,
@@ -5750,6 +6105,7 @@
      "h": 633,
      "callouts": [
       {
+       "id": "o0",
        "name": "Lobby stairs",
        "aliases": [],
        "room": true,
@@ -5766,6 +6122,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Central Stairs",
        "aliases": [],
        "room": true,
@@ -5782,6 +6139,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Lobby H",
        "aliases": [],
        "room": true,
@@ -5798,6 +6156,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Command",
        "aliases": [],
        "room": true,
@@ -5814,6 +6173,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Bedroom",
        "aliases": [],
        "room": true,
@@ -5830,6 +6190,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Bedroom H",
        "aliases": [],
        "room": true,
@@ -5846,6 +6207,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Briefing H",
        "aliases": [],
        "room": true,
@@ -5862,6 +6224,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Bathroom",
        "aliases": [],
        "room": true,
@@ -5878,6 +6241,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Briefing",
        "aliases": [],
        "room": true,
@@ -5894,6 +6258,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Horse",
        "aliases": [],
        "room": true,
@@ -5910,6 +6275,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Portrait H",
        "aliases": [],
        "room": true,
@@ -5926,6 +6292,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Mez",
        "aliases": [],
        "room": true,
@@ -5942,6 +6309,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Gaming",
        "aliases": [],
        "room": true,
@@ -5958,6 +6326,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Dorm",
        "aliases": [],
        "room": true,
@@ -5974,6 +6343,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Dorm H",
        "aliases": [],
        "room": true,
@@ -5990,6 +6360,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Shisha",
        "aliases": [],
        "room": true,
@@ -6006,6 +6377,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Gaming H",
        "aliases": [],
        "room": true,
@@ -6022,6 +6394,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Vending",
        "aliases": [],
        "room": true,
@@ -6038,6 +6411,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Old stairs",
        "aliases": [],
        "room": true,
@@ -6054,6 +6428,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Old tower drop",
        "aliases": [],
        "room": true,
@@ -6070,6 +6445,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "New Tower",
        "aliases": [],
        "room": true,
@@ -6117,6 +6493,7 @@
      "h": 1164,
      "callouts": [
       {
+       "id": "o0",
        "name": "Vault",
        "aliases": [],
        "room": true,
@@ -6133,6 +6510,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Cash",
        "aliases": [],
        "room": true,
@@ -6149,6 +6527,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Gold",
        "aliases": [],
        "room": true,
@@ -6165,6 +6544,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Jail",
        "aliases": [],
        "room": true,
@@ -6181,6 +6561,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Lockers",
        "aliases": [],
        "room": true,
@@ -6197,6 +6578,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Red hall",
        "aliases": [],
        "room": true,
@@ -6213,6 +6595,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "CC",
        "aliases": [],
        "room": true,
@@ -6229,6 +6612,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Server",
        "aliases": [],
        "room": true,
@@ -6245,6 +6629,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Server rack",
        "aliases": [],
        "room": true,
@@ -6261,6 +6646,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Blue",
        "aliases": [],
        "room": true,
@@ -6277,6 +6663,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "PC",
        "aliases": [],
        "room": false,
@@ -6290,6 +6677,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "E1",
        "aliases": [],
        "room": true,
@@ -6306,6 +6694,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Main",
        "aliases": [],
        "room": true,
@@ -6322,6 +6711,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Garage",
        "aliases": [],
        "room": true,
@@ -6363,6 +6753,7 @@
      "h": 1075,
      "callouts": [
       {
+       "id": "o0",
        "name": "ATM",
        "aliases": [],
        "room": true,
@@ -6379,6 +6770,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Lobby",
        "aliases": [],
        "room": true,
@@ -6395,6 +6787,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Tellers",
        "aliases": [],
        "room": true,
@@ -6411,6 +6804,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Tellers Office",
        "aliases": [],
        "room": true,
@@ -6427,6 +6821,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Emo",
        "aliases": [],
        "room": false,
@@ -6440,6 +6835,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Loan",
        "aliases": [],
        "room": true,
@@ -6456,6 +6852,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Spiral",
        "aliases": [],
        "room": true,
@@ -6472,6 +6869,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "E2 Hall",
        "aliases": [],
        "room": true,
@@ -6488,6 +6886,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Dark",
        "aliases": [],
        "room": false,
@@ -6501,6 +6900,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Light",
        "aliases": [],
        "room": false,
@@ -6514,6 +6914,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Open",
        "aliases": [],
        "room": true,
@@ -6530,6 +6931,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Admin",
        "aliases": [],
        "room": true,
@@ -6546,6 +6948,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Printer",
        "aliases": [],
        "room": true,
@@ -6562,6 +6965,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Archive",
        "aliases": [],
        "room": true,
@@ -6578,6 +6982,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Quad Wall",
        "aliases": [],
        "room": false,
@@ -6591,6 +6996,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Bottom Sqr",
        "aliases": [],
        "room": true,
@@ -6607,6 +7013,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -6623,6 +7030,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "Electrical",
        "aliases": [],
        "room": true,
@@ -6639,6 +7047,7 @@
        ]
       },
       {
+       "id": "o27",
        "name": "Sqr Stairs",
        "aliases": [],
        "room": true,
@@ -6680,6 +7089,7 @@
      "h": 1251,
      "callouts": [
       {
+       "id": "o0",
        "name": "Spiral",
        "aliases": [],
        "room": true,
@@ -6696,6 +7106,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Atm rappel",
        "aliases": [],
        "room": false,
@@ -6709,6 +7120,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Achieved",
        "aliases": [],
        "room": false,
@@ -6722,6 +7134,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Spider-man",
        "aliases": [],
        "room": false,
@@ -6735,6 +7148,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Venom",
        "aliases": [],
        "room": false,
@@ -6748,6 +7162,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Kanto",
        "aliases": [],
        "room": false,
@@ -6761,6 +7176,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Banana",
        "aliases": [],
        "room": true,
@@ -6777,6 +7193,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Loaf",
        "aliases": [],
        "room": true,
@@ -6793,6 +7210,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Trump",
        "aliases": [],
        "room": true,
@@ -6809,6 +7227,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "CEO",
        "aliases": [],
        "room": true,
@@ -6825,6 +7244,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Top Sqr",
        "aliases": [],
        "room": true,
@@ -6841,6 +7261,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Curve",
        "aliases": [],
        "room": true,
@@ -6857,6 +7278,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Terrace",
        "aliases": [],
        "room": true,
@@ -6873,6 +7295,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Stock",
        "aliases": [],
        "room": true,
@@ -6889,6 +7312,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Janitor",
        "aliases": [],
        "room": true,
@@ -6905,6 +7329,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Meeting",
        "aliases": [],
        "room": true,
@@ -6921,6 +7346,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Lounge",
        "aliases": [],
        "room": true,
@@ -6937,6 +7363,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "E3",
        "aliases": [],
        "room": true,
@@ -6953,6 +7380,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Marble",
        "aliases": [],
        "room": true,
@@ -7000,6 +7428,7 @@
      "h": 1154,
      "callouts": [
       {
+       "id": "o0",
        "name": "Bakery",
        "aliases": [],
        "room": true,
@@ -7016,6 +7445,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Prep",
        "aliases": [],
        "room": true,
@@ -7032,6 +7462,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Rice",
        "aliases": [],
        "room": false,
@@ -7045,6 +7476,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Sinks",
        "aliases": [],
        "room": true,
@@ -7061,6 +7493,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Garage",
        "aliases": [],
        "room": true,
@@ -7077,6 +7510,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Freezer",
        "aliases": [],
        "room": true,
@@ -7093,6 +7527,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "VIP",
        "aliases": [],
        "room": true,
@@ -7109,6 +7544,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Whiskey",
        "aliases": [],
        "room": true,
@@ -7125,6 +7561,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Wine",
        "aliases": [],
        "room": true,
@@ -7141,6 +7578,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "HP",
        "aliases": [],
        "room": false,
@@ -7154,6 +7592,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Coat",
        "aliases": [],
        "room": true,
@@ -7170,6 +7609,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Small bake",
        "aliases": [],
        "room": true,
@@ -7186,6 +7626,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Recep",
        "aliases": [],
        "room": true,
@@ -7202,6 +7643,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Booth",
        "aliases": [],
        "room": true,
@@ -7218,6 +7660,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Shelf",
        "aliases": [],
        "room": false,
@@ -7231,6 +7674,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Kitchen",
        "aliases": [],
        "room": true,
@@ -7250,6 +7694,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "K2",
        "aliases": [],
        "room": false,
@@ -7263,6 +7708,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "K1",
        "aliases": [],
        "room": false,
@@ -7276,6 +7722,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "K3",
        "aliases": [],
        "room": false,
@@ -7289,6 +7736,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Red Hall 1F",
        "aliases": [],
        "room": true,
@@ -7305,6 +7753,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Red S1",
        "aliases": [],
        "room": true,
@@ -7321,6 +7770,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Brown",
        "aliases": [],
        "room": true,
@@ -7337,6 +7787,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "White stairs",
        "aliases": [],
        "room": true,
@@ -7378,6 +7829,7 @@
      "h": 1102,
      "callouts": [
       {
+       "id": "o0",
        "name": "White stairs",
        "aliases": [],
        "room": true,
@@ -7394,6 +7846,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Hell",
        "aliases": [],
        "room": true,
@@ -7410,6 +7863,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Default",
        "aliases": [],
        "room": false,
@@ -7423,6 +7877,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Brown",
        "aliases": [],
        "room": true,
@@ -7439,6 +7894,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Emo",
        "aliases": [],
        "room": true,
@@ -7455,6 +7911,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "P2",
        "aliases": [],
        "room": false,
@@ -7468,6 +7925,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "P1",
        "aliases": [],
        "room": false,
@@ -7481,6 +7939,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Red Hall 2F",
        "aliases": [],
        "room": true,
@@ -7497,6 +7956,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Reading",
        "aliases": [],
        "room": true,
@@ -7513,6 +7973,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Laundry",
        "aliases": [],
        "room": true,
@@ -7529,6 +7990,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Green",
        "aliases": [],
        "room": false,
@@ -7542,6 +8004,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Dining",
        "aliases": [],
        "room": true,
@@ -7558,6 +8021,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Train",
        "aliases": [],
        "room": true,
@@ -7574,6 +8038,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Red",
        "aliases": [],
        "room": false,
@@ -7587,6 +8052,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Red S2",
        "aliases": [],
        "room": true,
@@ -7603,6 +8069,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Wheel",
        "aliases": [],
        "room": true,
@@ -7619,6 +8086,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "R90",
        "aliases": [],
        "room": true,
@@ -7635,6 +8103,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "King",
        "aliases": [],
        "room": false,
@@ -7648,6 +8117,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Queen",
        "aliases": [],
        "room": false,
@@ -7661,6 +8131,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Jack",
        "aliases": [],
        "room": false,
@@ -7674,6 +8145,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Tetris",
        "aliases": [],
        "room": false,
@@ -7687,6 +8159,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Hard",
        "aliases": [],
        "room": false,
@@ -7700,6 +8173,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Soft",
        "aliases": [],
        "room": false,
@@ -7738,6 +8212,7 @@
      "h": 1114,
      "callouts": [
       {
+       "id": "o0",
        "name": "White stairs",
        "aliases": [],
        "room": true,
@@ -7754,6 +8229,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "White hall",
        "aliases": [],
        "room": true,
@@ -7770,6 +8246,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Pixel",
        "aliases": [],
        "room": false,
@@ -7783,6 +8260,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Top red",
        "aliases": [],
        "room": true,
@@ -7799,6 +8277,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Red S3",
        "aliases": [],
        "room": true,
@@ -7815,6 +8294,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "New balc",
        "aliases": [],
        "room": true,
@@ -7831,6 +8311,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Heaven",
        "aliases": [],
        "room": true,
@@ -7847,6 +8328,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Cocktail",
        "aliases": [],
        "room": true,
@@ -7863,6 +8345,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "C1",
        "aliases": [],
        "room": false,
@@ -7876,6 +8359,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "C2",
        "aliases": [],
        "room": false,
@@ -7889,6 +8373,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Freezer",
        "aliases": [],
        "room": true,
@@ -7905,6 +8390,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Tarps",
        "aliases": [],
        "room": false,
@@ -7918,6 +8404,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "C3",
        "aliases": [],
        "room": false,
@@ -7931,6 +8418,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Stacks",
        "aliases": [],
        "room": false,
@@ -7944,6 +8432,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Bathroom",
        "aliases": [],
        "room": true,
@@ -7960,6 +8449,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Deep freezer",
        "aliases": [],
        "room": true,
@@ -7976,6 +8466,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "F2",
        "aliases": [],
        "room": false,
@@ -7989,6 +8480,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "F1",
        "aliases": [],
        "room": false,
@@ -8002,6 +8494,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Stage",
        "aliases": [],
        "room": true,
@@ -8018,6 +8511,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Ticket",
        "aliases": [],
        "room": true,
@@ -8034,6 +8528,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Piano",
        "aliases": [],
        "room": true,
@@ -8050,6 +8545,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "J desk",
        "aliases": [],
        "room": false,
@@ -8063,6 +8559,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Cigar",
        "aliases": [],
        "room": true,
@@ -8079,6 +8576,7 @@
        ]
       },
       {
+       "id": "o23",
        "name": "Cryo",
        "aliases": [],
        "room": false,
@@ -8092,6 +8590,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Bar",
        "aliases": [],
        "room": true,
@@ -8108,6 +8607,7 @@
        ]
       },
       {
+       "id": "o25",
        "name": "Outer",
        "aliases": [],
        "room": false,
@@ -8121,6 +8621,7 @@
        ]
       },
       {
+       "id": "o26",
        "name": "Inner",
        "aliases": [],
        "room": false,
@@ -8134,6 +8635,7 @@
        ]
       },
       {
+       "id": "o27",
        "name": "Trash",
        "aliases": [],
        "room": false,
@@ -8147,6 +8649,7 @@
        ]
       },
       {
+       "id": "o28",
        "name": "Shaiiko",
        "aliases": [],
        "room": false,
@@ -8160,6 +8663,7 @@
        ]
       },
       {
+       "id": "o29",
        "name": "B2",
        "aliases": [],
        "room": false,
@@ -8173,6 +8677,7 @@
        ]
       },
       {
+       "id": "o30",
        "name": "B1",
        "aliases": [],
        "room": false,
@@ -8186,6 +8691,7 @@
        ]
       },
       {
+       "id": "o31",
        "name": "South",
        "aliases": [],
        "room": false,
@@ -8199,6 +8705,7 @@
        ]
       },
       {
+       "id": "o32",
        "name": "West",
        "aliases": [],
        "room": false,
@@ -8212,6 +8719,7 @@
        ]
       },
       {
+       "id": "o33",
        "name": "Shop",
        "aliases": [],
        "room": false,
@@ -8256,6 +8764,7 @@
      "h": 869,
      "callouts": [
       {
+       "id": "o0",
        "name": "Warehouse",
        "aliases": [],
        "room": true,
@@ -8272,6 +8781,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Barrels",
        "aliases": [],
        "room": true,
@@ -8288,6 +8798,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Lockers",
        "aliases": [],
        "room": true,
@@ -8304,6 +8815,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Lockers",
        "aliases": [],
        "room": true,
@@ -8320,6 +8832,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Missile Hall",
        "aliases": [],
        "room": true,
@@ -8336,6 +8849,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Missile",
        "aliases": [],
        "room": true,
@@ -8352,6 +8866,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Lab",
        "aliases": [],
        "room": true,
@@ -8368,6 +8883,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Toxin",
        "aliases": [],
        "room": true,
@@ -8384,6 +8900,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Stock",
        "aliases": [],
        "room": true,
@@ -8400,6 +8917,7 @@
        ]
       },
       {
+       "id": "o9",
        "name": "Archives",
        "aliases": [],
        "room": true,
@@ -8416,6 +8934,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Loaf",
        "aliases": [],
        "room": true,
@@ -8432,6 +8951,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "L1",
        "aliases": [],
        "room": false,
@@ -8445,6 +8965,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "L2",
        "aliases": [],
        "room": false,
@@ -8458,6 +8979,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "L3",
        "aliases": [],
        "room": false,
@@ -8471,6 +8993,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Filtration",
        "aliases": [],
        "room": true,
@@ -8487,6 +9010,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Filtration Stairs",
        "aliases": [],
        "room": true,
@@ -8528,6 +9052,7 @@
      "h": 798,
      "callouts": [
       {
+       "id": "o0",
        "name": "Green stairs",
        "aliases": [],
        "room": true,
@@ -8545,6 +9070,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Armory",
        "aliases": [],
        "room": true,
@@ -8561,6 +9087,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Medic",
        "aliases": [],
        "room": true,
@@ -8577,6 +9104,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Maintenance",
        "aliases": [],
        "room": true,
@@ -8593,6 +9121,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Range",
        "aliases": [],
        "room": true,
@@ -8609,6 +9138,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Janitor",
        "aliases": [],
        "room": true,
@@ -8625,6 +9155,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Rocket",
        "aliases": [],
        "room": true,
@@ -8641,6 +9172,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Lobby",
        "aliases": [],
        "room": true,
@@ -8657,6 +9189,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "Blue Hall",
        "aliases": [],
        "room": true,
@@ -8673,6 +9206,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Med hall",
        "aliases": [],
        "room": true,
@@ -8689,6 +9223,7 @@
        ]
       },
       {
+       "id": "o12",
        "name": "Green door",
        "aliases": [],
        "room": false,
@@ -8702,6 +9237,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Green window",
        "aliases": [],
        "room": false,
@@ -8715,6 +9251,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Green hall",
        "aliases": [],
        "room": false,
@@ -8728,6 +9265,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "BUNKS",
        "aliases": [],
        "room": true,
@@ -8744,6 +9282,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Briefing",
        "aliases": [],
        "room": true,
@@ -8760,6 +9299,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Control",
        "aliases": [],
        "room": true,
@@ -8776,6 +9316,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Yellow Hall",
        "aliases": [],
        "room": true,
@@ -8792,6 +9333,7 @@
        ]
       },
       {
+       "id": "o22",
        "name": "Yellow stairs",
        "aliases": [],
        "room": true,
@@ -8808,6 +9350,7 @@
        ]
       },
       {
+       "id": "o24",
        "name": "Green",
        "aliases": [],
        "room": true,
@@ -8849,6 +9392,7 @@
      "h": 746,
      "callouts": [
       {
+       "id": "o0",
        "name": "Operation",
        "aliases": [],
        "room": true,
@@ -8865,6 +9409,7 @@
        ]
       },
       {
+       "id": "o1",
        "name": "Sky Bridge",
        "aliases": [],
        "room": true,
@@ -8881,6 +9426,7 @@
        ]
       },
       {
+       "id": "o2",
        "name": "Ops Wall",
        "aliases": [],
        "room": true,
@@ -8897,6 +9443,7 @@
        ]
       },
       {
+       "id": "o3",
        "name": "Mezz",
        "aliases": [],
        "room": true,
@@ -8913,6 +9460,7 @@
        ]
       },
       {
+       "id": "o4",
        "name": "Bath Hall 2",
        "aliases": [],
        "room": true,
@@ -8929,6 +9477,7 @@
        ]
       },
       {
+       "id": "o5",
        "name": "Mask",
        "aliases": [],
        "room": true,
@@ -8945,6 +9494,7 @@
        ]
       },
       {
+       "id": "o6",
        "name": "Master",
        "aliases": [],
        "room": true,
@@ -8961,6 +9511,7 @@
        ]
       },
       {
+       "id": "o7",
        "name": "Desk",
        "aliases": [],
        "room": false,
@@ -8974,6 +9525,7 @@
        ]
       },
       {
+       "id": "o8",
        "name": "Server",
        "aliases": [],
        "room": true,
@@ -8990,6 +9542,7 @@
        ]
       },
       {
+       "id": "o10",
        "name": "R6",
        "aliases": [],
        "room": true,
@@ -9008,6 +9561,7 @@
        ]
       },
       {
+       "id": "o11",
        "name": "Tetris",
        "aliases": [],
        "room": false,
@@ -9021,6 +9575,7 @@
        ]
       },
       {
+       "id": "o13",
        "name": "Display",
        "aliases": [],
        "room": true,
@@ -9037,6 +9592,7 @@
        ]
       },
       {
+       "id": "o14",
        "name": "Storage",
        "aliases": [],
        "room": true,
@@ -9053,6 +9609,7 @@
        ]
       },
       {
+       "id": "o15",
        "name": "Rocket stairs",
        "aliases": [],
        "room": true,
@@ -9069,6 +9626,7 @@
        ]
       },
       {
+       "id": "o16",
        "name": "Bathroom 2",
        "aliases": [],
        "room": true,
@@ -9085,6 +9643,7 @@
        ]
       },
       {
+       "id": "o17",
        "name": "Pebbles",
        "aliases": [],
        "room": true,
@@ -9101,6 +9660,7 @@
        ]
       },
       {
+       "id": "o18",
        "name": "Blue stairs",
        "aliases": [],
        "room": true,
@@ -9117,6 +9677,7 @@
        ]
       },
       {
+       "id": "o19",
        "name": "Courtyard",
        "aliases": [],
        "room": true,
@@ -9133,6 +9694,7 @@
        ]
       },
       {
+       "id": "o20",
        "name": "Z Hall",
        "aliases": [],
        "room": true,
@@ -9149,6 +9711,7 @@
        ]
       },
       {
+       "id": "o21",
        "name": "Boost",
        "aliases": [],
        "room": false,

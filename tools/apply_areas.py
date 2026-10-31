@@ -5,8 +5,10 @@ Usage: python3 -I tools/apply_areas.py <dir of floor JSON files> src/callouts.js
 Each <map>.<floor>.json is the editor's saved document for that floor (its
 callouts in order, with id, name, aliases, room, x/y/gx/gy, and the outlines
 "whole" for the Main rooms pool and "area" for the other pools, in call-sheet
-coordinates). Callouts keep the fields the editor doesn't know about (short,
-broad) unless they were renamed. Outlines become:
+coordinates). Each callout keeps the editor's id, which the app files its saved
+progress under, so progress follows a callout through renames and moves. Callouts
+keep the fields the editor doesn't know about (short, broad) unless they were
+renamed. Outlines become:
   room_zone  the whole room, main rooms only (Main rooms pool); a main room
              with no whole-room outline uses its own area
   zone       the callout's own area (every other pool)
@@ -116,11 +118,12 @@ for m in data['maps']:
         for s in saved:
             nm = s['name'].strip()
             extra = {k: v for k, v in by_name.get(nm, {}).items() if k in ('short', 'broad')}
-            new.append({'name': nm, 'aliases': s['aliases'], 'room': s['room'], 'rot': s.get('rot', 0),
+            new.append({'id': s['id'], 'name': nm, 'aliases': s['aliases'], 'room': s['room'], 'rot': s.get('rot', 0),
                         'x': s['x'], 'y': s['y'], 'gx': s['gx'], 'gy': s['gy'], **extra,
                         '_whole': (s.get('whole') or s.get('area')) if s['room'] else None, '_area': s.get('area')})
             if s['room'] and not s.get('whole') and s.get('area'):
                 log.append(f"{nm} has no whole-room outline: its own area stands in")
+        assert len({c['id'] for c in new}) == len(new), f'{name}: two callouts share an id'
         for field, key in (('_whole', 'room_zone'), ('_area', 'zone')):
             items = [(c, shape(c[field], w, h)) for c in new if c[field]]
             items = [(c, p, (c['x'] * w, c['y'] * h)) for c, p in items]

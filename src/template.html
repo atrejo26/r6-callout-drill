@@ -95,6 +95,7 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 }
 .linkish:hover { color: var(--text); }
 .side-foot { display: grid; gap: 12px; }
+.group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 
 /* Map plate */
 .board {
@@ -281,6 +282,47 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 .log .empty { flex: 1 1 auto; font-size: 13px; }
 .panel footer { flex: none; color: var(--muted); font-size: 11.5px; line-height: 1.45; border-top: 1px solid var(--line); padding-top: 9px; }
 
+/* Pop-ups over the dimmed app: the update note and the progress report */
+.sheet {
+  width: min(600px, calc(100% - 32px)); max-width: calc(100% - 32px); max-height: calc(100% - 32px);
+  margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain;
+  background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--r);
+}
+.sheet::backdrop { background: rgba(0, 0, 0, .62); }
+.sheet-in, .sheet-body { display: grid; gap: 14px; }
+.sheet-in { padding: 20px; }
+.sheet p { margin: 0; }
+.sheet h3 { margin: 4px 0 0; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.sheet-head .prompt { margin-top: 6px; }
+.hero { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.hero b { font: 700 46px/1 var(--display); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.hero span { color: var(--muted); }
+.hero em { margin-left: auto; font: 500 20px/1 var(--mono); font-style: normal; color: var(--amber); }
+.bar { display: block; height: 3px; margin-top: -8px; background: var(--line); }
+.bar::before { content: ""; display: block; height: 100%; width: var(--p); background: var(--amber); }
+.maps.rep { list-style: none; margin: 0; padding: 0; }
+.rep li {
+  background: var(--panel); padding: 7px 10px 8px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 8px;
+}
+.rep small { grid-column: 1 / -1; font: 500 11px/1.35 var(--mono); letter-spacing: .04em; color: var(--muted); }
+.sheet .log ol { max-height: none; }
+.share { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.share[hidden] { display: none; }
+.field { display: grid; gap: 6px; }
+.field input, .share textarea {
+  width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: var(--r); padding: 9px 11px;
+}
+.field input { font-size: 16px; }
+.share textarea { font: 13px/1.45 var(--mono); min-height: 140px; resize: vertical; }
+.field input:focus, .share textarea:focus { border-color: var(--amber); outline: none; }
+@media (max-width: 600px) {
+  .sheet-in { padding: 16px; }
+  .sheet .stats { grid-template-columns: repeat(2, 1fr); }
+  .hero b { font-size: 40px; }
+}
+
 /* Desktop (landscape, 1181px and up): settings | map | question, filling the window */
 @media (min-width: 1181px) and (orientation: landscape) {
   .app {
@@ -381,7 +423,7 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
 
   <nav class="side" id="side" aria-label="Drill settings">
     <div class="side-head"><h2 class="label">Drill settings</h2><button class="btn" id="closeMenu">Done</button></div>
-    <div class="group map-group"><h2 class="label" id="mapLabel">Map / mastered</h2><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
+    <div class="group map-group"><div class="group-head"><h2 class="label" id="mapLabel">Map / mastered</h2><button class="linkish" id="reportBtn">Full report</button></div><div class="maps" id="mapChips" role="group" aria-labelledby="mapLabel"></div></div>
     <div class="group"><h2 class="label">Mode</h2>
       <div class="seg" id="modeTabs" role="group" aria-label="Mode">
         <button data-mode="name" aria-pressed="true">Name it</button>
@@ -443,6 +485,39 @@ h1 { font: 700 26px/1 var(--display); letter-spacing: .03em; text-transform: upp
   </aside>
   <div class="scrim" id="scrim" hidden></div>
 </div>
+
+<dialog class="sheet" id="updateNote" aria-labelledby="updateTitle">
+  <div class="sheet-in">
+    <p class="eyebrow">What's new</p>
+    <h2 class="prompt" id="updateTitle">The callouts have changed</h2>
+    <p>Many callouts were renamed, added or removed, and Find it now takes a tap anywhere in a callout's outlined area. Your progress came along, but it was earned on the old callouts, so starting over is recommended.</p>
+    <p class="hint">Start over erases your saved progress; your settings stay. New too: a full progress report you can share, next to the map list.</p>
+    <div class="actions"><button class="btn" id="startOver">Start over</button><button class="btn ghost" id="keepProgress">Keep my progress</button></div>
+  </div>
+</dialog>
+
+<dialog class="sheet" id="report" aria-labelledby="reportTitle">
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <div><p class="eyebrow" id="reportWho"></p><h2 class="prompt" id="reportTitle">Progress report</h2></div>
+      <button class="btn ghost" id="reportClose">Close</button>
+    </div>
+    <p class="hint" id="reportNote" hidden></p>
+    <div class="sheet-body" id="reportBody"></div>
+    <section class="share" id="reportShare" aria-labelledby="shareLabel">
+      <h3 class="label" id="shareLabel">Share</h3>
+      <label class="field"><span class="label">Your name (optional)</span><input id="shareName" maxlength="24" autocomplete="nickname" spellcheck="false"></label>
+      <div class="actions">
+        <button class="btn" id="shareBtn" hidden>Share…</button>
+        <button class="btn ghost" id="copyReport">Copy report</button>
+        <button class="btn ghost" id="copyLink">Copy link</button>
+      </div>
+      <textarea id="shareText" readonly hidden aria-label="Your report"></textarea>
+      <p class="hint" id="shareMsg" aria-live="polite"></p>
+      <button class="linkish" id="previewBtn">See what they'll see</button>
+    </section>
+  </div>
+</dialog>
 
 <script>
 'use strict';
@@ -570,8 +645,8 @@ const covers = (o, c) => (o.broad || []).some(t => compact(t) === compact(c.name
 
 // ---------- data ----------
 const ALL = [];
-DATA.maps.forEach(m => m.floors.forEach((f, fi) => f.callouts.forEach((c, ci) => {
-  c.key = `${m.id}|${f.name}|${c.name}|${ci}`;
+DATA.maps.forEach(m => m.floors.forEach((f, fi) => f.callouts.forEach(c => {
+  c.key = `${m.id}|${f.name}|${c.id}`;   // progress is filed under the callout's id, which renames keep
   c.map = m; c.floor = f; c.fi = fi;
   ALL.push(c);
 })));
@@ -597,6 +672,20 @@ if (S.map !== 'all' && !Object.hasOwn(mapById, S.map)) S.map = 'border';
 if (typeof S.floor !== 'string') S.floor = null;
 S.others = S.others === true;
 for (const k of Object.keys(stats)) if (!isObj(stats[k])) delete stats[k];
+// Earlier releases filed progress under a callout's name and place in its floor's list.
+// old_keys has every such key, oldest first, with the callout it belongs to: answers
+// filed under several add up, and the newest says whether the callout is mastered.
+const tally = v => Number.isFinite(v) && v > 0 ? v : 0;
+const hadProgress = Object.keys(stats).length > 0;
+let carried = false;
+for (const [where, keys] of Object.entries(DATA.old_keys)) for (const [old, id] of Object.entries(keys)) {
+  const from = stats[`${where}|${old}`], to = stats[`${where}|${id}`];
+  if (!from) continue;
+  stats[`${where}|${id}`] = to ? { n: tally(to.n) + tally(from.n), c: tally(to.c) + tally(from.c), last: from.last } : from;
+  delete stats[`${where}|${old}`];
+  carried = true;
+}
+if (carried) save();
 const session = { n: 0, c: 0, streak: 0, best: 0, log: [] };
 let zoom = 1;
 let q = null;              // current question
@@ -1075,6 +1164,197 @@ function pressed(container, attr, val) {
   container.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset[attr] === val)));
 }
 
+// ---------- update note ----------
+// Raised when a release changes the callouts enough that earlier progress means less:
+// anyone with progress from before is asked once whether to start over.
+const UPDATE = 1;
+const noted = () => Number.isInteger(saved.update) && saved.update >= UPDATE;
+if (!hadProgress && !noted()) { saved.update = UPDATE; save(); }
+function showNote() {
+  if (!noted() && !$('updateNote').open) { $('updateNote').showModal(); $('keepProgress').focus(); }
+}
+$('updateNote').addEventListener('close', () => { saved.update = UPDATE; save(); });
+$('keepProgress').onclick = () => $('updateNote').close();
+$('startOver').onclick = () => { eraseProgress(); $('updateNote').close(); };
+
+// ---------- progress report ----------
+// The report adds up, per map, answers and right answers, and per floor its callouts (t),
+// main rooms (r), callouts mastered (m), main rooms mastered (rm) and callouts tried (s).
+// A shared link carries just those numbers, the date and an optional name.
+const SITE = 'https://atrejo26.github.io/r6-callout-drill/';
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+const cleanName = s => [...s.replace(/[\p{Cc}\u202a-\u202e\u2066-\u2069]/gu, '').replace(/\s+/g, ' ').trim()].slice(0, 24).join('').trim();
+if (typeof saved.name === 'string' && cleanName(saved.name)) saved.name = cleanName(saved.name); else delete saved.name;
+function summary() {
+  const d = new Date();
+  return { date: [d.getFullYear(), d.getMonth() + 1, d.getDate()], name: saved.name || '', maps: DATA.maps.map(m => {
+    let n = 0, c = 0;
+    const floors = m.floors.map(f => {
+      const fl = { name: f.name, t: 0, r: 0, m: 0, rm: 0, s: 0 };
+      for (const o of f.callouts) {
+        const st = stats[o.key], won = !!st && st.last === 1;
+        fl.t++; fl.r += o.room ? 1 : 0; fl.m += won ? 1 : 0; fl.rm += won && o.room ? 1 : 0; fl.s += st ? 1 : 0;
+        if (st) { n += tally(st.n); c += Math.min(tally(st.c), tally(st.n)); }
+      }
+      return fl;
+    });
+    return { id: m.id, name: m.name, n, c, floors };
+  }) };
+}
+const totals = maps => maps.reduce((a, m) => {
+  a.n += m.n; a.c += m.c;
+  for (const f of m.floors) for (const k of ['t', 'r', 'm', 'rm', 's']) a[k] += f[k];
+  return a;
+}, { n: 0, c: 0, t: 0, r: 0, m: 0, rm: 0, s: 0 });
+const fmtDate = ([y, mo, d]) => new Date(y, mo - 1, d).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+const accuracy = t => t.n ? `${pct(t.c, t.n)}% right` : 'no answers yet';
+
+function reportBody(sum, own) {
+  const all = totals(sum.maps);
+  const stat = (label, value) => el('div', { className: 'stat' }, el('span', { textContent: label }), el('b', { textContent: value }));
+  const bar = el('i', { className: 'bar' });
+  bar.style.setProperty('--p', (100 * all.m / all.t).toFixed(1) + '%');
+  const out = [
+    el('p', { className: 'hero' }, el('b', { textContent: `${all.m}/${all.t}` }), el('span', { textContent: 'callouts mastered' }), el('em', { textContent: `${pct(all.m, all.t)}%` })),
+    bar,
+    el('div', { className: 'stats' }, stat('Main rooms', `${all.rm}/${all.r}`), stat('Spots', `${all.m - all.rm}/${all.t - all.r}`),
+      stat('Answers', all.n.toLocaleString()), stat('Right', all.n ? `${pct(all.c, all.n)}%` : '–')),
+    el('p', { className: 'hint', textContent: `${all.s} of ${all.t} callouts tried. A callout is mastered once the latest answer for it was right.` }),
+    el('h3', { className: 'label', textContent: 'By map' }),
+    el('ul', { className: 'maps rep' }, ...sum.maps.map(m => {
+      const t = totals([m]);
+      const li = el('li', {}, el('span', { className: 'name', textContent: m.name }), el('span', { className: 'num', textContent: `${t.m}/${t.t}` }), el('i'),
+        el('small', { textContent: [...m.floors.map(f => `${f.name} ${f.m}/${f.t}`), accuracy(t)].join(' · ') }));
+      li.style.setProperty('--p', (100 * t.m / t.t).toFixed(1) + '%');
+      return li;
+    })),
+  ];
+  if (!own) return out;
+  // Callouts whose latest answer was wrong, the most missed first.
+  const missed = c => tally(stats[c.key].n) - Math.min(tally(stats[c.key].c), tally(stats[c.key].n));
+  const misses = ALL.filter(c => stats[c.key] && stats[c.key].last === 0)
+    .sort((a, b) => missed(b) - missed(a) || a.name.localeCompare(b.name));
+  out.push(el('section', { className: 'log' },
+    el('div', { className: 'log-head' }, el('h3', { className: 'label', textContent: 'To work on' }),
+      el('span', { className: 'label', textContent: misses.length ? `${misses.length} missed last time` : '' })),
+    misses.length
+      ? el('ol', {}, ...misses.slice(0, 8).map(c => el('li', { className: 'bad' }, el('b', {}, ...named(c)),
+        el('span', { textContent: `${c.map.name} ${c.floor.name}` }), el('small', { textContent: `Missed ${missed(c)} of ${tally(stats[c.key].n)}` }))))
+      : el('p', { className: 'empty', textContent: all.s ? 'Nothing: your latest answer was right for every callout you have tried.' : 'Callouts you miss show up here.' }),
+    misses.length ? el('div', { className: 'actions' }, el('button', { className: 'btn ghost', textContent: 'Practice my misses', onclick: practiceMisses })) : ''));
+  return out;
+}
+function practiceMisses() {
+  S.map = 'all'; S.floor = null; S.pool = 'misses';
+  if (S.mode === 'study') { S.mode = 'name'; pressed($('modeTabs'), 'mode', S.mode); applyAnswer(); }
+  pressed($('poolChips'), 'pool', S.pool); persistPrefs(); renderMapChips();
+  $('report').close(); setMenu(false); nextQuestion();
+}
+function reportText(sum) {
+  const all = totals(sum.maps);
+  return [`R6 Callout Drill progress${sum.name ? `: ${sum.name}` : ''}, ${fmtDate(sum.date)}`,
+    `Mastered ${all.m} of ${all.t} callouts (${pct(all.m, all.t)}%): main rooms ${all.rm}/${all.r}, spots ${all.m - all.rm}/${all.t - all.r}`,
+    all.n ? `${all.n.toLocaleString()} answers, ${pct(all.c, all.n)}% right` : 'No answers yet',
+    sum.maps.map(m => { const t = totals([m]); return `${m.name} ${t.m}/${t.t}`; }).join(' · ')].join('\n');
+}
+
+// The link: 1~date~name~map~map..., each map id_answers_right_floor_floor..., each
+// floor name.t.r.m.rm.s; numbers in base 36, the name as URL-safe base64 of its UTF-8.
+const b64url = s => btoa(String.fromCharCode(...new TextEncoder().encode(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64url = s => new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)));
+const b36 = v => v.toString(36);
+const code = sum => ['1', sum.date.map((v, i) => String(v).padStart(i ? 2 : 4, '0')).join(''), sum.name ? b64url(sum.name) : '',
+  ...sum.maps.map(m => [m.id, b36(m.n), b36(m.c), ...m.floors.map(f => [f.name, ...[f.t, f.r, f.m, f.rm, f.s].map(b36)].join('.'))].join('_'))].join('~');
+const link = sum => SITE + '#report=' + code(sum);
+// Anyone can make a link say anything, so it counts only if every part is well formed
+// and the numbers add up; it is shown as plain text and never touches saved progress.
+function readReport(text) {
+  try {
+    const [v, date, name, ...maps] = text.split('~');
+    const dm = /^(\d{4})(\d{2})(\d{2})$/.exec(date);
+    if (text.length > 4000 || v !== '1' || !dm || !maps.length || maps.length > 30 || name.length > 200) return null;
+    const [y, mo, d] = dm.slice(1).map(Number), day = new Date(y, mo - 1, d);
+    if (y < 2000 || day.getFullYear() !== y || day.getMonth() !== mo - 1 || day.getDate() !== d) return null;
+    const num = s => /^[0-9a-z]{1,6}$/.test(s) ? parseInt(s, 36) : NaN;
+    const sum = { date: [y, mo, d], name: name ? cleanName(unb64url(name)) : '', maps: [] };
+    for (const part of maps) {
+      const [id, n, c, ...fs] = part.split('_');
+      const m = { id, name: Object.hasOwn(mapById, id) ? mapById[id].name : id, n: num(n), c: num(c), floors: [] };
+      if (!/^[a-z0-9-]{1,24}$/.test(id) || sum.maps.some(o => o.id === id) || !fs.length || fs.length > 8 || !(m.c <= m.n)) return null;
+      for (const fpart of fs) {
+        const [fname, ...vals] = fpart.split('.'), [t, r, mm, rm, s] = vals.map(num);
+        if (!/^[A-Za-z0-9]{1,12}$/.test(fname) || m.floors.some(f => f.name === fname) || vals.length !== 5
+          || !(t > 0 && r <= t && mm <= s && s <= t && rm <= mm && rm <= r && mm - rm <= t - r)) return null;
+        m.floors.push({ name: fname, t, r, m: mm, rm, s });
+      }
+      sum.maps.push(m);
+    }
+    return sum;
+  } catch { return null; }
+}
+// undefined: no report in the address; null: one that doesn't read
+function sharedReport() {
+  const m = /^#report=(.*)$/s.exec(location.hash);
+  if (!m) return;
+  try { return readReport(decodeURIComponent(m[1])); } catch { return null; }
+}
+
+let reportMode = null;     // 'own', 'shared' or 'preview' (your own, as others see it)
+function openReport(mode, sum) {
+  reportMode = mode;
+  const own = mode === 'own';
+  $('reportTitle').textContent = own ? 'Progress report' : 'Shared progress';
+  $('reportWho').textContent = sum ? [sum.name, fmtDate(sum.date)].filter(Boolean).join(' · ') : '';
+  $('reportNote').hidden = own;
+  $('reportNote').textContent = mode === 'preview' ? 'This is what people see when they open your link.'
+    : sum ? "Someone shared their progress with you. Yours isn't changed; close this to start drilling."
+    : 'This progress link is damaged or incomplete, so there is nothing to show.';
+  $('reportBody').replaceChildren(...(sum ? reportBody(sum, own) : []));
+  $('reportShare').hidden = !own;
+  $('reportClose').textContent = mode === 'preview' ? 'Back' : 'Close';
+  if (own) {
+    $('shareName').value = saved.name || '';
+    $('shareBtn').hidden = typeof navigator.share !== 'function';
+    $('copyReport').classList.toggle('ghost', !$('shareBtn').hidden);
+    $('shareText').hidden = true; $('shareMsg').textContent = '';
+  }
+  if (!$('report').open) $('report').showModal();
+  $('report').scrollTop = 0;
+  $('reportClose').focus();
+}
+function dropHash() { try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch {} }
+$('reportBtn').onclick = () => openReport('own', summary());
+$('reportClose').onclick = () => reportMode === 'preview' ? openReport('own', summary()) : $('report').close();
+$('previewBtn').onclick = () => openReport('preview', readReport(code(summary())));
+$('report').addEventListener('click', e => { if (e.target === $('report')) $('report').close(); });   // the dimmed outside
+$('report').addEventListener('close', () => { if (reportMode === 'shared') dropHash(); reportMode = null; showNote(); });
+$('shareName').oninput = e => {
+  const v = cleanName(e.target.value);
+  if (v) saved.name = v; else delete saved.name;
+  save();
+  $('reportWho').textContent = [v, fmtDate(summary().date)].filter(Boolean).join(' · ');
+  $('shareText').hidden = true; $('shareMsg').textContent = '';
+};
+const say = t => { $('shareMsg').textContent = t; };
+async function copy(text, what) {
+  try {
+    await navigator.clipboard.writeText(text);
+    $('shareText').hidden = true; say(`${what} copied.`);
+  } catch {      // no clipboard here: leave it selected to copy by hand
+    const t = $('shareText');
+    t.value = text; t.hidden = false; t.focus(); t.select();
+    say("Your browser didn't let the app copy it. It's selected above: copy it from there.");
+  }
+}
+$('copyReport').onclick = () => { const sum = summary(); copy(reportText(sum) + '\n' + link(sum), 'Report'); };
+$('copyLink').onclick = () => copy(link(summary()), 'Link');
+$('shareBtn').onclick = async () => {
+  const sum = summary();
+  try { await navigator.share({ title: 'R6 Callout Drill progress', text: reportText(sum), url: link(sum) }); say(''); }
+  catch (e) { if (e.name !== 'AbortError') copy(reportText(sum) + '\n' + link(sum), 'Report'); }
+};
+addEventListener('hashchange', () => { const r = sharedReport(); if (r !== undefined) openReport('shared', r); });
+
 // ---------- wiring ----------
 $('modeTabs').onclick = e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1118,12 +1398,15 @@ function applyView() {
   $('viewBtn').setAttribute('aria-pressed', String(S.view === 'game'));
 }
 $('optOthers').onchange = e => { S.others = e.target.checked; persistPrefs(); if (S.mode !== 'study') nextQuestion(); };
+function eraseProgress() {
+  for (const k of Object.keys(stats)) delete stats[k];
+  save(); renderMapChips();
+  if (S.pool === 'misses') nextQuestion();
+}
 let armed = false;
 $('resetBtn').onclick = () => {
   if (!armed) { armed = true; $('resetBtn').textContent = 'Tap again to erase all saved progress'; setTimeout(() => { armed = false; $('resetBtn').textContent = 'Reset my progress'; }, 4000); return; }
-  for (const k of Object.keys(stats)) delete stats[k];
-  save(); armed = false; $('resetBtn').textContent = 'Progress erased';
-  renderMapChips();
+  eraseProgress(); armed = false; $('resetBtn').textContent = 'Progress erased';
 };
 // Settings drawer (everything but the desktop layout)
 const wide = matchMedia('(min-width: 1181px) and (orientation: landscape)');
@@ -1141,6 +1424,7 @@ $('closeMenu').onclick = () => { setMenu(false); $('menuBtn').focus(); };
 $('scrim').onclick = () => setMenu(false);
 wide.addEventListener('change', () => setMenu(false));
 document.addEventListener('keydown', e => {
+  if (document.querySelector('dialog[open]')) return;   // keys there belong to the pop-up
   if (menuOpen()) { if (e.key === 'Escape') { setMenu(false); $('menuBtn').focus(); } return; }
   if (!q) return;
   if (S.mode === 'pick' && !q.done && /^[1-4]$/.test(e.key)) choose(+e.key - 1);
@@ -1168,5 +1452,8 @@ $('optOthers').checked = S.others;
 applyView(); renderStats(); renderMapChips(); renderSummary(); renderLog();
 $('planImg').addEventListener('load', () => sizePlate());
 nextQuestion();
+// A shared report opens over the app; the update note waits until it's closed.
+const shared = sharedReport();
+if (shared !== undefined) openReport('shared', shared); else showNote();
 }/*SCOPE*/
 </script>
